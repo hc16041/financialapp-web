@@ -1,0 +1,14 @@
+<app-generic-table
+  [title]="'Listado de Deposito Extranjero'"
+  [columns]="tableColumns"
+  [data]="(depositoextranjeroList$ | async)!"
+  [showActions]="false"
+  [searchEnabled]="true"
+  [showXmlDownload]="true"
+  [showExcelDownload]="true"
+  [showReporteDownload]="false"
+  (xmlDownload)="descargarArchivoXML()"
+  (excelDownload)="descargarArchivoExcel()"
+  (reporteDownload)="descargarReporte()"
+>
+</app-generic-table>

@@ -1,0 +1,17 @@
+<app-generic-table
+  [title]="'Listado de Garantías Hipotecarias'"
+  [columns]="tableColumns"
+  [data]="(garantias_hipotecariaList$ | async)!"
+  [showActions]="false"
+  [searchEnabled]="true"
+  [showXmlDownload]="true"
+  [showExcelDownload]="true"
+  (xmlDownload)="descargarArchivoXML()"
+  (excelDownload)="descargarArchivoExcel()"
+>
+  <!-- <ng-template #rowActions let-item>
+      <button class="btn btn-sm btn-info" (click)="onViewDetails(item)">
+      Detalles
+    </button>
+  </ng-template> -->
+</app-generic-table>

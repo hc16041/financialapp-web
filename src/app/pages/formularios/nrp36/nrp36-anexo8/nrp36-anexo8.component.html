@@ -1,0 +1,38 @@
+<app-generic-table
+  [title]="'Listado de Anexo 8'"
+  [columns]="tableColumns"
+  [excludedFields]="[
+    'fecha_creacion',
+    'fecha_actualizacion',
+    'cod_usuario',
+    'cod_usuario_modificacion',
+    'activo'
+  ]"
+  [requiredFields]="['id']"
+  [readonlyFields]="['id']"
+  [allowedActions]="['edit', 'deactivate', 'activate']"
+  [data]="(anexo8List$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [showStatusFilter]="true"
+  [entityDTO]="anexo8DTO"
+  [hiddenColumns]="[
+    'id',
+    'fecha_creacion',
+    'fecha_actualizacion',
+    'cod_usuario',
+    'cod_usuario_modificacion'
+  ]"
+  [selectOptions]="selectOptions"
+  (new)="onAddAnexo8($event)"
+  (edit)="onEditAnexo8($event)"
+  (delete)="onDeleteAnexo8($event)"
+  (deactivate)="onDeactivateAnexo8($event)"
+  (activate)="onActivateAnexo8($event)"
+  [showXmlDownload]="true"
+  [showExcelDownload]="true"
+  (xmlDownload)="descargarArchivoXML()"
+  (excelDownload)="descargarArchivoExcel()"
+>
+</app-generic-table>

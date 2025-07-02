@@ -1,20 +1,28 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { NgModule } from "@angular/core";
+import { RouterModule, Routes } from "@angular/router";
+
+import { LayoutComponent } from "./layouts/layout.component";
+
+// Auth
+import { AuthGuard } from "./core/guards/auth.guard";
 
 const routes: Routes = [
-  { 
-    path: 'transactions', 
-    loadChildren: () => import('./features/transactions/transactions.module').then(m => m.TransactionsModule) 
+  {
+    path: "",
+    component: LayoutComponent,
+    loadChildren: () =>
+      import("./pages/pages.module").then((m) => m.PagesModule),
+    canActivate: [AuthGuard],
   },
-  { 
-    path: 'credit-cards', 
-    loadChildren: () => import('./features/credit-cards/credit-cards.module').then(m => m.CreditCardsModule) 
+  {
+    path: "auth",
+    loadChildren: () =>
+      import("./account/account.module").then((m) => m.AccountModule),
   },
-  { path: '', redirectTo: '/transactions', pathMatch: 'full' }
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

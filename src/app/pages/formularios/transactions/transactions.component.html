@@ -1,0 +1,20 @@
+<app-generic-table
+  [title]="'Listado de Transacciones'"
+  [columns]="tableColumns"
+  [excludedFields]="['isProcessed', 'creditCard', 'date']"
+  [selectFields]="['creditCardId', 'type']"
+  [selectOptions]="selectOptions"
+  [requiredFields]="['id']"
+  [readonlyFields]="['id']"
+  [allowedActions]="['edit', 'process', 'deactivate', 'activate']"
+  [data]="(transactionsList$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [showStatusFilter]="true"
+  [entityDTO]="transactionsDTO"
+  [hiddenColumns]="['id', 'isProcessed', 'creditCard']"
+  [selectOptions]="selectOptions"
+  (new)="onAddTransaction($event)"
+>
+</app-generic-table>

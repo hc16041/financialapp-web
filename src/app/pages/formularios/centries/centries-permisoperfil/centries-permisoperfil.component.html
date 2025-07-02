@@ -1,0 +1,19 @@
+<app-generic-table
+  [title]="'Listado de Permisos por Perfil'"
+  [columns]="tableColumns"
+  [excludedFields]="['nombre_permiso', 'perfil']"
+  [selectFields]="['id_perfil', 'id_permiso']"
+  [requiredFields]="['id_perfil', 'id_permiso']"
+  [allowedActions]="['delete']"
+  [data]="(permisosPerfilList$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [entityDTO]="permisoperfilDTO"
+  [hiddenColumns]="['id_perfil', 'id_permiso']"
+  [selectOptions]="selectOptions"
+  (profileSelected)="handleProfileChange($event)"
+  (new)="onAddPermisoPerfil($event)"
+  (delete)="onDeletePermisoPerfil($event)"
+>
+</app-generic-table>

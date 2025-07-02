@@ -1,0 +1,39 @@
+<app-generic-table
+  [title]="'Listado de Anexo 5'"
+  [columns]="tableColumns"
+  [excludedFields]="[
+    'fecha_creacion',
+    'fecha_actualizacion',
+    'cod_usuario',
+    'cod_usuario_modificacion',
+    'activo'
+  ]"
+  [selectFields]="['actividad_informada']"
+  [requiredFields]="['id']"
+  [readonlyFields]="['id']"
+  [allowedActions]="['edit', 'deactivate', 'activate']"
+  [data]="(anexo5List$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [showStatusFilter]="true"
+  [entityDTO]="anexo5DTO"
+  [hiddenColumns]="[
+    'id',
+    'fecha_creacion',
+    'fecha_actualizacion',
+    'cod_usuario',
+    'cod_usuario_modificacion'
+  ]"
+  [selectOptions]="selectOptions"
+  (new)="onAddAnexo5($event)"
+  (edit)="onEditAnexo5($event)"
+  (delete)="onDeleteAnexo5($event)"
+  (deactivate)="onDeactivateAnexo5($event)"
+  (activate)="onActivateAnexo5($event)"
+  [showXmlDownload]="true"
+  [showExcelDownload]="true"
+  (xmlDownload)="descargarArchivoXML()"
+  (excelDownload)="descargarArchivoExcel()"
+>
+</app-generic-table>

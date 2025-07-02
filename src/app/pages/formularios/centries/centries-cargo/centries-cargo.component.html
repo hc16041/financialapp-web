@@ -1,0 +1,16 @@
+<app-generic-table
+  [title]="'Listado de Cargos'"
+  [columns]="tableColumns"
+  [readonlyFields]="['id_cargo']"
+  [data]="(cargosList$ | async)!"
+  [showActions]="true"
+  [requiredFields]="['cargo']"
+  [allowedActions]="['edit']"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [entityDTO]="cargoDTO"
+  (edit)="onEditCargo($event)"
+  (new)="onAddCargo($event)"
+  (delete)="onDeleteCargo($event)"
+>
+</app-generic-table>

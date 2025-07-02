@@ -1,0 +1,32 @@
+<app-generic-table
+  [title]="'Listado de Tarjetas de Crédito'"
+  [columns]="tableColumns"
+  [sumColumns]="['creditLimit', 'currentBalance', 'availableCredit']"
+  [excludedFields]="[
+    'fecha_creacion',
+    'fecha_actualizacion',
+    'cod_usuario',
+    'cod_usuario_modificacion',
+    'isActive'
+  ]"
+  [requiredFields]="['id']"
+  [readonlyFields]="['id']"
+  [allowedActions]="['edit', 'deactivate', 'activate']"
+  [data]="(creditcardList$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [showStatusFilter]="true"
+  [entityDTO]="creditcardDTO"
+  [hiddenColumns]="[
+    'id',
+    'fecha_creacion',
+    'fecha_actualizacion',
+    'cod_usuario',
+    'cod_usuario_modificacion',
+    'isActive'
+  ]"
+  [selectOptions]="selectOptions"
+  (new)="onAddCreditcard($event)"
+>
+</app-generic-table>

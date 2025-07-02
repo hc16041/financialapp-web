@@ -1,0 +1,12 @@
+<app-generic-table
+  [title]="'Listado de Garantias Prendarias'"
+  [columns]="tableColumns"
+  [data]="(garantiasPrendariasList$ | async)!"
+  [showActions]="false"
+  [searchEnabled]="true"
+  [showXmlDownload]="true"
+  [showExcelDownload]="true"
+  (xmlDownload)="descargarArchivoXML()"
+  (excelDownload)="descargarArchivoExcel()"
+>
+</app-generic-table>

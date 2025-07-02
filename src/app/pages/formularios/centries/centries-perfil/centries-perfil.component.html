@@ -1,0 +1,15 @@
+<app-generic-table
+  [title]="'Listado de Perfiles'"
+  [columns]="tableColumns"
+  [readonlyFields]="['id_perfil']"
+  [data]="(perfilesList$ | async)!"
+  [showActions]="true"
+  [allowedActions]="['edit']"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [entityDTO]="perfilDTO"
+  (edit)="onEditPerfil($event)"
+  (new)="onAddPerfil($event)"
+  (delete)="onDeletePerfil($event)"
+>
+</app-generic-table>

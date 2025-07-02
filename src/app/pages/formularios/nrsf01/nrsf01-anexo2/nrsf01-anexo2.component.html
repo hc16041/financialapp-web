@@ -1,0 +1,14 @@
+<app-generic-table
+  [title]="'Listado de Anexos 2'"
+  [columns]="tableColumns"
+  [data]="(anexo2List$ | async)!"
+  [showActions]="false"
+  [searchEnabled]="true"
+  [showXmlDownload]="true"
+  [showExcelDownload]="true"
+  [showReporteDownload]="true"
+  (xmlDownload)="descargarArchivoXML()"
+  (excelDownload)="descargarArchivoExcel()"
+  (reporteDownload)="descargarReporte()"
+>
+</app-generic-table>

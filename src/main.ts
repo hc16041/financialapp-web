@@ -1,7 +1,14 @@
-import 'zone.js';  // Añade esta importación en la PRIMERA línea
-import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import { enableProdMode } from "@angular/core";
+import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
 
-bootstrapApplication(App, appConfig)
+import { AppModule } from "./app/app.module";
+import { environment } from "./environments/environment";
+import "reflect-metadata"; // <-- Añade esta línea
+
+if (environment.production) {
+  enableProdMode();
+}
+
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
   .catch((err) => console.error(err));

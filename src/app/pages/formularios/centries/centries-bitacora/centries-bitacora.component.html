@@ -1,0 +1,13 @@
+<app-generic-table
+  [title]="'Listado de Bitacora De Descargas'"
+  [columns]="tableColumns"
+  [data]="(bitacoraList$ | async)!"
+  [allowedActions]="['file']"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showXmlDownload]="false"
+  [showExcelDownload]="false"
+  [hiddenColumns]="['text_archivo']"
+  (fileDownload)="descargarArchivo($event)"
+>
+</app-generic-table>

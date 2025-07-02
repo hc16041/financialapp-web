@@ -1,0 +1,44 @@
+<app-generic-table
+  [title]="'Listado de Usuarios Activos'"
+  [columns]="tableColumns"
+  [excludedFields]="[
+    'cargo',
+    'perfil',
+    'fec_ultimo_inicio',
+    'fecha',
+    'codigo_vendedor',
+    'mac_maquina'
+  ]"
+  [readonlyFields]="['id']"
+  [selectFields]="['id_cargo', 'id_perfil']"
+  [requiredFields]="['id_perfil', 'id_cargo', 'usuario', 'nom_colaborador']"
+  [allowedActions]="['edit', 'deactivate', 'reset', 'delete']"
+  [data]="(usuariosList$ | async)!"
+  [validatePermissions]="false"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [entityDTO]="usuarioDTO"
+  [hiddenColumns]="[
+    'id_cargo',
+    'id_perfil',
+    'fec_ultimo_inicio',
+    'codigo_vendedor',
+    'mac_maquina',
+    'btn_insertar',
+    'btn_actualizar',
+    'btn_eliminar',
+    'btn_desactivar',
+    'btn_activar',
+    'btn_descarga_xml',
+    'btn_descarga_texto_plano',
+    'btn_descarga_excel',
+    'btn_descarga_excel_plantilla'
+  ]"
+  [selectOptions]="selectOptions"
+  (edit)="onEditUsuario($event)"
+  (new)="onAddUsuario($event)"
+  (deactivate)="onDeactivateUsuario($event)"
+  (resetPassword)="onResetPassword($event)"
+>
+</app-generic-table>
