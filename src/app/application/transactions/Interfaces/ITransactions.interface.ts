@@ -57,6 +57,7 @@ export interface ITransactionsCreate {
   description: string;
   creditCardId: number;
   transactionDate: Date;
+  merchantId: number;
 }
 
 export interface ITransactionType {

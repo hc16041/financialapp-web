@@ -54,6 +54,10 @@ export class TransactionsDTO {
   @IsObject()
   creditCard?: CreditcardDTO;
 
+  @IsNumber()
+  @Min(1, { message: "El merchantId debe ser un número mayor o igual a 1." })
+  merchantId: number;
+
   constructor(data?: Partial<TransactionsDTO>) {
     this.id = data?.id ?? 0;
     this.amount = data?.amount ?? 0;
@@ -66,5 +70,6 @@ export class TransactionsDTO {
     this.creditCard = data?.creditCard
       ? new CreditcardDTO(data.creditCard)
       : undefined;
+    this.merchantId = data?.merchantId ?? 1;
   }
 }

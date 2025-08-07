@@ -75,6 +75,7 @@ import { Nrp51TituloValorExtranjeroComponent } from "./nrp51/nrp51-titulovalorex
 import { CentriesBitacoraComponent } from "./centries/centries-bitacora/centries-bitacora.component";
 import { CreditcardComponent } from './creditcard/creditcard.component';
 import { TransactionsComponent } from './transactions/transactions.component';
+import { MerchantsComponent } from './merchants/merchants.component';
 
 @NgModule({
   declarations: [
@@ -145,6 +146,7 @@ import { TransactionsComponent } from './transactions/transactions.component';
     CentriesBitacoraComponent,
     CreditcardComponent,
     TransactionsComponent,
+    MerchantsComponent,
   ],
   imports: [
     CommonModule,

@@ -8,6 +8,7 @@ import { TransactionsService } from "src/app/application/transactions/Services/T
 import { ITransactionsCreate } from "src/app/application/transactions/Interfaces/ITransactions.interface";
 import { CreditcardService } from "src/app/application/creditcard/Services/Creditcard.service";
 import { CreditcardDTO } from "src/app/application/creditcard/DTO/CreditcardDTO";
+import { MerchantsService } from "src/app/application/Merchants/Services/Merchants.service";
 
 @Component({
   selector: "app-transactions",
@@ -26,6 +27,8 @@ export class TransactionsComponent {
     []
   );
 
+  merchantList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+
   // Table data
   transactionsDTO = new TransactionsDTO();
 
@@ -38,13 +41,15 @@ export class TransactionsComponent {
   constructor(
     private dataService: DataService,
     private transactionsService: TransactionsService,
-    private creditcardService: CreditcardService
+    private creditcardService: CreditcardService,
+    private merchantService: MerchantsService
   ) {}
 
   ngOnInit(): void {
     this.obtenerTransactions();
     this.obtenerCreditCardCodes();
     this.obtenerTiposTransacciones();
+    this.obtenerMerchants();
     this.initializeSelectOptions();
     this.setupSubscriptions();
   }
@@ -69,6 +74,12 @@ export class TransactionsComponent {
         type: this.mapTransactionTypes(transactionTypes),
       };
     });
+    this.merchantList$.subscribe((merchants) => {
+      this.selectOptions = {
+        ...this.selectOptions,
+        merchantId: this.mapMerchants(merchants),
+      };
+    });
   }
 
   private mapCreditCardCodes(creditCardCodes: any[]): any[] {
@@ -85,6 +96,13 @@ export class TransactionsComponent {
     }));
   }
 
+  private mapMerchants(merchants: any[]): any[] {
+    return merchants.map((m: any) => ({
+      value: m.id,
+      label: m.name,
+    }));
+  }
+
   private mapToTransactionCreate(newTransaction: any): ITransactionsCreate {
     return {
       amount: newTransaction.amount,
@@ -92,7 +110,17 @@ export class TransactionsComponent {
       description: newTransaction.description,
       creditCardId: newTransaction.creditCardId,
       transactionDate: newTransaction.transactionDate,
+      merchantId: newTransaction.merchantId,
     };
+  }
+
+  async obtenerMerchants(): Promise<void> {
+    return this.dataService.obtenerDatos(
+      this.merchantService,
+      "getMerchants",
+      this.merchantList$,
+      "Error al cargar comercios"
+    );
   }
 
   async obtenerTiposTransacciones(): Promise<void> {
@@ -114,12 +142,78 @@ export class TransactionsComponent {
   }
 
   async obtenerTransactions(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.transactionsService,
-      "getListadoTransactions",
-      this.transactionsList$,
-      "Error al cargar transacciones"
-    );
+    // Obtener token y username del sessionStorage
+    const token = sessionStorage.getItem("authToken") || "";
+    const username = sessionStorage.getItem("username") || "";
+
+    // Establecer fechas por defecto (primer y último día del mes actual)
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    // Formatear fechas al formato YYYY-MM-DD
+    const formatDateForInput = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const startDate = formatDateForInput(firstDayOfMonth);
+    const endDate = formatDateForInput(lastDayOfMonth);
+
+    // Llamar directamente al servicio con las fechas por defecto
+    await this.obtenerTransactionsByDateRange(startDate, endDate);
+  }
+
+  async obtenerTransactionsByDateRange(
+    startDate: string,
+    endDate: string
+  ): Promise<void> {
+    try {
+      // Obtener token y username del sessionStorage usando las claves correctas
+      const token = sessionStorage.getItem("authToken") || "";
+      const username = sessionStorage.getItem("username") || "";
+
+      const data = await this.transactionsService.getListadoTransactions(
+        token,
+        username,
+        startDate,
+        endDate
+      );
+      this.transactionsList$.next(data);
+    } catch (error) {
+      console.error("Error al cargar transacciones por fecha:", error);
+      // Aquí podrías usar el alertService si está disponible
+    }
+  }
+
+  async onDateRangeSearch(dateRange: {
+    startDate: string;
+    endDate: string;
+  }): Promise<void> {
+    // Si las fechas están vacías, establecer fechas por defecto
+    let startDate = dateRange.startDate;
+    let endDate = dateRange.endDate;
+
+    if (!startDate || !endDate) {
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Formatear fechas al formato YYYY-MM-DD
+      const formatDateForInput = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      startDate = formatDateForInput(firstDayOfMonth);
+      endDate = formatDateForInput(lastDayOfMonth);
+    }
+
+    await this.obtenerTransactionsByDateRange(startDate, endDate);
   }
 
   async onAddTransaction(newTransaction: any): Promise<void> {

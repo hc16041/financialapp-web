@@ -378,4 +378,10 @@ export const MENU: MenuItem[] = [
     link: "/transactions",
     parentId: 5,
   },
+  {
+    id: 6,
+    label: "Comercios",
+    link: "/merchants",
+    parentId: 5,
+  },
 ];

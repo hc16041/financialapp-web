@@ -16,21 +16,59 @@ export class TransactionsService implements ITransactions {
    */
   async getListadoTransactions(
     token: string,
-    usuario: string
+    usuario: string,
+    startDate?: string,
+    endDate?: string
   ): Promise<TransactionsDTO[]> {
-    try {
-      // Formatea las fechas correctamente (YYYY-MM-DD)
-      const formattedStart = "05-01-2025"; // "2025-05-01"
-      const formattedEnd = "07-31-2025"; // "2025-07-31"
+    // Si las fechas están vacías, establecer fechas por defecto
+    let finalStartDate = startDate;
+    let finalEndDate = endDate;
 
-      const url = `transactions/transactions/by-date?startDate=${formattedStart}&endDate=${formattedEnd}`;
-      return await this.apiConnectionService.sendRequestAsync<
+    if (!finalStartDate || !finalEndDate) {
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Formatear fechas al formato YYYY-MM-DD
+      const formatDateForInput = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      finalStartDate = formatDateForInput(firstDayOfMonth);
+      finalEndDate = formatDateForInput(lastDayOfMonth);
+    }
+
+    try {
+      let url = `transactions/transactions`;
+
+      // Siempre usar el endpoint con filtro de fechas ya que ahora siempre tenemos fechas
+      const formattedStart = this.formatDateForBackend(finalStartDate!);
+      const formattedEnd = this.formatDateForBackend(finalEndDate!);
+      url = `transactions/transactions/by-date?startDate=${formattedStart}&endDate=${formattedEnd}`;
+
+      const result = await this.apiConnectionService.sendRequestAsync<
         TransactionsDTO[]
       >(url, "GET", null, { Authorization: token });
+
+      return result;
     } catch (error) {
       console.error("Error en getListadoTransactions:", error);
       throw error;
     }
+  }
+
+  /**
+   * Formatea una fecha del formato YYYY-MM-DD al formato MM-DD-YYYY requerido por el backend
+   */
+  private formatDateForBackend(dateString: string): string {
+    const date = new Date(dateString);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${month}-${day}-${year}`;
   }
 
   async guardarTransactions(

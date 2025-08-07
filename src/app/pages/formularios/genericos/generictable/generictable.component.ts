@@ -107,6 +107,34 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                     </option>
                   </select>
 
+                  <!-- Filtro de rango de fechas -->
+                  <div
+                    *ngIf="showDateRangeFilter"
+                    class="d-flex gap-2 align-items-center"
+                  >
+                    <label class="form-label mb-0">{{ dateRangeLabel }}:</label>
+                    <input
+                      type="date"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="startDate"
+                      placeholder="Fecha inicio"
+                    />
+                    <span class="text-muted">a</span>
+                    <input
+                      type="date"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="endDate"
+                      placeholder="Fecha fin"
+                    />
+                    <button
+                      class="btn btn-primary btn-sm"
+                      (click)="onDateRangeSearch()"
+                      [disabled]="!startDate || !endDate"
+                    >
+                      <i class="bi bi-search"></i> Buscar
+                    </button>
+                  </div>
+
                   <input
                     *ngIf="searchEnabled"
                     type="text"
@@ -345,9 +373,15 @@ export class GenericTableComponent<T> implements OnChanges {
   @Input() showStatusFilter: boolean = false; // Nuevo input para mostrar el filtro
   @Input() validatePermissions: boolean = true; // Nuevo estado para validar permisos
   @Input() sumColumns: string[] = []; // Nuevo input para sumar columnas
+  @Input() showDateRangeFilter: boolean = false; // Nuevo input para mostrar filtro de fechas
+  @Input() dateRangeLabel: string = "Rango de fechas"; // Etiqueta para el filtro de fechas
 
   // Eventos
   @Output() actionClick = new EventEmitter<{ action: string; item: T }>(); // Nuevo evento para acciones
+  @Output() dateRangeSearch = new EventEmitter<{
+    startDate: string;
+    endDate: string;
+  }>(); // Nuevo evento para búsqueda por fecha
   @Output() edit = new EventEmitter<T>(); // Nuevo evento para edición
   @Output() new = new EventEmitter<T>(); // Nuevo evento para nuevo registro
   @Output() delete = new EventEmitter<T>(); // Nuevo evento para eliminación
@@ -374,6 +408,8 @@ export class GenericTableComponent<T> implements OnChanges {
   showAll: boolean = false; // Nuevo estado para controlar "Ver todo"
   sortColumn: string | null = null; // Columna actual para ordenar
   sortDirection: "asc" | "desc" | null = null; // Dirección de orden actual
+  startDate: string = ""; // Fecha de inicio para filtro
+  endDate: string = ""; // Fecha de fin para filtro
 
   private searchSubject = new Subject<string>(); // Nuevo sujeto para búsqueda
   private sortCache: { data: T[]; column: string; direction: string } | null =
@@ -404,19 +440,26 @@ export class GenericTableComponent<T> implements OnChanges {
     private modalService: NgbModal,
     private cdRef: ChangeDetectorRef
   ) {
+    // Configurar suscripciones para búsqueda
     this.searchSubject
-      .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe((value) => {
-        this.searchTerm = value;
+      .pipe(debounceTime(this.searchDebounceTime), distinctUntilChanged())
+      .subscribe((term) => {
+        this.searchTerm = term;
         this.applyFilters();
       });
-    // Añade esta nueva suscripción
+
+    // Configurar suscripciones para filtro de estado
     this.statusFilterSubject
       .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe((value) => {
-        this.selectedStatus = value;
+      .subscribe((status) => {
+        this.selectedStatus = status;
         this.applyFilters();
       });
+
+    // Establecer fechas por defecto si el filtro está habilitado
+    if (this.showDateRangeFilter) {
+      this.setDefaultDateRange();
+    }
   }
   /**
    * Inicializa el componente.
@@ -424,6 +467,38 @@ export class GenericTableComponent<T> implements OnChanges {
    */
   ngOnInit() {
     this.visibleColumns;
+
+    // Establecer valores por defecto para las fechas si el filtro está habilitado
+    if (this.showDateRangeFilter && (!this.startDate || !this.endDate)) {
+      // Usar setTimeout para asegurar que el componente esté completamente inicializado
+      setTimeout(() => {
+        this.setDefaultDateRange();
+        this.cdRef.detectChanges();
+      }, 0);
+    }
+  }
+
+  /**
+   * Establece el rango de fechas por defecto al primer y último día del mes actual
+   */
+  private setDefaultDateRange(): void {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    // Formatear fechas al formato YYYY-MM-DD requerido por input type="date"
+    this.startDate = this.formatDateForInput(firstDayOfMonth);
+    this.endDate = this.formatDateForInput(lastDayOfMonth);
+  }
+
+  /**
+   * Formatea una fecha al formato YYYY-MM-DD requerido por input type="date"
+   */
+  private formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -936,6 +1011,15 @@ export class GenericTableComponent<T> implements OnChanges {
     if (changes["data"] || changes["searchTerm"] || changes["columns"]) {
       this.applyFilters();
     }
+
+    // Si se habilita el filtro de fechas y las fechas están vacías, establecer valores por defecto
+    if (
+      changes["showDateRangeFilter"] &&
+      this.showDateRangeFilter &&
+      (!this.startDate || !this.endDate)
+    ) {
+      this.setDefaultDateRange();
+    }
   }
 
   /**
@@ -1051,6 +1135,24 @@ export class GenericTableComponent<T> implements OnChanges {
   onSearch(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.searchSubject.next(value);
+  }
+
+  /**
+   * Se llama cuando el usuario hace clic en el botón de búsqueda por rango de fechas.
+   * Emite el evento dateRangeSearch con las fechas seleccionadas.
+   */
+  onDateRangeSearch(): void {
+    // Si las fechas están vacías, establecer fechas por defecto
+    if (!this.startDate || !this.endDate) {
+      this.setDefaultDateRange();
+    }
+
+    if (this.startDate && this.endDate) {
+      this.dateRangeSearch.emit({
+        startDate: this.startDate,
+        endDate: this.endDate,
+      });
+    }
   }
 
   /**

@@ -6,5 +6,5 @@ export const GlobalComponent = {
   // Auth Api
   // AUTH_API: "https://api-node.themesbrand.website/auth/",
   AUTH_API: "http://194.163.182.246:8090/api/",
-  // AUTH_API: "https://localhost:7117/api/",
+  //AUTH_API: "https://localhost:7117/api/",
 };
