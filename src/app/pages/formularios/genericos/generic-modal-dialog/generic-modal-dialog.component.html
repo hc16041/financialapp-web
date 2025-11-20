@@ -16,7 +16,7 @@
         *ngFor="let field of fields"
         [class.col-xxl-6]="multiColumnLayout"
         [class.col-xxl-12]="!multiColumnLayout"
-        class="col-md-12"
+        class="col-12 col-md-12"
       >
         <label [for]="field.key" class="form-label">{{ field.label }}</label>
 
@@ -90,13 +90,13 @@
         </div>
       </div>
     </div>
-    <div class="hstack gap-2 justify-content-end mt-3">
-      <button type="button" class="btn btn-light" (click)="close()">
+    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-3">
+      <button type="button" class="btn btn-light order-2 order-sm-1" (click)="close()">
         Cerrar
       </button>
       <button
         type="submit"
-        class="btn btn-primary"
+        class="btn btn-primary order-1 order-sm-2"
         [disabled]="form.invalid || isSaving"
       >
         {{ isSaving ? "Guardando..." : "Guardar" }}
@@ -107,14 +107,14 @@
   <!-- Mostrar mensaje de confirmación cuando showConfirmButtons sea true -->
   <div *ngIf="showConfirmButtons">
     <p>{{ actionConfig[actionType].message }}</p>
-    <div class="hstack gap-2 justify-content-end mt-3">
+    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-3">
       <button
-        class="btn {{ actionConfig[actionType].btnClass }}"
+        class="btn {{ actionConfig[actionType].btnClass }} order-2 order-sm-1"
         (click)="onSave.emit()"
       >
         {{ actionLabel || actionConfig[actionType].btnText }}
       </button>
-      <button class="btn btn-secondary" (click)="close()">Cancelar</button>
+      <button class="btn btn-secondary order-1 order-sm-2" (click)="close()">Cancelar</button>
     </div>
   </div>
 </div>

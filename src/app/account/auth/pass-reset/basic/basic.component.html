@@ -33,36 +33,175 @@
 
                       <div class="card-body p-4">
                           <div class="text-center mt-2">
-                              <h5 class="text-primary">Forgot Password?</h5>
-                              <p class="text-muted">Reset password with velzon</p>
-                              <lord-icon
-                                    src="https://cdn.lordicon.com/rhvddzym.json"
-                                    trigger="loop"
-                                    colors="primary:#0ab39c"
-                                    class="avatar-xl">
-                                </lord-icon>
+                              @if(isResetMode){
+                              <h5 class="text-primary">Restablecer Contraseña</h5>
+                              <p class="text-muted">Ingresa tu nueva contraseña</p>
+                              } @else {
+                              <h5 class="text-primary">¿Olvidaste tu contraseña?</h5>
+                              <p class="text-muted">Restablece tu contraseña</p>
+                              }
                           </div>
 
-                          <div class="alert border-0 alert-warning text-center mb-2 mx-2" role="alert">
-                              Enter your email and instructions will be sent to you!
+                          @if(success){
+                          <div class="alert border-0 alert-success text-center mb-2 mx-2" role="alert">
+                              @if(isResetMode){
+                              Contraseña restablecida exitosamente. Redirigiendo al login...
+                              } @else {
+                              Se ha enviado un correo electrónico con las instrucciones para restablecer tu contraseña.
+                              }
                           </div>
+                          } @else if(!isResetMode){
+                          <div class="alert border-0 alert-warning text-center mb-2 mx-2" role="alert">
+                              Ingresa tu correo electrónico y te enviaremos las instrucciones!
+                          </div>
+                          }
+
+                          @if(error){
+                          <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                          </div>
+                          }
+
                           <div class="p-2">
-                              <form [formGroup]="passresetForm" (ngSubmit)="onSubmit()">
-                                  <div class="mb-4">
-                                      <label class="form-label">Email</label>
-                                      <input type="email" class="form-control" id="email" placeholder="Enter Email" formControlName="email" [ngClass]="{ 'is-invalid': submitted && f['email'].errors }">
+                              <form [formGroup]="passresetForm" (ngSubmit)="onSubmit()" *ngIf="!success">
+                                  @if(isResetMode){
+                                  <!-- Modo Reset Password con Token -->
+                                  <div class="mb-3">
+                                      <label class="form-label">Correo Electrónico</label>
+                                      <input 
+                                        type="email" 
+                                        class="form-control" 
+                                        id="email" 
+                                        placeholder="Ingrese su correo electrónico" 
+                                        formControlName="email" 
+                                        [readonly]="!!email"
+                                        [ngClass]="{ 'is-invalid': submitted && f['email'].errors }">
                                       @if(submitted && f['email'].errors){
-                                      <div class="invalid-feedback" align="left">
+                                      <div class="invalid-feedback">
                                         @if(f['email'].errors['required']){
-                                        <div>Email is required</div>
+                                        <div>El correo electrónico es requerido</div>
+                                        }
+                                        @if(f['email'].errors['email']){
+                                        <div>Debe ser un correo electrónico válido</div>
                                         }
                                       </div>
-                                    }
+                                      }
+                                  </div>
+
+                                  <div class="mb-3">
+                                      <label class="form-label" for="newPassword">Nueva Contraseña</label>
+                                      <div class="position-relative auth-pass-inputgroup">
+                                          <input
+                                            [type]="fieldTextType ? 'text' : 'password'"
+                                            class="form-control pe-5"
+                                            id="newPassword"
+                                            placeholder="Ingrese nueva contraseña"
+                                            formControlName="newPassword"
+                                            [ngClass]="{ 'is-invalid': submitted && f['newPassword'].errors }">
+                                          <button
+                                            class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
+                                            type="button"
+                                            (click)="toggleFieldTextType()">
+                                              <i class="mdi align-middle" [ngClass]="{
+                                                'mdi-eye-off-outline': !fieldTextType,
+                                                'mdi-eye-outline': fieldTextType
+                                              }"></i>
+                                          </button>
+                                          @if(submitted && f['newPassword'].errors){
+                                          <div class="invalid-feedback">
+                                            @if(f['newPassword'].errors['required']){
+                                            <div>La contraseña es requerida</div>
+                                            }
+                                            @if(f['newPassword'].errors['minlength']){
+                                            <div>La contraseña debe tener al menos 6 caracteres</div>
+                                            }
+                                          </div>
+                                          }
+                                      </div>
+                                  </div>
+
+                                  <div class="mb-3">
+                                      <label class="form-label" for="confirmPassword">Confirmar Contraseña</label>
+                                      <div class="position-relative auth-pass-inputgroup">
+                                          <input
+                                            [type]="confirmFieldTextType ? 'text' : 'password'"
+                                            class="form-control pe-5"
+                                            id="confirmPassword"
+                                            placeholder="Confirme nueva contraseña"
+                                            formControlName="confirmPassword"
+                                            [ngClass]="{ 'is-invalid': submitted && (f['confirmPassword'].errors || passresetForm.errors?.['passwordMismatch']) }">
+                                          <button
+                                            class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
+                                            type="button"
+                                            (click)="toggleConfirmFieldTextType()">
+                                              <i class="mdi align-middle" [ngClass]="{
+                                                'mdi-eye-off-outline': !confirmFieldTextType,
+                                                'mdi-eye-outline': confirmFieldTextType
+                                              }"></i>
+                                          </button>
+                                          @if(submitted && (f['confirmPassword'].errors || passresetForm.errors?.['passwordMismatch'])){
+                                          <div class="invalid-feedback">
+                                            @if(f['confirmPassword'].errors?.['required']){
+                                            <div>La confirmación de contraseña es requerida</div>
+                                            }
+                                            @if(passresetForm.errors?.['passwordMismatch']){
+                                            <div>Las contraseñas no coinciden</div>
+                                            }
+                                          </div>
+                                          }
+                                      </div>
                                   </div>
 
                                   <div class="text-center mt-4">
-                                      <button class="btn btn-success w-100" type="submit">Send Reset Link</button>
+                                      <button 
+                                        class="btn btn-success w-100" 
+                                        type="submit"
+                                        [disabled]="isLoading">
+                                        @if(isLoading){
+                                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                          Restableciendo...
+                                        } @else {
+                                          Restablecer Contraseña
+                                        }
+                                      </button>
                                   </div>
+                                  } @else {
+                                  <!-- Modo Forgot Password -->
+                                  <div class="mb-4">
+                                      <label class="form-label">Correo Electrónico</label>
+                                      <input 
+                                        type="email" 
+                                        class="form-control" 
+                                        id="email" 
+                                        placeholder="Ingrese su correo electrónico" 
+                                        formControlName="email" 
+                                        [ngClass]="{ 'is-invalid': submitted && f['email'].errors }">
+                                      @if(submitted && f['email'].errors){
+                                      <div class="invalid-feedback">
+                                        @if(f['email'].errors['required']){
+                                        <div>El correo electrónico es requerido</div>
+                                        }
+                                        @if(f['email'].errors['email']){
+                                        <div>Debe ser un correo electrónico válido</div>
+                                        }
+                                      </div>
+                                      }
+                                  </div>
+
+                                  <div class="text-center mt-4">
+                                      <button 
+                                        class="btn btn-success w-100" 
+                                        type="submit"
+                                        [disabled]="isLoading">
+                                        @if(isLoading){
+                                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                          Enviando...
+                                        } @else {
+                                          Enviar enlace de restablecimiento
+                                        }
+                                      </button>
+                                  </div>
+                                  }
                               </form><!-- end form -->
                           </div>
                       </div>
@@ -71,7 +210,7 @@
                   <!-- end card -->
 
                   <div class="mt-4 text-center">
-                      <p class="mb-0">Wait, I remember my password... <a routerLink="/auth/signin/basic" class="fw-semibold text-primary text-decoration-underline"> Click here </a> </p>
+                      <p class="mb-0">¿Recordaste tu contraseña? <a routerLink="/auth/login" class="fw-semibold text-primary text-decoration-underline"> Inicia sesión aquí </a> </p>
                   </div>
 
               </div>

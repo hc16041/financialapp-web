@@ -1,12 +1,14 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   EventEmitter,
   Output,
   Inject,
   ViewChild,
   TemplateRef,
 } from "@angular/core";
+import { Subscription } from "rxjs";
 import { DOCUMENT } from "@angular/common";
 import { EventService } from "../../core/services/event.service";
 
@@ -16,6 +18,7 @@ import { AuthenticationService } from "../../core/services/auth.service";
 import { AuthfakeauthenticationService } from "../../core/services/authfake.service";
 import { Router } from "@angular/router";
 import { TokenStorageService } from "../../core/services/token-storage.service";
+import { AuthNewService } from "../../core/services/auth-new.service";
 
 // Language
 import { CookieService } from "ngx-cookie-service";
@@ -32,7 +35,7 @@ import { LoginService } from "../../account/login/Services/LoginService";
   templateUrl: "./topbar.component.html",
   styleUrls: ["./topbar.component.scss"],
 })
-export class TopbarComponent implements OnInit {
+export class TopbarComponent implements OnInit, OnDestroy {
   messages: any;
   element: any;
   mode: string | undefined;
@@ -52,6 +55,7 @@ export class TopbarComponent implements OnInit {
   isDropdownOpen = false;
   @ViewChild("removenotification") removenotification!: TemplateRef<any>;
   notifyId: any;
+  private userSubscription?: Subscription;
 
   constructor(
     @Inject(DOCUMENT) private document: any,
@@ -64,17 +68,44 @@ export class TopbarComponent implements OnInit {
     private loginService: LoginService,
     private authFackservice: AuthfakeauthenticationService,
     private router: Router,
-    private TokenStorageService: TokenStorageService
+    private TokenStorageService: TokenStorageService,
+    private authNewService: AuthNewService
   ) {}
 
   ngOnInit(): void {
     this.userData = this.TokenStorageService.getUser();
     this.element = document.documentElement;
 
-    this.userData = {
-      name: sessionStorage.getItem("username") || "Usuario",
-      profile: sessionStorage.getItem("profile") || "N/A",
-    };
+    // Obtener datos del usuario desde AuthNewService
+    const currentUser = this.authNewService.getCurrentUser();
+    if (currentUser) {
+      this.userData = {
+        name: currentUser.fullName || "Usuario",
+        profile: currentUser.email || "N/A",
+      };
+    } else {
+      // Intentar obtener desde sessionStorage como fallback
+      const userStr = sessionStorage.getItem("currentUser");
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          this.userData = {
+            name: user.fullName || "Usuario",
+            profile: user.email || "N/A",
+          };
+        } catch (error) {
+          this.userData = {
+            name: "Usuario",
+            profile: "N/A",
+          };
+        }
+      } else {
+        this.userData = {
+          name: "Usuario",
+          profile: "N/A",
+        };
+      }
+    }
 
     // Cookies wise Language set
     this.cookieValue = this._cookiesService.get("lang");
@@ -98,6 +129,22 @@ export class TopbarComponent implements OnInit {
       var item_price = item.quantity * item.price;
       this.total += item_price;
     });
+
+    // Suscribirse a cambios en el usuario actual
+    this.userSubscription = this.authNewService.currentUser$.subscribe((user) => {
+      if (user) {
+        this.userData = {
+          name: user.fullName || "Usuario",
+          profile: user.email || "N/A",
+        };
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
+    }
   }
 
   /**

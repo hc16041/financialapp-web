@@ -32,3 +32,46 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: block;
   }
 }
+
+// Estilos responsive para modales
+@media (max-width: 575.98px) {
+  :host ::ng-deep .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  :host ::ng-deep .modal-content {
+    border-radius: 0.5rem;
+  }
+
+  :host ::ng-deep .modal-header {
+    padding: 1rem 0.75rem;
+    
+    .modal-title {
+      font-size: 1.1rem;
+    }
+  }
+
+  :host ::ng-deep .modal-body {
+    padding: 1rem 0.75rem;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    width: 100%;
+  }
+}

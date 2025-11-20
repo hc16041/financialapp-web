@@ -47,33 +47,39 @@
               <div class="p-2 mt-4">
                 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
                   <div class="mb-3">
-                    <label class="form-label" for="username">Usuario</label>
+                    <label class="form-label" for="email">Correo Electrónico</label>
                     <input
-                      type="text"
+                      type="email"
                       class="form-control"
-                      id="username"
-                      formControlName="username"
+                      id="email"
+                      formControlName="email"
                       [ngClass]="{
-                        'is-invalid': submitted && f['username'].errors
+                        'is-invalid': submitted && f['email'].errors
                       }"
-                      placeholder="Ingrese usuario"
+                      placeholder="Ingrese su correo electrónico"
                     />
-                    <!-- @if(submitted && f['email'].errors){
-                                        <div class="invalid-feedback">
-                                            @if(f['email'].errors['required']){
-                                            <div>Email is required</div>
-                                            @if(f['email'].errors['email']){
-                                            <div>Email must be a valid email address</div>
-                                            }
-                                            }
-                                        </div>
-                                        } -->
+                    @if(submitted && f['email'].errors){
+                    <div class="invalid-feedback">
+                      @if(f['email'].errors['required']){
+                      <div>El correo electrónico es requerido</div>
+                      }
+                      @if(f['email'].errors['email']){
+                      <div>Debe ser un correo electrónico válido</div>
+                      }
+                    </div>
+                    }
                   </div>
+
+                  @if(error){
+                  <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                  </div>
+                  }
 
                   <div class="mb-3">
                     <div class="float-end">
-                      <a routerLink="/pass-reset/basic" class="text-muted"
-                        >Recordar contraseña?</a
+                      <a routerLink="/auth/pass-reset/basic" class="text-muted"
+                        >¿Olvidaste tu contraseña?</a
                       >
                     </div>
                     <label class="form-label" for="password-input"
@@ -127,9 +133,25 @@
                   </div>
 
                   <div class="mt-4">
-                    <button class="btn btn-success w-100" type="submit">
-                      Iniciar Sesión
+                    <button 
+                      class="btn btn-success w-100" 
+                      type="submit"
+                      [disabled]="isLoading">
+                      @if(isLoading){
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Iniciando sesión...
+                      } @else {
+                        Iniciar Sesión
+                      }
                     </button>
+                  </div>
+
+                  <div class="mt-4 text-center">
+                    <p class="mb-0">¿No tienes una cuenta? 
+                      <a routerLink="/auth/register" class="fw-semibold text-primary text-decoration-underline">
+                        Regístrate
+                      </a>
+                    </p>
                   </div>
                 </form>
               </div>

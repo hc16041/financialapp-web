@@ -1,12 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-
-// Register Auth
-import { environment } from '../../../environments/environment';
-import { AuthenticationService } from '../../core/services/auth.service';
-import { UserProfileService } from '../../core/services/user.service';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
-import { first } from 'rxjs/operators';
+import { AuthNewService } from '../../core/services/auth-new.service';
+import { AlertcustomService } from '../../core/services/alertcustom.service';
 
 @Component({
   selector: 'app-register',
@@ -18,28 +14,50 @@ import { first } from 'rxjs/operators';
  * Register Component
  */
 export class RegisterComponent implements OnInit {
-
-  // Login Form
   signupForm!: UntypedFormGroup;
   submitted = false;
   successmsg = false;
   error = '';
-  // set the current year
+  isLoading = false;
   year: number = new Date().getFullYear();
 
-  constructor(private formBuilder: UntypedFormBuilder, private router: Router,
-    private authenticationService: AuthenticationService,
-    private userService: UserProfileService) { }
+  constructor(
+    private formBuilder: UntypedFormBuilder,
+    private router: Router,
+    private authService: AuthNewService,
+    private alertService: AlertcustomService
+  ) {
+    // Si ya está autenticado, redirigir al home
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/']);
+    }
+  }
 
   ngOnInit(): void {
     /**
-     * Form Validatyion
+     * Form Validation
      */
-     this.signupForm = this.formBuilder.group({
+    this.signupForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
-      name: ['', [Validators.required]],
-      password: ['', Validators.required],
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      phoneNumber: [''],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]],
+    }, {
+      validators: this.passwordMatchValidator
     });
+  }
+
+  // Validator personalizado para confirmar contraseña
+  passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('password');
+    const confirmPassword = control.get('confirmPassword');
+    
+    if (password && confirmPassword && password.value !== confirmPassword.value) {
+      return { passwordMismatch: true };
+    }
+    return null;
   }
 
   // convenience getter for easy access to form fields
@@ -48,50 +66,56 @@ export class RegisterComponent implements OnInit {
   /**
    * Register submit form
    */
-   onSubmit() {
+  onSubmit() {
     this.submitted = true;
-    // stop here if form is invalid
+    this.error = '';
 
-    //Register Api
-    this.authenticationService.register(this.f['email'].value, this.f['name'].value, this.f['password'].value).pipe(first()).subscribe(
-      (data: any) => {
-      this.successmsg = true;
-      if (this.successmsg) {
-        this.router.navigate(['/auth/login']);
-      }
-    },
-    (error: any) => {
-      this.error = error ? error : '';
-    });
+    if (this.signupForm.invalid) {
+      return;
+    }
 
-    // if (this.signupForm.invalid) {
-    //   return;
-    // } else {
-    //   if (environment.defaultauth === 'firebase') {
-    //     this.authenticationService.register(this.f['email'].value, this.f['password'].value).then((res: any) => {
-    //       this.successmsg = true;
-    //       if (this.successmsg) {
-    //         this.router.navigate(['']);
-    //       }
-    //     })
-    //       .catch((error: string) => {
-    //         this.error = error ? error : '';
-    //       });
-    //   } else {
-    //     this.userService.register(this.signupForm.value)
-    //       .pipe(first())
-    //       .subscribe(
-    //         (data: any) => {
-    //           this.successmsg = true;
-    //           if (this.successmsg) {
-    //             this.router.navigate(['/auth/login']);
-    //           }
-    //         },
-    //         (error: any) => {
-    //           this.error = error ? error : '';
-    //         });
-    //   }
-    // }
+    if (this.signupForm.errors?.['passwordMismatch']) {
+      this.error = 'Las contraseñas no coinciden';
+      return;
+    }
+
+    this.register();
   }
 
+  register(): void {
+    this.isLoading = true;
+    const userData = {
+      email: this.f['email'].value,
+      password: this.f['password'].value,
+      confirmPassword: this.f['confirmPassword'].value,
+      firstName: this.f['firstName'].value,
+      lastName: this.f['lastName'].value,
+      phoneNumber: this.f['phoneNumber'].value || undefined,
+    };
+
+    this.authService.register(userData).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.successmsg = true;
+        this.alertService.showSuccess('¡Registro exitoso! Por favor inicia sesión.');
+        this.router.navigate(['/auth/login']);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Error en registro:', error);
+        
+        let errorMessage = 'Error al registrar usuario';
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error?.errors) {
+          errorMessage = Object.values(error.error.errors).flat().join(', ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        this.error = errorMessage;
+        this.alertService.showError(errorMessage);
+      }
+    });
+  }
 }

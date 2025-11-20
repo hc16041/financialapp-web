@@ -1,0 +1,135 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title mb-0">
+            <i class="mdi mdi-fingerprint me-2"></i>
+            Configuración de Autenticación Biométrica
+          </h4>
+        </div>
+        <div class="card-body">
+          <!-- Mensajes de error y éxito -->
+          <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-alert-circle me-2"></i>
+            {{ errorMessage }}
+            <button type="button" class="btn-close" (click)="errorMessage = null" aria-label="Close"></button>
+          </div>
+
+          <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-check-circle me-2"></i>
+            {{ successMessage }}
+            <button type="button" class="btn-close" (click)="successMessage = null" aria-label="Close"></button>
+          </div>
+
+          <!-- Cargando estado -->
+          <div *ngIf="isLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando estado de autenticación biométrica...</p>
+          </div>
+
+          <!-- Contenido principal -->
+          <div *ngIf="!isLoading">
+            <!-- Verificación de disponibilidad -->
+            <div *ngIf="!isWebAuthnAvailable()" class="alert alert-warning" role="alert">
+              <i class="mdi mdi-alert me-2"></i>
+              <strong>Autenticación biométrica no disponible</strong>
+              <p class="mb-0 mt-2">
+                Su dispositivo o navegador no soporta autenticación biométrica. 
+                Por favor, use un dispositivo compatible con huella dactilar o Face ID.
+              </p>
+            </div>
+
+            <!-- Estado actual -->
+            <div *ngIf="biometricStatus" class="mb-4">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <i class="mdi mdi-information-outline me-2"></i>
+                    Estado Actual
+                  </h5>
+                  <div class="row mt-3">
+                    <div class="col-md-6">
+                      <p class="mb-2">
+                        <strong>Estado:</strong>
+                        <span [class]="biometricStatus.isEnabled ? 'badge bg-success ms-2' : 'badge bg-secondary ms-2'">
+                          {{ biometricStatus.isEnabled ? 'Activa' : 'Inactiva' }}
+                        </span>
+                      </p>
+                    </div>
+                    <div class="col-md-6">
+                      <p class="mb-2">
+                        <strong>Fecha de registro:</strong>
+                        <span class="ms-2">{{ formatDate(biometricStatus.registeredAt) }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="d-flex flex-column flex-md-row gap-3">
+              <!-- Botón para registrar/activar -->
+              <button
+                *ngIf="!biometricStatus?.isEnabled"
+                type="button"
+                class="btn btn-primary btn-lg"
+                (click)="registerBiometric()"
+                [disabled]="isRegistering || !isWebAuthnAvailable()"
+              >
+                <span *ngIf="!isRegistering">
+                  <i class="mdi mdi-fingerprint me-2"></i>
+                  Registrar Huella Dactilar
+                </span>
+                <span *ngIf="isRegistering">
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Registrando...
+                </span>
+              </button>
+
+              <!-- Botón para desactivar -->
+              <button
+                *ngIf="biometricStatus?.isEnabled"
+                type="button"
+                class="btn btn-danger btn-lg"
+                (click)="disableBiometric()"
+                [disabled]="isDisabling"
+              >
+                <span *ngIf="!isDisabling">
+                  <i class="mdi mdi-fingerprint-off me-2"></i>
+                  Desactivar Autenticación Biométrica
+                </span>
+                <span *ngIf="isDisabling">
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Desactivando...
+                </span>
+              </button>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="mt-4">
+              <div class="card bg-light border-0">
+                <div class="card-body">
+                  <h6 class="card-title">
+                    <i class="mdi mdi-information me-2"></i>
+                    Información
+                  </h6>
+                  <ul class="mb-0">
+                    <li>La autenticación biométrica permite iniciar sesión usando su huella dactilar o Face ID.</li>
+                    <li>Sus credenciales biométricas se almacenan de forma segura en su dispositivo.</li>
+                    <li>Puede desactivar la autenticación biométrica en cualquier momento.</li>
+                    <li>Se requiere autenticación con contraseña para registrar la huella dactilar por primera vez.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

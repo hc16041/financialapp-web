@@ -5,14 +5,9 @@ import {
   Validators,
 } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-
-// Login Auth
-
 import { AlertcustomService } from "src/app/core/services/alertcustom.service";
-import { AsciiShiftService } from "../../core/services/ascii-shift.service";
-import { LoginRequestDTO } from "./DTO/LoginRequestDTO";
-import { LoginResponseDTO } from "./DTO/LoginResponseDTO";
-import { LoginService } from "./Services/LoginService";
+import { AuthNewService } from "src/app/core/services/auth-new.service";
+
 @Component({
   selector: "app-login",
   templateUrl: "./login.component.html",
@@ -23,16 +18,13 @@ import { LoginService } from "./Services/LoginService";
  * Login Component
  */
 export class LoginComponent implements OnInit {
-  email: string = "";
-  password: string = "";
-  errorMessage: string = "";
-
   // Login Form
   loginForm!: UntypedFormGroup;
   submitted = false;
   fieldTextType!: boolean;
   error = "";
   returnUrl!: string;
+  isLoading = false;
   // set the current year
   year: number = new Date().getFullYear();
 
@@ -40,26 +32,22 @@ export class LoginComponent implements OnInit {
     private formBuilder: UntypedFormBuilder,
     private router: Router,
     private route: ActivatedRoute,
-    private loginService: LoginService,
-    private asciiShiftService: AsciiShiftService,
+    private authService: AuthNewService,
     private alertService: AlertcustomService
   ) {
-    // redirect to home if already logged in
-    // if (this.authenticationService.currentUserValue) {
-    //   this.router.navigate(["/"]);
-    // }
+    // Si ya está autenticado, redirigir al home
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(["/"]);
+    }
   }
 
   ngOnInit(): void {
-    // if (sessionStorage.getItem("currentUser")) {
-    this.router.navigate(["/"]);
-    // }
     /**
-     * Form Validatyion
+     * Form Validation
      */
     this.loginForm = this.formBuilder.group({
-      username: ["", [Validators.required]],
-      password: ["", [Validators.required]],
+      email: ["", [Validators.required, Validators.email]],
+      password: ["", [Validators.required, Validators.minLength(6)]],
     });
     // get return url from route parameters or default to '/'
     this.returnUrl = this.route.snapshot.queryParams["returnUrl"] || "/";
@@ -75,45 +63,45 @@ export class LoginComponent implements OnInit {
    */
   onSubmit() {
     this.submitted = true;
+    this.error = "";
+
+    if (this.loginForm.invalid) {
+      return;
+    }
+
     this.login();
   }
 
   login(): void {
-    const loginData = new LoginRequestDTO({
-      usuario: this.f["username"].value,
-      clave: this.asciiShiftService.transform(this.f["password"].value),
-      mac_addres: "00:00:00:00:00:00",
-    });
+    this.isLoading = true;
+    const loginData = {
+      email: this.f["email"].value,
+      password: this.f["password"].value,
+    };
 
-    //Login
-    this.loginService.login(loginData).then(
-      (response: LoginResponseDTO) => {
-        // Aquí puedes guardar el token o manejar la respuesta
-        if (response.token == null) {
-          this.alertService.showWarning(response.respuesta);
-        } else {
-          this.alertService.showSuccess("Login successful!");
-          this.loginService.saveToken(response.token || "");
-          this.router.navigate(["/"]);
-        }
+    this.authService.login(loginData).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.alertService.showSuccess("¡Inicio de sesión exitoso!");
+        this.router.navigate([this.returnUrl]);
       },
-      (error: LoginResponseDTO | Error) => {
-        if (error instanceof Error) {
-          console.error("Error inesperado:", error.message);
-          this.alertService.showError("Error inesperado:", error.message);
-        } else {
-          console.error("Error de la API:", error.respuesta);
-
-          this.alertService.showError("Error de la API:", error.respuesta);
-          // Maneja el error devuelto por la API
+      error: (error) => {
+        this.isLoading = false;
+        console.error("Error en login:", error);
+        
+        let errorMessage = "Error al iniciar sesión";
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error?.errors) {
+          errorMessage = Object.values(error.error.errors).flat().join(", ");
+        } else if (error.message) {
+          errorMessage = error.message;
         }
+        
+        this.error = errorMessage;
+        this.alertService.showError(errorMessage);
       }
-    );
-  }
-
-  logout() {
-    this.loginService.logout();
-    this.router.navigate(["/auth/login"]);
+    });
   }
 
   /**

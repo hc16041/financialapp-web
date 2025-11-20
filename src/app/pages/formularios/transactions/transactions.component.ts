@@ -32,8 +32,8 @@ export class TransactionsComponent {
   // Table data
   transactionsDTO = new TransactionsDTO();
 
-  // Table columns
-  tableColumns: TableColumn[] = generateTableColumns(this.transactionsDTO);
+  // Table columns - Personalizadas para mejor visualización
+  tableColumns: TableColumn[] = this.generateCustomColumns();
 
   // Select options
   selectOptions: { [key: string]: any[] } = {};
@@ -228,5 +228,37 @@ export class TransactionsComponent {
     );
 
     await this.obtenerTransactions();
+  }
+
+  /**
+   * Genera columnas personalizadas para la tabla de transacciones
+   */
+  private generateCustomColumns(): TableColumn[] {
+    const baseColumns = generateTableColumns(this.transactionsDTO);
+    
+    // Personalizar encabezados y ocultar columnas innecesarias
+    return baseColumns.map(column => {
+      // Personalizar encabezados
+      switch (column.property) {
+        case 'amount':
+          return { ...column, header: 'Monto' };
+        case 'type':
+          return { ...column, header: 'Tipo' };
+        case 'description':
+          return { ...column, header: 'Descripción' };
+        case 'transactionDate':
+          return { ...column, header: 'Fecha de Transacción', format: 'yyyy-MM-dd' };
+        case 'creditCardId':
+          return { ...column, header: 'Tarjeta de Crédito' };
+        case 'merchantId':
+          return { ...column, header: 'Comercio' };
+        default:
+          return column;
+      }
+    }).filter(column => {
+      // Ocultar columnas que no queremos mostrar
+      const hiddenProps = ['id', 'isProcessed', 'creditCard', 'date'];
+      return !hiddenProps.includes(column.property);
+    });
   }
 }

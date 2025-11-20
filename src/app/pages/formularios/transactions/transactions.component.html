@@ -15,7 +15,7 @@
   [showDateRangeFilter]="true"
   [dateRangeLabel]="'Rango de fechas'"
   [entityDTO]="transactionsDTO"
-  [hiddenColumns]="['id', 'isProcessed', 'creditCard']"
+  [hiddenColumns]="['id', 'isProcessed', 'creditCard', 'date']"
   [selectOptions]="selectOptions"
   (new)="onAddTransaction($event)"
   (dateRangeSearch)="onDateRangeSearch($event)"

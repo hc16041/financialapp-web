@@ -23,125 +23,144 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
       <div class="col-lg-12">
         <div class="card">
           <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="d-flex flex-column mb-4">
-                <h4 class="card-title mb-0">{{ title }}</h4>
-                <div class="d-flex gap-2">
-                  <button
-                    *ngIf="showNewRegister"
-                    class="btn btn-outline-info waves-effect waves-light"
-                    (click)="onNew()"
-                    id="btn_insertar"
-                  >
-                    Nuevo Registro
-                  </button>
-                  <button
-                    *ngIf="showXmlDownload && hasPermission('descargaXml')"
-                    class="btn btn-outline-warning waves-effect waves-light"
-                    (click)="onXmlDownload()"
-                    id="btn_descarga_xml"
-                  >
-                    Descargar XML
-                  </button>
-                  <button
-                    *ngIf="showExcelDownload && hasPermission('descargaExcel')"
-                    class="btn btn-outline-success waves-effect waves-light"
-                    (click)="onExcelDownload()"
-                    id="btn_descarga_excel"
-                  >
-                    Descargar Excel
-                  </button>
-                  <button
-                    *ngIf="
-                      showTextoDownload && hasPermission('descargaTextoPlano')
-                    "
-                    class="btn btn-outline-secondary waves-effect waves-light"
-                    (click)="onTextoDownload()"
-                    id="btn_descarga_texto_plano"
-                  >
-                    Descargar Texto
-                  </button>
-                  <button
-                    *ngIf="showPdfDownload && hasPermission('descargaPdf')"
-                    class="btn btn-outline-danger waves-effect waves-light"
-                    (click)="onPdfDownload()"
-                    id="btn_descarga_pdf"
-                  >
-                    Descargar PDF
-                  </button>
-                  <button
-                    *ngIf="
-                      showReporteDownload &&
-                      hasPermission('descargaExcelPlantilla')
-                    "
-                    class="btn btn-outline-dark waves-effect waves-light"
-                    (click)="onRporteDownload()"
-                    id="btn_descarga_excel_plantilla"
-                  >
-                    Descargar Reporte
-                  </button>
-                  <button
-                    class="btn btn-outline-info waves-effect waves-light"
-                    (click)="toggleShowAll()"
-                  >
-                    {{ showAll ? "Ver menos" : "Ver todo" }}
-                  </button>
+            <!-- Primera fila: Título y botones principales -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                  <h4 class="card-title mb-0">{{ title }}</h4>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button
+                      *ngIf="showNewRegister"
+                      class="btn btn-outline-info btn-sm waves-effect waves-light"
+                      (click)="onNew()"
+                      id="btn_insertar"
+                    >
+                      <i class="mdi mdi-plus d-md-none"></i>
+                      <span class="d-none d-md-inline">Nuevo Registro</span>
+                      <span class="d-md-none">Nuevo</span>
+                    </button>
+                    <button
+                      *ngIf="showXmlDownload && hasPermission('descargaXml')"
+                      class="btn btn-outline-warning btn-sm waves-effect waves-light d-none d-md-inline-flex"
+                      (click)="onXmlDownload()"
+                      id="btn_descarga_xml"
+                    >
+                      Descargar XML
+                    </button>
+                    <button
+                      *ngIf="showExcelDownload && hasPermission('descargaExcel')"
+                      class="btn btn-outline-success btn-sm waves-effect waves-light d-none d-md-inline-flex"
+                      (click)="onExcelDownload()"
+                      id="btn_descarga_excel"
+                    >
+                      Descargar Excel
+                    </button>
+                    <button
+                      *ngIf="
+                        showTextoDownload && hasPermission('descargaTextoPlano')
+                      "
+                      class="btn btn-outline-secondary btn-sm waves-effect waves-light d-none d-lg-inline-flex"
+                      (click)="onTextoDownload()"
+                      id="btn_descarga_texto_plano"
+                    >
+                      Descargar Texto
+                    </button>
+                    <button
+                      *ngIf="showPdfDownload && hasPermission('descargaPdf')"
+                      class="btn btn-outline-danger btn-sm waves-effect waves-light d-none d-lg-inline-flex"
+                      (click)="onPdfDownload()"
+                      id="btn_descarga_pdf"
+                    >
+                      Descargar PDF
+                    </button>
+                    <button
+                      *ngIf="
+                        showReporteDownload &&
+                        hasPermission('descargaExcelPlantilla')
+                      "
+                      class="btn btn-outline-dark btn-sm waves-effect waves-light d-none d-lg-inline-flex"
+                      (click)="onRporteDownload()"
+                      id="btn_descarga_excel_plantilla"
+                    >
+                      Descargar Reporte
+                    </button>
+                    <button
+                      class="btn btn-outline-info btn-sm waves-effect waves-light"
+                      (click)="toggleShowAll()"
+                    >
+                      <span class="d-none d-md-inline">{{ showAll ? "Ver menos" : "Ver todo" }}</span>
+                      <span class="d-md-none">{{ showAll ? "Menos" : "Todo" }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div
-                class="d-flex justify-content-between align-items-center mb-3"
-              >
-                <!-- Search and additional actions -->
-                <div class="d-flex align-items-center gap-2">
-                  <select
-                    *ngIf="showStatusFilter"
-                    class="form-select"
-                    (change)="onStatusChange($event)"
-                    [disabled]="!data.length"
-                  >
-                    <option
-                      *ngFor="let opt of statusFilterOptions"
-                      [value]="opt.value"
+            </div>
+            
+            <!-- Segunda fila: Filtros y búsqueda -->
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="d-flex flex-column flex-md-row gap-3 align-items-stretch align-items-md-center">
+                  <!-- Filtro de estado -->
+                  <div *ngIf="showStatusFilter" class="flex-shrink-0" style="min-width: 150px;">
+                    <select
+                      class="form-select form-select-sm"
+                      (change)="onStatusChange($event)"
+                      [disabled]="!data.length"
                     >
-                      {{ opt.label }}
-                    </option>
-                  </select>
+                      <option
+                        *ngFor="let opt of statusFilterOptions"
+                        [value]="opt.value"
+                      >
+                        {{ opt.label }}
+                      </option>
+                    </select>
+                  </div>
 
                   <!-- Filtro de rango de fechas -->
                   <div
                     *ngIf="showDateRangeFilter"
-                    class="d-flex gap-2 align-items-center"
+                    class="flex-grow-1"
                   >
-                    <label class="form-label mb-0">{{ dateRangeLabel }}:</label>
-                    <input
-                      type="date"
-                      class="form-control form-control-sm"
-                      [(ngModel)]="startDate"
-                      placeholder="Fecha inicio"
-                    />
-                    <span class="text-muted">a</span>
-                    <input
-                      type="date"
-                      class="form-control form-control-sm"
-                      [(ngModel)]="endDate"
-                      placeholder="Fecha fin"
-                    />
-                    <button
-                      class="btn btn-primary btn-sm"
-                      (click)="onDateRangeSearch()"
-                      [disabled]="!startDate || !endDate"
-                    >
-                      <i class="bi bi-search"></i> Buscar
-                    </button>
+                    <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
+                      <label class="form-label mb-0 d-none d-md-inline-block me-2" style="white-space: nowrap;">
+                        {{ dateRangeLabel }}:
+                      </label>
+                      <div class="d-flex gap-2 align-items-center flex-grow-1">
+                        <input
+                          type="date"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="startDate"
+                          placeholder="Fecha inicio"
+                        />
+                        <span class="text-muted d-none d-md-inline">-</span>
+                        <input
+                          type="date"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="endDate"
+                          placeholder="Fecha fin"
+                        />
+                        <button
+                          class="btn btn-primary btn-sm flex-shrink-0"
+                          (click)="onDateRangeSearch()"
+                          [disabled]="!startDate || !endDate"
+                        >
+                          <i class="bi bi-search d-md-none"></i>
+                          <span class="d-none d-md-inline">Buscar</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <input
-                    *ngIf="searchEnabled"
-                    type="text"
-                    class="form-control search"
-                    placeholder="Buscar..."
-                    (input)="onSearch($event)"
-                  />
+                  <!-- Búsqueda -->
+                  <div *ngIf="searchEnabled" class="flex-shrink-0" style="min-width: 200px;">
+                    <input
+                      type="text"
+                      class="form-control form-control-sm search"
+                      placeholder="Buscar..."
+                      (input)="onSearch($event)"
+                    />
+                  </div>
+                  
                   <ng-content select="[tableActions]"></ng-content>
                 </div>
               </div>
@@ -149,7 +168,8 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
           </div>
 
           <div class="card-body">
-            <div class="table-responsive">
+            <!-- Vista de tabla para desktop -->
+            <div class="table-responsive d-none d-md-block">
               <table class="table table-gridjs">
                 <thead>
                   <tr>
@@ -311,6 +331,90 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                 </tbody>
               </table>
             </div>
+
+            <!-- Vista de cards para móviles -->
+            <div class="d-md-none">
+              <div class="row g-3">
+                <div class="col-12" *ngFor="let item of paginatedData; trackBy: trackByFn">
+                  <div class="card shadow-sm">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">
+                          {{ visibleColumns[0] ? getValue(item, visibleColumns[0].property) : '-' }}
+                        </h6>
+                        <div class="action-menu-container" *ngIf="showActions">
+                          <button
+                            class="btn btn-icon btn-sm btn-light"
+                            [ngbPopover]="popContentMobile"
+                            [placement]="'bottom-end'"
+                            [container]="'body'"
+                            triggers="manual"
+                            #pMobile="ngbPopover"
+                            (click)="toggleMenu($event, pMobile)"
+                          >
+                            <i class="mdi mdi-dots-horizontal"></i>
+                          </button>
+                          <ng-template #popContentMobile>
+                            <div class="action-menu-items">
+                              <ng-container *ngFor="let action of allowedActions">
+                                <button
+                                  class="menu-item"
+                                  *ngIf="
+                                    actionConfig[action] &&
+                                    (actionConfig[action].bypassPermission ||
+                                      hasPermission(
+                                        actionConfig[action].permission!
+                                      )) &&
+                                    shouldShowAction(action, item)
+                                  "
+                                  (click)="
+                                    onActionClick(
+                                      actionConfig[action].action,
+                                      item
+                                    );
+                                    pMobile.close()
+                                  "
+                                >
+                                  <i
+                                    class="mdi {{ actionConfig[action].icon }} {{
+                                      actionConfig[action].color
+                                    }}"
+                                  ></i>
+                                  <span>{{ actionConfig[action].text }}</span>
+                                </button>
+                              </ng-container>
+                            </div>
+                          </ng-template>
+                        </div>
+                      </div>
+                      <div class="row g-2">
+                        <div class="col-6" *ngFor="let column of visibleColumns.slice(1)">
+                          <small class="text-muted d-block">{{ column.header }}:</small>
+                          <div class="fw-medium">
+                            <ng-container [ngSwitch]="column.type">
+                              <ng-container *ngSwitchCase="'date'">
+                                {{ getValue(item, column.property) | date : column.format || "yyyy-MM-dd" }}
+                              </ng-container>
+                              <ng-container *ngSwitchDefault>
+                                <ngb-highlight
+                                  [result]="
+                                    getValue(item, column.property) ||
+                                    column.defaultValue ||
+                                    '-'
+                                  "
+                                  [term]="searchTerm"
+                                ></ngb-highlight>
+                              </ng-container>
+                            </ng-container>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div
               class="row justify-content-between align-items-center mt-3"
               *ngIf="!showAll"

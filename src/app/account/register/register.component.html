@@ -33,54 +33,100 @@
 
                       <div class="card-body p-4">
                           <div class="text-center mt-2">
-                              <h5 class="text-primary">Create New Account</h5>
-                              <p class="text-muted">Get your free velzon account now</p>
+                              <h5 class="text-primary">Crear Nueva Cuenta</h5>
+                              <p class="text-muted">Regístrate para comenzar</p>
                           </div>
                           <div class="p-2 mt-4">
                               <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
 
-                                  <div class="mb-3">
-                                      <label for="useremail" class="form-label">Email <span class="text-danger">*</span></label>
-                                      <input type="email" class="form-control" id="useremail" placeholder="Enter email address" required formControlName="email" [ngClass]="{ 'is-invalid': submitted && f['email'].errors }">
-                                      <div class="invalid-feedback">
-                                          Please enter email
-                                      </div>
+                                  @if(error){
+                                  <div class="alert alert-danger" role="alert">
+                                    {{ error }}
                                   </div>
+                                  }
+
                                   <div class="mb-3">
-                                      <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                                      <input type="text" class="form-control" id="username" placeholder="Enter username" required formControlName="name" [ngClass]="{ 'is-invalid': submitted && f['name'].errors }">
+                                      <label for="useremail" class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
+                                      <input type="email" class="form-control" id="useremail" placeholder="Ingrese su correo electrónico" formControlName="email" [ngClass]="{ 'is-invalid': submitted && f['email'].errors }">
+                                      @if(submitted && f['email'].errors){
                                       <div class="invalid-feedback">
-                                          Please enter username
+                                        @if(f['email'].errors['required']){
+                                        <div>El correo electrónico es requerido</div>
+                                        }
+                                        @if(f['email'].errors['email']){
+                                        <div>Debe ser un correo electrónico válido</div>
+                                        }
                                       </div>
+                                      }
                                   </div>
 
-                                  <div class="mb-2">
-                                      <label for="userpassword" class="form-label">Password <span class="text-danger">*</span></label>
-                                      <input type="password" class="form-control" id="userpassword" placeholder="Enter password" required formControlName="password" [ngClass]="{ 'is-invalid': submitted && f['password'].errors }">
+                                  <div class="mb-3">
+                                      <label for="firstName" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control" id="firstName" placeholder="Ingrese su nombre" formControlName="firstName" [ngClass]="{ 'is-invalid': submitted && f['firstName'].errors }">
+                                      @if(submitted && f['firstName'].errors){
                                       <div class="invalid-feedback">
-                                          Please enter password
+                                        El nombre es requerido
                                       </div>
+                                      }
                                   </div>
 
-                                  <div class="mb-4">
-                                      <p class="mb-0 fs-12 text-muted fst-italic">By registering you agree to the Velzon <a href="javascript:void(0);" class="text-primary text-decoration-underline fst-normal fw-medium">Terms of Use</a></p>
+                                  <div class="mb-3">
+                                      <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control" id="lastName" placeholder="Ingrese su apellido" formControlName="lastName" [ngClass]="{ 'is-invalid': submitted && f['lastName'].errors }">
+                                      @if(submitted && f['lastName'].errors){
+                                      <div class="invalid-feedback">
+                                        El apellido es requerido
+                                      </div>
+                                      }
+                                  </div>
+
+                                  <div class="mb-3">
+                                      <label for="phoneNumber" class="form-label">Teléfono</label>
+                                      <input type="text" class="form-control" id="phoneNumber" placeholder="Ingrese su número de teléfono (opcional)" formControlName="phoneNumber">
+                                  </div>
+
+                                  <div class="mb-3">
+                                      <label for="userpassword" class="form-label">Contraseña <span class="text-danger">*</span></label>
+                                      <input type="password" class="form-control" id="userpassword" placeholder="Ingrese su contraseña" formControlName="password" [ngClass]="{ 'is-invalid': submitted && f['password'].errors }">
+                                      @if(submitted && f['password'].errors){
+                                      <div class="invalid-feedback">
+                                        @if(f['password'].errors['required']){
+                                        <div>La contraseña es requerida</div>
+                                        }
+                                        @if(f['password'].errors['minlength']){
+                                        <div>La contraseña debe tener al menos 6 caracteres</div>
+                                        }
+                                      </div>
+                                      }
+                                  </div>
+
+                                  <div class="mb-3">
+                                      <label for="confirmPassword" class="form-label">Confirmar Contraseña <span class="text-danger">*</span></label>
+                                      <input type="password" class="form-control" id="confirmPassword" placeholder="Confirme su contraseña" formControlName="confirmPassword" [ngClass]="{ 'is-invalid': submitted && (f['confirmPassword'].errors || signupForm.errors?.['passwordMismatch']) }">
+                                      @if(submitted && (f['confirmPassword'].errors || signupForm.errors?.['passwordMismatch'])){
+                                      <div class="invalid-feedback">
+                                        @if(f['confirmPassword'].errors?.['required']){
+                                        <div>La confirmación de contraseña es requerida</div>
+                                        }
+                                        @if(signupForm.errors?.['passwordMismatch']){
+                                        <div>Las contraseñas no coinciden</div>
+                                        }
+                                      </div>
+                                      }
                                   </div>
 
                                   <div class="mt-4">
-                                      <button class="btn btn-success w-100" type="submit">Sign Up</button>
-                                  </div>
-
-                                  <div class="mt-4 text-center">
-                                      <div class="signin-other-title">
-                                          <h5 class="fs-13 mb-4 title text-muted">Create account with</h5>
-                                      </div>
-
-                                      <div class="d-flex gap-2 justify-content-center">
-                                          <button type="button" class="btn btn-primary btn-icon waves-effect waves-light"><i class="ri-facebook-fill fs-16"></i></button>
-                                          <button type="button" class="btn btn-danger btn-icon waves-effect waves-light"><i class="ri-google-fill fs-16"></i></button>
-                                          <button type="button" class="btn btn-dark btn-icon waves-effect waves-light"><i class="ri-github-fill fs-16"></i></button>
-                                          <button type="button" class="btn btn-info btn-icon waves-effect waves-light"><i class="ri-twitter-fill fs-16"></i></button>
-                                      </div>
+                                      <button 
+                                        class="btn btn-success w-100" 
+                                        type="submit"
+                                        [disabled]="isLoading">
+                                        @if(isLoading){
+                                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                          Registrando...
+                                        } @else {
+                                          Registrarse
+                                        }
+                                      </button>
                                   </div>
                               </form>
 
@@ -91,7 +137,7 @@
                   <!-- end card -->
 
                   <div class="mt-4 text-center">
-                      <p class="mb-0">Already have an account ? <a routerLink="/auth/login" class="fw-semibold text-primary text-decoration-underline"> Signin </a> </p>
+                      <p class="mb-0">¿Ya tienes una cuenta? <a routerLink="/auth/login" class="fw-semibold text-primary text-decoration-underline"> Inicia sesión </a> </p>
                   </div>
 
               </div>

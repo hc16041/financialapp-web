@@ -31,6 +31,13 @@ const routes: Routes = [
         (m) => m.FormulariosModule
       ),
   },
+  {
+    path: "settings/biometric",
+    loadChildren: () =>
+      import("./settings/settings.module").then(
+        (m) => m.SettingsModule
+      ),
+  },
 ];
 
 @NgModule({
