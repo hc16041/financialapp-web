@@ -1,0 +1,21 @@
+<app-generic-table
+  [title]="'Listado de Métodos de Retiro'"
+  [columns]="tableColumns"
+  [excludedFields]="[]"
+  [selectFields]="[]"
+  [requiredFields]="['id']"
+  [readonlyFields]="['id']"
+  [allowedActions]="['edit', 'delete']"
+  [data]="(withdrawalMethodsList$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [showStatusFilter]="true"
+  [entityDTO]="withdrawalMethodsDTO"
+  [hiddenColumns]="['id']"
+  (new)="onAddWithdrawalMethod($event)"
+  (edit)="onEditWithdrawalMethod($event)"
+  (delete)="onDeleteWithdrawalMethod($event)"
+>
+</app-generic-table>
+

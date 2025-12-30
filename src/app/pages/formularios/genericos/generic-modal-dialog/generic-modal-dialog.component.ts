@@ -5,10 +5,13 @@ import {
   Input,
   Output,
   ViewChild,
+  OnDestroy,
 } from "@angular/core";
 import { NgForm } from "@angular/forms";
 import { ChangeDetectorRef } from "@angular/core";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
+import { Subject } from "rxjs";
+import { debounceTime } from "rxjs/operators";
 
 @Component({
   selector: "app-generic-modal-dialog",
@@ -17,9 +20,12 @@ import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
   // changeDetection: ChangeDetectionStrategy.OnPush,
   changeDetection: ChangeDetectionStrategy.Default,
 })
-export class GenericModalDialogComponent {
+export class GenericModalDialogComponent implements OnDestroy {
   // Añadir referencia al formulario
   @ViewChild("form") form!: NgForm;
+
+  // Subject para debounce del cálculo de comisión
+  private commissionCalculationSubject = new Subject<void>();
 
   @Input() title: string = "Formulario"; // Título del modal
   @Input() data: any = {}; // Datos recibidos
@@ -28,31 +34,52 @@ export class GenericModalDialogComponent {
     label: string;
     type: string;
     readonly: boolean;
+    disabled?: boolean; // Nueva propiedad para campos deshabilitados
     options?: any[]; // Nueva propiedad para opciones
   }[] = []; // Campos generados dinámicamente
 
   @Input() selectOptions: { [key: string]: any[] } = {};
   @Input() excludedFields: string[] = []; // Recibe desde generic-table
   @Input() readonlyFields: string[] = []; // Campos bloqueados por defecto
+  @Input() disabledFields: string[] = []; // Campos deshabilitados dinámicamente
   @Input() selectFields: string[] = []; // Campos select
   @Input() showConfirmButtons: boolean = false; // Nueva propiedad para mostrar botones de confirmación
   @Input() actionType: "delete" | "activate" | "deactivate" = "delete"; // Acción por defecto
   @Input() actionLabel: string = ""; // Etiqueta personalizada opcional
   @Input() requiredFields: string[] = []; // Campos requeridos
   @Input() entityType: any; // Recibir la clase del DTO
+  @Input() fieldsOrder: string[] = []; // Orden personalizado de campos
 
   @Output() onSave = new EventEmitter<any>(); // Evento para guardar datos
   @Output() onClose = new EventEmitter<void>(); // Evento para cerrar modal
   @Output() onProfileChange = new EventEmitter<number>();
+  @Output() onFieldValueChange = new EventEmitter<{
+    field: string;
+    value: any;
+  }>(); // Evento para cambios de campo
 
   multiColumnLayout = false;
   isSaving: boolean = false;
   constructor(
     public activeModal: NgbActiveModal,
     private cdRef: ChangeDetectorRef
-  ) {}
+  ) {
+    // Suscribirse al Subject con debounce de 300ms para el cálculo de comisión
+    this.commissionCalculationSubject.pipe(debounceTime(300)).subscribe(() => {
+      this.calcularComisionInversiones();
+      // Usar markForCheck en lugar de detectChanges para evitar pérdida de foco
+      this.cdRef.markForCheck();
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar la suscripción al destruir el componente
+    this.commissionCalculationSubject.complete();
+  }
 
   ngOnInit(): void {
+    // Actualizar readonlyFields antes de generar campos (para inversiones)
+    this.updateReadonlyFieldsForCommission();
     this.generateFields();
     this.initializeRequiredFields();
   }
@@ -113,17 +140,61 @@ export class GenericModalDialogComponent {
    *
    */
   private generateFields(): void {
-    this.fields = Object.keys(this.data)
-      .filter((key) => !this.excludedFields.includes(key))
-      .map((key) => ({
-        key,
-        label: this.formatLabel(key),
-        type: this.getInputType(key),
-        // readonly: key === "id",
-        readonly: this.isReadonlyField(key),
-        options: this.getOptions(key),
-      }));
+    let fieldKeys = Object.keys(this.data).filter(
+      (key) => !this.excludedFields.includes(key)
+    );
+
+    // Ordenar campos según fieldsOrder si está definido
+    if (this.fieldsOrder && this.fieldsOrder.length > 0) {
+      const orderedFields: string[] = [];
+      const unorderedFields: string[] = [];
+
+      // Primero agregar los campos en el orden especificado
+      this.fieldsOrder.forEach((key) => {
+        if (fieldKeys.includes(key)) {
+          orderedFields.push(key);
+        }
+      });
+
+      // Luego agregar los campos que no están en el orden especificado
+      fieldKeys.forEach((key) => {
+        if (!this.fieldsOrder.includes(key)) {
+          unorderedFields.push(key);
+        }
+      });
+
+      fieldKeys = [...orderedFields, ...unorderedFields];
+    }
+
+    this.fields = fieldKeys.map((key) => ({
+      key,
+      label: this.formatLabel(key),
+      type: this.getInputType(key),
+      readonly: this.isReadonlyField(key),
+      disabled: this.isDisabledField(key),
+      options: this.getOptions(key),
+    }));
     this.multiColumnLayout = this.fields.length > 5;
+  }
+
+  /**
+   * Comprueba si un campo está deshabilitado.
+   */
+  isDisabledField(key: string): boolean {
+    return this.disabledFields.some(
+      (f) => f.toLowerCase() === key.toLowerCase()
+    );
+  }
+
+  /**
+   * Actualiza dinámicamente el estado disabled de un campo
+   */
+  updateFieldDisabled(key: string, disabled: boolean): void {
+    const field = this.fields.find((f) => f.key === key);
+    if (field) {
+      field.disabled = disabled;
+      this.cdRef.detectChanges();
+    }
   }
   /**
    * Inicializa los campos requeridos con valores predeterminados.
@@ -321,6 +392,85 @@ export class GenericModalDialogComponent {
       (f) => f.toLowerCase() === key.toLowerCase()
     );
   }
+
+  /**
+   * Actualiza los campos readonly según el tipo de transacción y método de retiro
+   * Solo para formularios de inversiones
+   */
+  private updateReadonlyFieldsForCommission(): void {
+    // Solo aplicar si es un formulario de inversiones
+    if (
+      !this.data.hasOwnProperty("transactionType") ||
+      !this.data.hasOwnProperty("withdrawalMethod") ||
+      !this.data.hasOwnProperty("commission")
+    ) {
+      return;
+    }
+
+    const transactionTypeId = Number(this.data["transactionType"]) || 0;
+    const withdrawalMethodId = Number(this.data["withdrawalMethod"]) || 0;
+
+    if (!transactionTypeId) {
+      // Si no hay transactionType, mantener commission como readonly
+      if (!this.readonlyFields.includes("commission")) {
+        this.readonlyFields = [...this.readonlyFields, "commission"];
+      }
+      return;
+    }
+
+    // Obtener información del tipo de transacción desde las opciones
+    const transactionTypeOptions = this.selectOptions["transactionType"] || [];
+    const transactionTypeOption = transactionTypeOptions.find(
+      (opt: any) => opt.value === transactionTypeId
+    );
+
+    if (!transactionTypeOption) {
+      if (!this.readonlyFields.includes("commission")) {
+        this.readonlyFields = [...this.readonlyFields, "commission"];
+      }
+      return;
+    }
+
+    const transactionTypeName = (
+      transactionTypeOption.label || ""
+    ).toLowerCase();
+    const esPurchase =
+      transactionTypeName.includes("purchase") ||
+      transactionTypeName.includes("compra");
+
+    if (esPurchase && withdrawalMethodId) {
+      // Obtener información del método de retiro desde las opciones
+      const withdrawalMethodOptions =
+        this.selectOptions["withdrawalMethod"] || [];
+      const methodOption = withdrawalMethodOptions.find(
+        (opt: any) => opt.value === withdrawalMethodId
+      );
+
+      if (methodOption) {
+        const methodName = (methodOption.label || "").toLowerCase();
+        const esBitcoin =
+          methodName.includes("bitcoin") || methodName.includes("btc");
+
+        // Si es Purchase con Bitcoin: habilitar campo commission (quitar de readonly)
+        if (esBitcoin) {
+          this.readonlyFields = this.readonlyFields.filter(
+            (f) => f.toLowerCase() !== "commission"
+          );
+        } else {
+          // Si es Purchase con tarjeta: commission sigue siendo readonly (será 0)
+          if (!this.readonlyFields.includes("commission")) {
+            this.readonlyFields = [...this.readonlyFields, "commission"];
+          }
+        }
+      }
+    } else {
+      // Si es Payment: commission es readonly (se calcula automáticamente)
+      if (!this.readonlyFields.includes("commission")) {
+        this.readonlyFields = [...this.readonlyFields, "commission"];
+      }
+    }
+  }
+
   private isInvalidValue(value: any, key: string): boolean {
     return this.isSelectField(key) && this.requiredFields.includes(key)
       ? Number(value) <= 0 ||
@@ -397,6 +547,20 @@ export class GenericModalDialogComponent {
    * @param value nuevo valor del campo
    */
   async onFieldChange(fieldKey: string, value: any) {
+    // Actualizar el valor en los datos
+    this.data[fieldKey] = value;
+
+    // Calcular comisión automáticamente para inversiones con debounce
+    if (
+      fieldKey === "amount" ||
+      fieldKey === "withdrawalMethod" ||
+      fieldKey === "libreDeComision"
+    ) {
+      // Emitir al Subject para calcular con debounce
+      this.commissionCalculationSubject.next();
+    }
+
+    // Casos especiales que requieren regenerar campos
     if (fieldKey === "id_perfil") {
       // Resetear permiso y emitir cambio
       this.data["id_permiso"] = null;
@@ -407,9 +571,182 @@ export class GenericModalDialogComponent {
 
       // Regenerar campos con nuevas opciones
       this.generateFields();
-      this.cdRef.markForCheck(); // Añade esto
+      this.cdRef.markForCheck();
       this.cdRef.detectChanges();
+      return;
     }
+
+    // Solo regenerar campos cuando withdrawalMethod cambia (para actualizar disabled de creditCardId)
+    if (fieldKey === "withdrawalMethod") {
+      // Emitir cambio de campo para que el componente padre pueda reaccionar
+      this.onFieldValueChange.emit({ field: fieldKey, value });
+
+      // Esperar un tick para que el componente padre actualice disabledFields
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // Actualizar readonlyFields según transactionType y withdrawalMethod
+      this.updateReadonlyFieldsForCommission();
+
+      // Regenerar campos para actualizar el estado disabled de creditCardId
+      this.generateFields();
+      this.cdRef.detectChanges();
+      return;
+    }
+
+    // Cuando cambia transactionType, actualizar readonlyFields para commission
+    if (fieldKey === "transactionType") {
+      // Emitir cambio de campo para que el componente padre pueda reaccionar
+      this.onFieldValueChange.emit({ field: fieldKey, value });
+
+      // Actualizar readonlyFields según transactionType y withdrawalMethod
+      this.updateReadonlyFieldsForCommission();
+
+      // Regenerar campos para actualizar el estado readonly de commission
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      this.generateFields();
+      this.cdRef.detectChanges();
+      return;
+    }
+
+    // Para campos como 'amount' y 'libreDeComision', NO emitir onFieldValueChange
+    // porque no requieren regeneración de campos y evitaríamos perder el foco
+    // Solo emitir para campos que realmente necesiten notificar al padre
+    const fieldsThatNeedNotification = [
+      "withdrawalMethod",
+      "creditCardId",
+      "platformId",
+      "transactionType",
+    ];
+    if (fieldsThatNeedNotification.includes(fieldKey)) {
+      this.onFieldValueChange.emit({ field: fieldKey, value });
+    }
+  }
+
+  /**
+   * Calcula la comisión para inversiones basándose en el método de retiro y tipo de transacción
+   */
+  private calcularComisionInversiones(): void {
+    // Solo calcular si es un formulario de inversiones (tiene los campos necesarios)
+    if (
+      !this.data.hasOwnProperty("amount") ||
+      !this.data.hasOwnProperty("withdrawalMethod") ||
+      !this.data.hasOwnProperty("commission") ||
+      !this.data.hasOwnProperty("transactionType")
+    ) {
+      return;
+    }
+
+    const amount = Number(this.data["amount"]) || 0;
+    const withdrawalMethodId = Number(this.data["withdrawalMethod"]) || 0;
+    const transactionTypeId = Number(this.data["transactionType"]) || 0;
+    const libreDeComision = this.data["libreDeComision"] || false;
+
+    if (
+      libreDeComision ||
+      amount <= 0 ||
+      !withdrawalMethodId ||
+      !transactionTypeId
+    ) {
+      this.data["commission"] = 0;
+      return;
+    }
+
+    // Obtener información del tipo de transacción desde las opciones
+    const transactionTypeOptions = this.selectOptions["transactionType"] || [];
+    const transactionTypeOption = transactionTypeOptions.find(
+      (opt: any) => opt.value === transactionTypeId
+    );
+
+    if (!transactionTypeOption) {
+      this.data["commission"] = 0;
+      return;
+    }
+
+    const transactionTypeName = (
+      transactionTypeOption.label || ""
+    ).toLowerCase();
+    const esPurchase =
+      transactionTypeName.includes("purchase") ||
+      transactionTypeName.includes("compra");
+
+    // Si es Purchase (compra)
+    if (esPurchase) {
+      // Obtener información del método de retiro desde las opciones
+      const withdrawalMethodOptions =
+        this.selectOptions["withdrawalMethod"] || [];
+      const methodOption = withdrawalMethodOptions.find(
+        (opt: any) => opt.value === withdrawalMethodId
+      );
+
+      if (!methodOption) {
+        this.data["commission"] = 0;
+        return;
+      }
+
+      const methodName = (methodOption.label || "").toLowerCase();
+      const esTarjeta =
+        methodName.includes("tarjeta") ||
+        methodName.includes("credito") ||
+        methodName.includes("card");
+      const esBitcoin =
+        methodName.includes("bitcoin") || methodName.includes("btc");
+
+      // Si es Purchase con tarjeta: comisión = 0
+      if (esTarjeta) {
+        this.data["commission"] = 0;
+        return;
+      }
+
+      // Si es Purchase con Bitcoin: NO calcular automáticamente (mantener valor actual o 0)
+      // El usuario debe ingresar la comisión manualmente
+      if (esBitcoin) {
+        // No cambiar el valor, dejar que el usuario lo ingrese
+        if (
+          this.data["commission"] === undefined ||
+          this.data["commission"] === null
+        ) {
+          this.data["commission"] = 0;
+        }
+        return;
+      }
+
+      // Por defecto para Purchase, comisión 0
+      this.data["commission"] = 0;
+      return;
+    }
+
+    // Si es Payment: calcular automáticamente según el método de retiro
+    const withdrawalMethodOptions =
+      this.selectOptions["withdrawalMethod"] || [];
+    const methodOption = withdrawalMethodOptions.find(
+      (opt: any) => opt.value === withdrawalMethodId
+    );
+
+    if (!methodOption) {
+      this.data["commission"] = 0;
+      return;
+    }
+
+    const methodName = (methodOption.label || "").toLowerCase();
+
+    // Bitcoin: 1% del monto
+    if (methodName.includes("bitcoin") || methodName.includes("btc")) {
+      this.data["commission"] = amount * 0.01;
+      return;
+    }
+
+    // Tarjeta de crédito: 2.6% del monto + $1.3 fijo
+    if (
+      methodName.includes("tarjeta") ||
+      methodName.includes("credito") ||
+      methodName.includes("card")
+    ) {
+      this.data["commission"] = amount * 0.026 + 1.3;
+      return;
+    }
+
+    // Por defecto, comisión 0
+    this.data["commission"] = 0;
   }
   /**
    * Muestra un mensaje de confirmación antes de realizar una acción.

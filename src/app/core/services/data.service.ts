@@ -156,12 +156,30 @@ export class DataService {
     mensajeError: string
   ): Promise<void> {
     try {
-      // console.log("Datos a agregar:", datos);
-      await servicio[metodo](datos, this.token, this.username);
+      console.log("=== DataService.agregarRegistro ===");
+      console.log("Servicio:", servicio);
+      console.log("Método:", metodo);
+      console.log("Datos a enviar:", JSON.stringify(datos, null, 2));
+      console.log("Token:", this.token ? "Presente" : "Ausente");
+      console.log("Username:", this.username);
+      
+      const resultado = await servicio[metodo](datos, this.token, this.username);
+      console.log("Respuesta del servidor:", resultado);
       this.alertService.showSuccess(mensajeExito);
-    } catch (error) {
-      console.error(`${mensajeError}:`, error);
-      this.alertService.showError(mensajeError);
+    } catch (error: any) {
+      console.error("=== ERROR en agregarRegistro ===");
+      console.error("Mensaje de error:", mensajeError);
+      console.error("Error completo:", error);
+      console.error("Error message:", error?.message);
+      console.error("Error response:", error?.response);
+      console.error("Error status:", error?.status);
+      console.error("Error data:", error?.error || error?.data);
+      console.error("Stack trace:", error?.stack);
+      
+      // Mostrar el mensaje de error más detallado si está disponible
+      const errorMessage = error?.error?.message || error?.message || error?.response?.data?.message || mensajeError;
+      this.alertService.showError(`${mensajeError}: ${errorMessage}`);
+      throw error;
     }
   }
 

@@ -26,7 +26,9 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
             <!-- Primera fila: Título y botones principales -->
             <div class="row mb-3">
               <div class="col-12">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div
+                  class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3"
+                >
                   <h4 class="card-title mb-0">{{ title }}</h4>
                   <div class="d-flex flex-wrap gap-2">
                     <button
@@ -48,7 +50,9 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                       Descargar XML
                     </button>
                     <button
-                      *ngIf="showExcelDownload && hasPermission('descargaExcel')"
+                      *ngIf="
+                        showExcelDownload && hasPermission('descargaExcel')
+                      "
                       class="btn btn-outline-success btn-sm waves-effect waves-light d-none d-md-inline-flex"
                       (click)="onExcelDownload()"
                       id="btn_descarga_excel"
@@ -88,20 +92,30 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                       class="btn btn-outline-info btn-sm waves-effect waves-light"
                       (click)="toggleShowAll()"
                     >
-                      <span class="d-none d-md-inline">{{ showAll ? "Ver menos" : "Ver todo" }}</span>
-                      <span class="d-md-none">{{ showAll ? "Menos" : "Todo" }}</span>
+                      <span class="d-none d-md-inline">{{
+                        showAll ? "Ver menos" : "Ver todo"
+                      }}</span>
+                      <span class="d-md-none">{{
+                        showAll ? "Menos" : "Todo"
+                      }}</span>
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <!-- Segunda fila: Filtros y búsqueda -->
             <div class="row g-3">
               <div class="col-12">
-                <div class="d-flex flex-column flex-md-row gap-3 align-items-stretch align-items-md-center">
+                <div
+                  class="d-flex flex-column flex-md-row gap-3 align-items-stretch align-items-md-center"
+                >
                   <!-- Filtro de estado -->
-                  <div *ngIf="showStatusFilter" class="flex-shrink-0" style="min-width: 150px;">
+                  <div
+                    *ngIf="showStatusFilter"
+                    class="flex-shrink-0"
+                    style="min-width: 150px;"
+                  >
                     <select
                       class="form-select form-select-sm"
                       (change)="onStatusChange($event)"
@@ -117,12 +131,14 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                   </div>
 
                   <!-- Filtro de rango de fechas -->
-                  <div
-                    *ngIf="showDateRangeFilter"
-                    class="flex-grow-1"
-                  >
-                    <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
-                      <label class="form-label mb-0 d-none d-md-inline-block me-2" style="white-space: nowrap;">
+                  <div *ngIf="showDateRangeFilter" class="flex-grow-1">
+                    <div
+                      class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center"
+                    >
+                      <label
+                        class="form-label mb-0 d-none d-md-inline-block me-2"
+                        style="white-space: nowrap;"
+                      >
                         {{ dateRangeLabel }}:
                       </label>
                       <div class="d-flex gap-2 align-items-center flex-grow-1">
@@ -152,7 +168,11 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                   </div>
 
                   <!-- Búsqueda -->
-                  <div *ngIf="searchEnabled" class="flex-shrink-0" style="min-width: 200px;">
+                  <div
+                    *ngIf="searchEnabled"
+                    class="flex-shrink-0"
+                    style="min-width: 200px;"
+                  >
                     <input
                       type="text"
                       class="form-control form-control-sm search"
@@ -160,7 +180,7 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                       (input)="onSearch($event)"
                     />
                   </div>
-                  
+
                   <ng-content select="[tableActions]"></ng-content>
                 </div>
               </div>
@@ -335,12 +355,21 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
             <!-- Vista de cards para móviles -->
             <div class="d-md-none">
               <div class="row g-3">
-                <div class="col-12" *ngFor="let item of paginatedData; trackBy: trackByFn">
+                <div
+                  class="col-12"
+                  *ngFor="let item of paginatedData; trackBy: trackByFn"
+                >
                   <div class="card shadow-sm">
                     <div class="card-body">
-                      <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div
+                        class="d-flex justify-content-between align-items-start mb-2"
+                      >
                         <h6 class="card-title mb-0">
-                          {{ visibleColumns[0] ? getValue(item, visibleColumns[0].property) : '-' }}
+                          {{
+                            visibleColumns[0]
+                              ? getValue(item, visibleColumns[0].property)
+                              : "-"
+                          }}
                         </h6>
                         <div class="action-menu-container" *ngIf="showActions">
                           <button
@@ -356,7 +385,9 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                           </button>
                           <ng-template #popContentMobile>
                             <div class="action-menu-items">
-                              <ng-container *ngFor="let action of allowedActions">
+                              <ng-container
+                                *ngFor="let action of allowedActions"
+                              >
                                 <button
                                   class="menu-item"
                                   *ngIf="
@@ -376,9 +407,9 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                                   "
                                 >
                                   <i
-                                    class="mdi {{ actionConfig[action].icon }} {{
-                                      actionConfig[action].color
-                                    }}"
+                                    class="mdi {{
+                                      actionConfig[action].icon
+                                    }} {{ actionConfig[action].color }}"
                                   ></i>
                                   <span>{{ actionConfig[action].text }}</span>
                                 </button>
@@ -388,12 +419,20 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
                         </div>
                       </div>
                       <div class="row g-2">
-                        <div class="col-6" *ngFor="let column of visibleColumns.slice(1)">
-                          <small class="text-muted d-block">{{ column.header }}:</small>
+                        <div
+                          class="col-6"
+                          *ngFor="let column of visibleColumns.slice(1)"
+                        >
+                          <small class="text-muted d-block"
+                            >{{ column.header }}:</small
+                          >
                           <div class="fw-medium">
                             <ng-container [ngSwitch]="column.type">
                               <ng-container *ngSwitchCase="'date'">
-                                {{ getValue(item, column.property) | date : column.format || "yyyy-MM-dd" }}
+                                {{
+                                  getValue(item, column.property)
+                                    | date : column.format || "yyyy-MM-dd"
+                                }}
                               </ng-container>
                               <ng-container *ngSwitchDefault>
                                 <ngb-highlight
@@ -458,6 +497,8 @@ export class GenericTableComponent<T> implements OnChanges {
   @Input() selectOptions: { [key: string]: any[] } = {}; // Recibe opciones para los selects
   @Input() excludedFields: string[] = []; // Recibe desde padre los campos a excluir
   @Input() readonlyFields: string[] = []; // Recibe campos readonly desde el padre
+  @Input() disabledFields: string[] = []; // Recibe campos disabled desde el padre
+  @Input() fieldsOrder: string[] = []; // Orden personalizado de campos
   @Input() selectFields: string[] = []; // Recibe campos select desde el padre
   @Input() requiredFields: string[] = []; // Recibe campos requeridos desde el padre
   @Input() allowedActions: string[] = []; // Acciones permitidas desde el padre
@@ -504,6 +545,10 @@ export class GenericTableComponent<T> implements OnChanges {
   @Output() reporteDownload = new EventEmitter<void>(); // Nuevo evento para descargar Reporte Excel
   @Output() profileSelected = new EventEmitter<number>(); // Nuevo evento para seleccionar perfil
   @Output() fileDownload = new EventEmitter<T>(); // Nuevo evento para descargar archivo
+  @Output() fieldValueChange = new EventEmitter<{
+    field: string;
+    value: any;
+  }>(); // Nuevo evento para cambios de campo
 
   // Propiedades
   currentPage: number = 1; // Página actual
@@ -813,7 +858,7 @@ export class GenericTableComponent<T> implements OnChanges {
       backdrop: "static",
       windowClass: "modal-dialog-centered",
     });
-    //limpiar los datos
+    //limpiar los datos y mapear campos si es necesario
     const cleanData = Object.keys(config.data).reduce(
       (acc: Record<string, any>, key) => {
         acc[key] = config.data[key] === 0 ? 0 : config.data[key];
@@ -821,6 +866,7 @@ export class GenericTableComponent<T> implements OnChanges {
       },
       {}
     );
+
     // Configuración común para todos los modales
     modalRef.componentInstance.title = config.title;
     modalRef.componentInstance.data = cleanData;
@@ -836,6 +882,8 @@ export class GenericTableComponent<T> implements OnChanges {
       modalRef.componentInstance.excludedFields = this.excludedFields;
       modalRef.componentInstance.selectOptions = this.selectOptions;
       modalRef.componentInstance.readonlyFields = this.readonlyFields;
+      modalRef.componentInstance.disabledFields = this.disabledFields || [];
+      modalRef.componentInstance.fieldsOrder = this.fieldsOrder || [];
       modalRef.componentInstance.selectFields = this.selectFields;
       // Escuchar cambios del modal
       modalRef.componentInstance.onProfileChange.subscribe(
@@ -852,6 +900,54 @@ export class GenericTableComponent<T> implements OnChanges {
 
           // 4. Forzamos la detección de cambios
           modalRef.componentInstance.cdRef.detectChanges();
+        }
+      );
+
+      // Escuchar cambios de campos para lógica personalizada
+      modalRef.componentInstance.onFieldValueChange.subscribe(
+        (change: { field: string; value: any }) => {
+          // Emitir al componente padre para que pueda manejar la lógica
+          this.fieldValueChange.emit(change);
+
+          // Solo regenerar campos cuando realmente sea necesario (ej: withdrawalMethod)
+          // Para campos como 'amount', NO regenerar para evitar perder el foco
+          const fieldsThatRequireRegeneration = [
+            "withdrawalMethod",
+            "id_perfil",
+          ];
+          if (fieldsThatRequireRegeneration.includes(change.field)) {
+            // Esperar un tick para que el componente padre actualice disabledFields
+            setTimeout(() => {
+              // Actualizar disabledFields en el modal cuando cambie
+              modalRef.componentInstance.disabledFields = [
+                ...this.disabledFields,
+              ];
+              modalRef.componentInstance.generateFields();
+              modalRef.componentInstance.cdRef.detectChanges();
+            }, 100);
+          } else {
+            // Para otros campos, solo actualizar disabledFields sin regenerar
+            modalRef.componentInstance.disabledFields = [
+              ...this.disabledFields,
+            ];
+            // Actualizar solo el campo específico sin regenerar todos los campos
+            const field = modalRef.componentInstance.fields.find(
+              (f: any) => f.key === change.field
+            );
+            if (field) {
+              field.disabled = modalRef.componentInstance.isDisabledField(
+                change.field
+              );
+            }
+            // Actualizar también el campo creditCardId si es necesario
+            const creditCardField = modalRef.componentInstance.fields.find(
+              (f: any) => f.key === "creditCardId"
+            );
+            if (creditCardField) {
+              creditCardField.disabled =
+                modalRef.componentInstance.isDisabledField("creditCardId");
+            }
+          }
         }
       );
     }

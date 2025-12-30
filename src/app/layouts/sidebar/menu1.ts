@@ -30,6 +30,24 @@ export const MENU: MenuItem[] = [
         link: "/merchants",
         parentId: 2,
       },
+      {
+        id: 6,
+        label: "Inversiones",
+        link: "/investments",
+        parentId: 2,
+      },
+      {
+        id: 7,
+        label: "Plataformas",
+        link: "/platforms",
+        parentId: 2,
+      },
+      {
+        id: 8,
+        label: "Métodos de Retiro",
+        link: "/withdrawal-methods",
+        parentId: 2,
+      },
     ],
   },
 ];

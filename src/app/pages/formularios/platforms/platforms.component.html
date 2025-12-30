@@ -1,0 +1,21 @@
+<app-generic-table
+  [title]="'Listado de Plataformas'"
+  [columns]="tableColumns"
+  [excludedFields]="[]"
+  [selectFields]="[]"
+  [requiredFields]="['id']"
+  [readonlyFields]="['id']"
+  [allowedActions]="['edit', 'delete']"
+  [data]="(platformsList$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [showStatusFilter]="true"
+  [entityDTO]="platformsDTO"
+  [hiddenColumns]="['id']"
+  (new)="onAddPlatform($event)"
+  (edit)="onEditPlatform($event)"
+  (delete)="onDeletePlatform($event)"
+>
+</app-generic-table>
+

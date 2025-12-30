@@ -15,10 +15,7 @@ import { AuthNewService } from "./auth-new.service";
   providedIn: "root",
 })
 export class ApiConnectionService {
-  constructor(
-    private http: HttpClient,
-    private authService: AuthNewService
-  ) {}
+  constructor(private http: HttpClient, private authService: AuthNewService) {}
 
   /**
    * Envia una solicitud HTTP a la API y devuelve la respuesta
@@ -49,31 +46,29 @@ export class ApiConnectionService {
     // Agregar token automáticamente si está disponible y no se proporcionó en headers
     const token = this.authService.getToken();
     const requestHeaders: Record<string, string> = { ...headers };
-    
+
     // Si hay token y no es un endpoint de autenticación, agregarlo
-    if (token && !apiUrl.includes('/auth/')) {
+    if (token && !apiUrl.includes("/auth/")) {
       // Si ya se pasó Authorization en headers, verificar si tiene Bearer
-      if (headers['Authorization']) {
+      if (headers["Authorization"]) {
         // Si no tiene Bearer, agregarlo
-        const authHeader = headers['Authorization'];
-        if (!authHeader.startsWith('Bearer ')) {
-          requestHeaders['Authorization'] = `Bearer ${authHeader.replace('Bearer ', '')}`;
-          console.log('[ApiConnectionService] Token agregado con Bearer desde headers manuales');
+        const authHeader = headers["Authorization"];
+        if (!authHeader.startsWith("Bearer ")) {
+          requestHeaders["Authorization"] = `Bearer ${authHeader.replace(
+            "Bearer ",
+            ""
+          )}`;
         } else {
-          console.log('[ApiConnectionService] Token ya tiene Bearer en headers manuales');
         }
       } else {
         // Si no se pasó Authorization, agregarlo automáticamente
-        requestHeaders['Authorization'] = `Bearer ${token}`;
-        console.log('[ApiConnectionService] Token agregado automáticamente:', token.substring(0, 20) + '...');
+        requestHeaders["Authorization"] = `Bearer ${token}`;
       }
-    } else if (!token && !apiUrl.includes('/auth/')) {
-      console.warn('[ApiConnectionService] No hay token disponible para:', apiUrl);
-    }
-
-    // Log para debug
-    if (requestHeaders['Authorization']) {
-      console.log('[ApiConnectionService] Request a:', apiUrl, 'con Authorization:', requestHeaders['Authorization'].substring(0, 30) + '...');
+    } else if (!token && !apiUrl.includes("/auth/")) {
+      console.warn(
+        "[ApiConnectionService] No hay token disponible para:",
+        apiUrl
+      );
     }
 
     const requestOptions: RequestInit = {
@@ -90,15 +85,23 @@ export class ApiConnectionService {
 
     try {
       const response = await fetch(apiUrl, requestOptions);
-      
+
       // Manejar errores de autenticación
       if (response.status === 401) {
-        console.error('[ApiConnectionService] Error 401 Unauthorized para:', apiUrl);
-        console.error('[ApiConnectionService] Token usado:', requestHeaders['Authorization'] ? 'Sí' : 'No');
+        console.error(
+          "[ApiConnectionService] Error 401 Unauthorized para:",
+          apiUrl
+        );
+        console.error(
+          "[ApiConnectionService] Token usado:",
+          requestHeaders["Authorization"] ? "Sí" : "No"
+        );
         // Si es 401, podría ser que el token expiró o no es válido
         const authService = this.authService;
         if (authService && authService.isAuthenticated()) {
-          console.warn('[ApiConnectionService] Token existe pero fue rechazado. Podría haber expirado.');
+          console.warn(
+            "[ApiConnectionService] Token existe pero fue rechazado. Podría haber expirado."
+          );
         }
       }
 
@@ -107,12 +110,16 @@ export class ApiConnectionService {
         let errorData;
         try {
           const text = await response.text();
-          errorData = text ? JSON.parse(text) : { message: response.statusText };
+          errorData = text
+            ? JSON.parse(text)
+            : { message: response.statusText };
         } catch (parseError) {
           errorData = { message: response.statusText };
         }
 
-        throw new Error(errorData.respuesta || errorData.message || response.statusText);
+        throw new Error(
+          errorData.respuesta || errorData.message || response.statusText
+        );
       }
 
       const responseData = await response.json();

@@ -4,6 +4,9 @@ import { AuthGuard } from "src/app/core/guards/auth.guard";
 import { CreditcardComponent } from "./creditcard/creditcard.component";
 import { TransactionsComponent } from "./transactions/transactions.component";
 import { MerchantsComponent } from "./merchants/merchants.component";
+import { InvestmentsComponent } from "./investments/investments.component";
+import { PlatformsComponent } from "./platforms/platforms.component";
+import { WithdrawalMethodsComponent } from "./withdrawal-methods/withdrawal-methods.component";
 
 const routes: Routes = [
   {
@@ -19,6 +22,21 @@ const routes: Routes = [
   {
     path: "merchants",
     component: MerchantsComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "investments",
+    component: InvestmentsComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "platforms",
+    component: PlatformsComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "withdrawal-methods",
+    component: WithdrawalMethodsComponent,
     canActivate: [AuthGuard],
   },
 ];

@@ -1,0 +1,25 @@
+<app-generic-table
+  [title]="'Listado de Inversiones'"
+  [columns]="tableColumns"
+  [excludedFields]="[]"
+  [selectFields]="['platformId', 'transactionType', 'withdrawalMethod', 'creditCardId']"
+  [selectOptions]="selectOptions"
+  [requiredFields]="['id']"
+  [readonlyFields]="readonlyFields"
+  [disabledFields]="disabledFields"
+  [fieldsOrder]="['id', 'withdrawalMethod', 'creditCardId', 'platformId', 'transactionType', 'transactionDate', 'libreDeComision', 'amount', 'commission']"
+  [allowedActions]="['edit', 'delete']"
+  [data]="(investmentsList$ | async)!"
+  [showActions]="true"
+  [searchEnabled]="true"
+  [showNewRegister]="true"
+  [showStatusFilter]="false"
+  [entityDTO]="investmentsDTO"
+  [hiddenColumns]="['id']"
+  (new)="onAddInvestment($event)"
+  (edit)="onEditInvestment($event)"
+  (delete)="onDeleteInvestment($event)"
+  (fieldValueChange)="onFieldChange($event)"
+>
+</app-generic-table>
+

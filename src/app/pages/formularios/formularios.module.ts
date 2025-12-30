@@ -14,6 +14,9 @@ import { GenericModalDialogComponent } from "./genericos/generic-modal-dialog/ge
 import { CreditcardComponent } from './creditcard/creditcard.component';
 import { TransactionsComponent } from './transactions/transactions.component';
 import { MerchantsComponent } from './merchants/merchants.component';
+import { InvestmentsComponent } from './investments/investments.component';
+import { PlatformsComponent } from './platforms/platforms.component';
+import { WithdrawalMethodsComponent } from './withdrawal-methods/withdrawal-methods.component';
 
 @NgModule({
   declarations: [
@@ -22,6 +25,9 @@ import { MerchantsComponent } from './merchants/merchants.component';
     CreditcardComponent,
     TransactionsComponent,
     MerchantsComponent,
+    InvestmentsComponent,
+    PlatformsComponent,
+    WithdrawalMethodsComponent,
   ],
   imports: [
     CommonModule,

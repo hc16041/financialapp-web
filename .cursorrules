@@ -1,0 +1,27 @@
+# Angular Clean Architecture & Best Practices
+
+You are a Senior Angular Architect. You must enforce a strict Clean Architecture separation of concerns.
+
+## Architectural Layers
+1.  **Presentation Layer (Components):**
+    -   Must be **Standalone**.
+    -   **Smart Components (Pages):** Only orchestrate data. Connect Facades/Services to UI. NO business logic.
+    -   **Dumb Components (UI):** Receive data via `input()`, emit events via `output()`. Purely visual.
+    -   **View:** Use modern Control Flow (`@if`, `@for`) instead of `*ngIf`/`*ngFor`.
+2.  **Domain/Application Layer (Facades/Services):**
+    -   Contains ALL business logic and state management.
+    -   Uses **Signals** for state.
+    -   Components should never call HTTP clients directly; they call Facades/Services.
+3.  **Infrastructure Layer (Data Services):**
+    -   Pure HTTP calls. Returns Observables or Promises.
+    -   Uses interceptors for global handling.
+
+## Refactoring Rules (DRY & Clean Code)
+-   **No Logic in HTML:** If an expression in the template is complex, move it to a `computed` signal or a pipe.
+-   **Strict Typing:** No `any`. Define interfaces for all models/DTOs.
+-   **Subscription Management:** NEVER use manual `.subscribe()` inside components. Use `async` pipe or Signals.
+-   **DRY:** If logic repeats in 2+ files, extract to a Utility or Shared Service.
+
+## Style
+-   Use `inject()` over constructor dependency injection.
+-   Use `changeDetection: ChangeDetectionStrategy.OnPush` everywhere.

@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { Router } from '@angular/router';
-import { GlobalComponent } from '../../global-component';
-import { jwtDecode } from 'jwt-decode';
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Observable, BehaviorSubject, throwError } from "rxjs";
+import { map, catchError } from "rxjs/operators";
+import { Router } from "@angular/router";
+import { GlobalComponent } from "../../global-component";
+import { jwtDecode } from "jwt-decode";
 
 export interface LoginRequest {
   email: string;
@@ -49,24 +49,23 @@ export interface DecodedToken {
 }
 
 const httpOptions = {
-  headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+  headers: new HttpHeaders({ "Content-Type": "application/json" }),
 };
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthNewService {
   private currentUserSubject: BehaviorSubject<AuthResponse | null>;
   public currentUser$: Observable<AuthResponse | null>;
-  private readonly TOKEN_KEY = 'authToken';
-  private readonly USER_KEY = 'currentUser';
+  private readonly TOKEN_KEY = "authToken";
+  private readonly USER_KEY = "currentUser";
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {
+  constructor(private http: HttpClient, private router: Router) {
     const storedUser = this.getStoredUser();
-    this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(storedUser);
+    this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(
+      storedUser
+    );
     this.currentUser$ = this.currentUserSubject.asObservable();
   }
 
@@ -87,7 +86,7 @@ export class AuthNewService {
           return response;
         }),
         catchError((error) => {
-          console.error('Error en login:', error);
+          console.error("Error en login:", error);
           return throwError(() => error);
         })
       );
@@ -116,7 +115,7 @@ export class AuthNewService {
           return response;
         }),
         catchError((error) => {
-          console.error('Error en registro:', error);
+          console.error("Error en registro:", error);
           return throwError(() => error);
         })
       );
@@ -156,7 +155,7 @@ export class AuthNewService {
     sessionStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(["/auth/login"]);
   }
 
   /**
@@ -165,9 +164,8 @@ export class AuthNewService {
   getToken(): string | null {
     const token = sessionStorage.getItem(this.TOKEN_KEY);
     if (token) {
-      console.log('[AuthNewService] Token recuperado:', token.substring(0, 20) + '...');
     } else {
-      console.warn('[AuthNewService] No se encontró token en sessionStorage');
+      console.warn("[AuthNewService] No se encontró token en sessionStorage");
     }
     return token;
   }
@@ -184,14 +182,14 @@ export class AuthNewService {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
       const expirationDate = decoded.exp ? new Date(decoded.exp * 1000) : null;
-      
+
       if (expirationDate && expirationDate < new Date()) {
         this.logout();
         return false;
       }
       return true;
     } catch (error) {
-      console.error('Error decodificando token:', error);
+      console.error("Error decodificando token:", error);
       return false;
     }
   }
@@ -217,7 +215,7 @@ export class AuthNewService {
       const userId = decoded.UserId || decoded.nameid;
       return userId ? parseInt(userId, 10) : null;
     } catch (error) {
-      console.error('Error obteniendo UserId:', error);
+      console.error("Error obteniendo UserId:", error);
       return null;
     }
   }
@@ -235,7 +233,7 @@ export class AuthNewService {
       const decoded = jwtDecode<DecodedToken>(token);
       return decoded.email || null;
     } catch (error) {
-      console.error('Error obteniendo email:', error);
+      console.error("Error obteniendo email:", error);
       return null;
     }
   }
@@ -244,10 +242,8 @@ export class AuthNewService {
    * Guarda los datos de autenticación
    */
   private saveAuthData(response: AuthResponse): void {
-    console.log('[AuthNewService] Guardando token:', response.token.substring(0, 20) + '...');
     sessionStorage.setItem(this.TOKEN_KEY, response.token);
     sessionStorage.setItem(this.USER_KEY, JSON.stringify(response));
-    console.log('[AuthNewService] Token guardado en sessionStorage');
   }
 
   /**
@@ -259,11 +255,10 @@ export class AuthNewService {
       try {
         return JSON.parse(userStr);
       } catch (error) {
-        console.error('Error parseando usuario almacenado:', error);
+        console.error("Error parseando usuario almacenado:", error);
         return null;
       }
     }
     return null;
   }
 }
-
