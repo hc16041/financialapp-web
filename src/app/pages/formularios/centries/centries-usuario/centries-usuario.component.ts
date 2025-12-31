@@ -1,4 +1,5 @@
-import { Component } from "@angular/core";
+import { Component, inject, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BehaviorSubject } from "rxjs";
 import { UsuarioDTO } from "src/app/application/centries/usuario/DTO/UsuarioDTO";
 import { UsuarioService } from "src/app/application/centries/usuario/Services/Usuario.service";
@@ -10,6 +11,7 @@ import { PerfilDTO } from "src/app/application/centries/perfil/DTO/PerfilDTO";
 import { PerfilService } from "src/app/application/centries/perfil/Services/Perfil.service";
 import { CargoService } from "src/app/application/centries/cargo/Services/Cargo.service";
 import { IUsuarioEdit } from "src/app/application/centries/usuario/Interfaces/IUsuario.interface";
+import { SelectOptionsMapperService } from "src/app/core/services/select-options-mapper.service";
 
 @Component({
   selector: "app-centries-usuario",
@@ -29,6 +31,9 @@ export class CentriesUsuarioComponent {
 
   // Select options
   selectOptions: { [key: string]: any[] } = {};
+  private selectOptionsMapper = inject(SelectOptionsMapperService);
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private dataService: DataService,
     private usuarioService: UsuarioService,
@@ -68,42 +73,32 @@ export class CentriesUsuarioComponent {
 
   private initializeSelectOptions(): void {
     this.selectOptions = {
-      cargo: this.mapCargos(this.cargosList$.getValue()),
-      perfil: this.mapPerfiles(this.perfilesList$.getValue()),
+      cargo: this.selectOptionsMapper.mapCargos(this.cargosList$.getValue()),
+      perfil: this.selectOptionsMapper.mapPerfiles(
+        this.perfilesList$.getValue()
+      ),
     };
   }
 
   private setupSubscriptions(): void {
-    // Suscripción para cargos
-    this.cargosList$.subscribe((cargos) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        cargo: this.mapCargos(cargos),
-      };
-    });
+    // Suscripciones con takeUntilDestroyed para limpieza automática
+    this.cargosList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((cargos) => {
+        this.selectOptions = {
+          ...this.selectOptions,
+          cargo: this.selectOptionsMapper.mapCargos(cargos),
+        };
+      });
 
-    // Suscripción para perfiles
-    this.perfilesList$.subscribe((perfiles) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        perfil: this.mapPerfiles(perfiles),
-      };
-    });
-  }
-
-  // Métodos de mapeo
-  private mapCargos(cargos: CargoDTO[]): any[] {
-    return cargos.map((c) => ({
-      value: c.id_cargo,
-      label: c.cargo,
-    }));
-  }
-
-  private mapPerfiles(perfiles: PerfilDTO[]): any[] {
-    return perfiles.map((p) => ({
-      value: p.id_perfil,
-      label: p.perfil,
-    }));
+    this.perfilesList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((perfiles) => {
+        this.selectOptions = {
+          ...this.selectOptions,
+          perfil: this.selectOptionsMapper.mapPerfiles(perfiles),
+        };
+      });
   }
 
   async obtenerCargos(): Promise<void> {

@@ -1,14 +1,13 @@
-import { Component } from "@angular/core";
-import { BehaviorSubject } from "rxjs";
+import { Component, inject } from "@angular/core";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { generateTableColumns } from "src/app/utils/table-utils";
 import { InvestmentsDTO } from "src/app/application/Investments/DTO/InvestmentsDTO";
-import { DataService } from "src/app/core/services/data.service";
-import { InvestmentsService } from "src/app/application/Investments/Services/Investments.service";
-import { PlatformsService } from "src/app/application/Platforms/Services/Platforms.service";
-import { TransactionsService } from "src/app/application/transactions/Services/Transactions.service";
-import { WithdrawalMethodsService } from "src/app/application/WithdrawalMethods/Services/WithdrawalMethods.service";
-import { CreditcardService } from "src/app/application/creditcard/Services/Creditcard.service";
+import { InvestmentsFacade } from "src/app/modules/investments/services/investments.facade";
+import {
+  CommissionCalculationService,
+  WithdrawalMethodInfo,
+  TransactionTypeInfo,
+} from "src/app/core/services/commission-calculation.service";
 
 @Component({
   selector: "app-investments",
@@ -16,37 +15,34 @@ import { CreditcardService } from "src/app/application/creditcard/Services/Credi
   styleUrl: "./investments.component.scss",
 })
 export class InvestmentsComponent {
-  // Table data
-  investmentsList$: BehaviorSubject<InvestmentsDTO[]> = new BehaviorSubject<
-    InvestmentsDTO[]
-  >([]);
+  // Inyectar Facade y servicio de cálculo de comisiones
+  private investmentsFacade = inject(InvestmentsFacade);
+  private commissionCalculationService = inject(CommissionCalculationService);
 
-  // Listados para los selects
-  platformsList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
-  transactionTypesList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>(
-    []
-  );
-  withdrawalMethodsList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>(
-    []
-  );
-  creditCardsList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+  // Exponer BehaviorSubjects del Facade para uso en template
+  investmentsList$ = this.investmentsFacade.investmentsList$;
+  platformsList$ = this.investmentsFacade.platformsList$;
+  transactionTypesList$ = this.investmentsFacade.transactionTypesList$;
+  withdrawalMethodsList$ = this.investmentsFacade.withdrawalMethodsList$;
+  creditCardsList$ = this.investmentsFacade.creditCardsList$;
+
+  // Exponer selectOptions del Facade
+  get selectOptions(): { [key: string]: any[] } {
+    return this.investmentsFacade.selectOptions;
+  }
+
+  // Exponer Maps del Facade para cálculos
+  get withdrawalMethodsInfo() {
+    return this.investmentsFacade.withdrawalMethodsInfo;
+  }
+
+  get transactionTypesInfo() {
+    return this.investmentsFacade.transactionTypesInfo;
+  }
 
   // Table data
   investmentsDTO = new InvestmentsDTO();
-
   tableColumns: TableColumn[] = generateTableColumns(this.investmentsDTO);
-
-  // Select options
-  selectOptions: { [key: string]: any[] } = {};
-
-  // Almacenar información de métodos de retiro para identificar cuáles requieren tarjeta
-  withdrawalMethodsInfo: Map<
-    number,
-    { name: string; requiresCreditCard: boolean }
-  > = new Map();
-
-  // Almacenar información de tipos de transacción
-  transactionTypesInfo: Map<number, { name: string }> = new Map();
 
   // Campos disabled dinámicamente
   disabledFields: string[] = ["creditCardId"];
@@ -54,140 +50,14 @@ export class InvestmentsComponent {
   // Campos readonly dinámicamente
   readonlyFields: string[] = ["id", "commission"];
 
-  constructor(
-    private dataService: DataService,
-    private investmentsService: InvestmentsService,
-    private platformsService: PlatformsService,
-    private transactionsService: TransactionsService,
-    private withdrawalMethodsService: WithdrawalMethodsService,
-    private creditcardService: CreditcardService
-  ) {}
-
   ngOnInit(): void {
-    this.obtenerInvestments();
-    this.obtenerPlatforms();
-    this.obtenerTransactionTypes();
-    this.obtenerWithdrawalMethods();
-    this.obtenerCreditCards();
-    this.initializeSelectOptions();
-    this.setupSubscriptions();
-  }
-
-  private initializeSelectOptions(): void {
-    this.selectOptions = {
-      platformId: [],
-      transactionType: [],
-      withdrawalMethod: [],
-      creditCardId: [],
-    };
-  }
-
-  private setupSubscriptions(): void {
-    // Suscripciones para actualizar las opciones de los selects cuando cambien los listados
-    this.platformsList$.subscribe((platforms) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        platformId: this.mapPlatforms(platforms),
-      };
-    });
-
-    this.transactionTypesList$.subscribe((transactionTypes) => {
-      // Guardar información de los tipos de transacción
-      transactionTypes.forEach((t: any) => {
-        this.transactionTypesInfo.set(t.id || t.transactionType, {
-          name: t.name || t.description || "",
-        });
-      });
-      this.selectOptions = {
-        ...this.selectOptions,
-        transactionType: this.mapTransactionTypes(transactionTypes),
-      };
-    });
-
-    this.withdrawalMethodsList$.subscribe((withdrawalMethods) => {
-      // Guardar información de los métodos de retiro
-      withdrawalMethods.forEach((w: any) => {
-        this.withdrawalMethodsInfo.set(w.id, {
-          name: w.name || w.description || "",
-          requiresCreditCard: w.requiresCreditCard || false,
-        });
-      });
-      this.selectOptions = {
-        ...this.selectOptions,
-        withdrawalMethod: this.mapWithdrawalMethods(withdrawalMethods),
-      };
-    });
-
-    this.creditCardsList$.subscribe((creditCards) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        creditCardId: this.mapCreditCards(creditCards),
-      };
-    });
-  }
-
-  // Métodos de mapeo para los listados
-  private mapPlatforms(platforms: any[]): any[] {
-    return platforms.map((p: any) => ({
-      value: p.id || p.platformId,
-      label: p.name || p.description || `Plataforma ${p.id || p.platformId}`,
-    }));
-  }
-
-  private mapTransactionTypes(transactionTypes: any[]): any[] {
-    // Solo tomar los primeros dos elementos
-    return transactionTypes.slice(0, 2).map((t: any) => ({
-      value: t.id || t.transactionType,
-      label: t.name || t.description || `Tipo ${t.id || t.transactionType}`,
-    }));
-  }
-
-  private mapWithdrawalMethods(withdrawalMethods: any[]): any[] {
-    return withdrawalMethods.map((w: any) => ({
-      value: w.id || w.withdrawalMethod,
-      label: w.name || w.description || `Método ${w.id || w.withdrawalMethod}`,
-    }));
-  }
-
-  private mapCreditCards(creditCards: any[]): any[] {
-    return creditCards.map((c: any) => ({
-      value: c.codigo,
-      label: c.descripcion,
-    }));
-  }
-
-  async obtenerInvestments(): Promise<void> {
-    try {
-      const data = await this.investmentsService.getInvestments(
-        sessionStorage.getItem("authToken") || "",
-        sessionStorage.getItem("username") || ""
-      );
-      console.log(data);
-      // Mapear withdrawalMethodId a withdrawalMethod cuando se reciben datos del servidor
-      const mappedData = data.map((investment: any) => {
-        if (investment.hasOwnProperty("withdrawalMethod")) {
-          // Si withdrawalMethodId es un objeto, tomar solo el ID numérico
-          const withdrawalMethodId =
-            investment.withdrawalMethodId?.id !== undefined
-              ? investment.withdrawalMethodId
-              : investment.withdrawalMethodId;
-
-          return {
-            ...investment,
-            withdrawalMethod: withdrawalMethodId,
-          };
-        }
-        return investment;
-      });
-
-      this.investmentsList$.next(mappedData);
-    } catch (error) {
-      console.error("Error al cargar inversiones:", error);
-    }
+    // Inicializar el Facade que carga todos los datos necesarios
+    this.investmentsFacade.initialize();
   }
 
   /**
    * Calcula la comisión según el método de retiro y tipo de transacción
+   * Delega al servicio de cálculo de comisiones
    */
   private calcularComision(
     amount: number,
@@ -195,112 +65,62 @@ export class InvestmentsComponent {
     transactionTypeId: number,
     libreDeComision: boolean = false
   ): number {
-    if (libreDeComision || !amount || amount <= 0) {
-      return 0;
-    }
-
     // Obtener información del tipo de transacción
     const transactionTypeInfo =
       this.transactionTypesInfo.get(transactionTypeId);
-    const transactionTypeName = transactionTypeInfo?.name?.toLowerCase() || "";
+    const transactionType: TransactionTypeInfo | undefined = transactionTypeInfo
+      ? {
+          id: transactionTypeId,
+          name: transactionTypeInfo.name,
+        }
+      : undefined;
 
-    // Si es Purchase (compra)
-    if (
-      transactionTypeName.includes("purchase") ||
-      transactionTypeName.includes("compra")
-    ) {
-      const methodInfo = this.withdrawalMethodsInfo.get(withdrawalMethodId);
-      if (!methodInfo) {
-        return 0;
-      }
-
-      const methodName = methodInfo.name.toLowerCase();
-
-      // Si es Purchase con tarjeta: comisión = 0
-      if (
-        methodInfo.requiresCreditCard ||
-        methodName.includes("tarjeta") ||
-        methodName.includes("credito") ||
-        methodName.includes("card")
-      ) {
-        return 0;
-      }
-
-      // Si es Purchase con bitcoin: no calcular automáticamente
-      // El usuario debe ingresar la comisión manualmente
-      // Retornar 0 como valor por defecto (el usuario lo cambiará manualmente)
-      return 0;
-    }
-
-    // Si es Payment: calcular automáticamente según el método de retiro
+    // Obtener información del método de retiro
     const methodInfo = this.withdrawalMethodsInfo.get(withdrawalMethodId);
-    if (!methodInfo) {
-      return 0;
-    }
+    const withdrawalMethod: WithdrawalMethodInfo | undefined = methodInfo
+      ? {
+          id: withdrawalMethodId,
+          name: methodInfo.name,
+          requiresCreditCard: methodInfo.requiresCreditCard,
+        }
+      : undefined;
 
-    const methodName = methodInfo.name.toLowerCase();
+    const result = this.commissionCalculationService.calculateCommission(
+      {
+        amount,
+        withdrawalMethodId,
+        transactionTypeId,
+        libreDeComision,
+      },
+      withdrawalMethod,
+      transactionType
+    );
 
-    // Bitcoin: 1% del monto
-    if (methodName.includes("bitcoin") || methodName.includes("btc")) {
-      return amount * 0.01;
-    }
-
-    // Tarjeta de crédito: 2.6% del monto + $1.3 fijo
-    if (
-      methodInfo.requiresCreditCard ||
-      methodName.includes("tarjeta") ||
-      methodName.includes("credito") ||
-      methodName.includes("card")
-    ) {
-      return amount * 0.026 + 1.3;
-    }
-
-    return 0;
+    return result.commission;
   }
 
   /**
    * Verifica si un método de retiro requiere tarjeta de crédito
+   * Delega al Facade
    */
   private requiereTarjeta(withdrawalMethodId: number): boolean {
-    const methodInfo = this.withdrawalMethodsInfo.get(withdrawalMethodId);
-    if (!methodInfo) {
-      return false;
-    }
-    const methodName = methodInfo.name.toLowerCase();
-    return (
-      methodInfo.requiresCreditCard ||
-      methodName.includes("tarjeta") ||
-      methodName.includes("credito") ||
-      methodName.includes("card")
-    );
+    return this.investmentsFacade.requiresCreditCard(withdrawalMethodId);
   }
 
   /**
    * Verifica si un tipo de transacción es Purchase
+   * Delega al Facade
    */
   private esPurchase(transactionTypeId: number): boolean {
-    const transactionTypeInfo =
-      this.transactionTypesInfo.get(transactionTypeId);
-    if (!transactionTypeInfo) {
-      return false;
-    }
-    const transactionTypeName = transactionTypeInfo.name.toLowerCase();
-    return (
-      transactionTypeName.includes("purchase") ||
-      transactionTypeName.includes("compra")
-    );
+    return this.investmentsFacade.isPurchase(transactionTypeId);
   }
 
   /**
    * Verifica si un método de retiro es Bitcoin
+   * Delega al Facade
    */
   private esBitcoin(withdrawalMethodId: number): boolean {
-    const methodInfo = this.withdrawalMethodsInfo.get(withdrawalMethodId);
-    if (!methodInfo) {
-      return false;
-    }
-    const methodName = methodInfo.name.toLowerCase();
-    return methodName.includes("bitcoin") || methodName.includes("btc");
+    return this.investmentsFacade.isBitcoin(withdrawalMethodId);
   }
 
   /**
@@ -391,10 +211,47 @@ export class InvestmentsComponent {
           newInvestment.commission = 0;
         } else if (this.esBitcoin(newInvestment.withdrawalMethod)) {
           console.log("Purchase con Bitcoin - mantener comisión manual");
-          // Si es Purchase con Bitcoin: mantener el valor ingresado manualmente (o 0 si no se ingresó)
-          // No calcular automáticamente
-          if (!newInvestment.commission && newInvestment.commission !== 0) {
-            newInvestment.commission = 0;
+          // Si es Purchase con Bitcoin: usar el servicio para determinar si debe calcularse
+          const transactionTypeInfo = this.transactionTypesInfo.get(
+            newInvestment.transactionType
+          );
+          const methodInfo = this.withdrawalMethodsInfo.get(
+            newInvestment.withdrawalMethod
+          );
+
+          if (transactionTypeInfo && methodInfo) {
+            const result =
+              this.commissionCalculationService.calculateCommission(
+                {
+                  amount: newInvestment.amount,
+                  withdrawalMethodId: newInvestment.withdrawalMethod,
+                  transactionTypeId: newInvestment.transactionType,
+                  libreDeComision: newInvestment.libreDeComision,
+                },
+                {
+                  id: newInvestment.withdrawalMethod,
+                  name: methodInfo.name,
+                  requiresCreditCard: methodInfo.requiresCreditCard,
+                },
+                {
+                  id: newInvestment.transactionType,
+                  name: transactionTypeInfo.name,
+                }
+              );
+
+            // Si no debe calcularse automáticamente, mantener el valor actual o 0
+            if (!result.shouldCalculateAutomatically) {
+              if (!newInvestment.commission && newInvestment.commission !== 0) {
+                newInvestment.commission = 0;
+              }
+            } else {
+              newInvestment.commission = result.commission;
+            }
+          } else {
+            // Fallback: mantener valor actual o 0
+            if (!newInvestment.commission && newInvestment.commission !== 0) {
+              newInvestment.commission = 0;
+            }
           }
         }
       } else {
@@ -422,74 +279,9 @@ export class InvestmentsComponent {
       newInvestment.creditCardId = 0;
     }
 
-    // Eliminar el campo libreDeComision antes de guardar (es solo para UI)
-    const { libreDeComision, ...investmentToSave } = newInvestment;
-
-    // Asegurar que los campos numéricos sean números y no strings
-    if (
-      investmentToSave.amount !== undefined &&
-      investmentToSave.amount !== null
-    ) {
-      investmentToSave.amount = Number(investmentToSave.amount);
-    }
-    if (
-      investmentToSave.commission !== undefined &&
-      investmentToSave.commission !== null
-    ) {
-      investmentToSave.commission = Number(investmentToSave.commission);
-    }
-    if (
-      investmentToSave.platformId !== undefined &&
-      investmentToSave.platformId !== null
-    ) {
-      investmentToSave.platformId = Number(investmentToSave.platformId);
-    }
-    if (
-      investmentToSave.transactionType !== undefined &&
-      investmentToSave.transactionType !== null
-    ) {
-      investmentToSave.transactionType = Number(
-        investmentToSave.transactionType
-      );
-    }
-    if (
-      investmentToSave.creditCardId !== undefined &&
-      investmentToSave.creditCardId !== null
-    ) {
-      investmentToSave.creditCardId = Number(investmentToSave.creditCardId);
-    }
-
-    // Mapear withdrawalMethod a withdrawalMethodId para la API
-    if (investmentToSave.hasOwnProperty("withdrawalMethod")) {
-      investmentToSave.withdrawalMethodId = Number(
-        investmentToSave.withdrawalMethod
-      );
-      delete investmentToSave.withdrawalMethod;
-    }
-
-    console.log(
-      "Datos finales a enviar:",
-      JSON.stringify(investmentToSave, null, 2)
-    );
-    console.log("Tipos de datos:", {
-      platformId: typeof investmentToSave.platformId,
-      amount: typeof investmentToSave.amount,
-      commission: typeof investmentToSave.commission,
-      transactionType: typeof investmentToSave.transactionType,
-      withdrawalMethodId: typeof investmentToSave.withdrawalMethodId,
-      creditCardId: typeof investmentToSave.creditCardId,
-      transactionDate: typeof investmentToSave.transactionDate,
-    });
-
     try {
-      await this.dataService.agregarRegistro(
-        this.investmentsService,
-        "guardarInvestments",
-        investmentToSave,
-        "Inversión agregada correctamente",
-        "Error al agregar inversión"
-      );
-      await this.obtenerInvestments();
+      // Usar el Facade para agregar la inversión (el Facade maneja la transformación)
+      await this.investmentsFacade.addInvestment(newInvestment);
       console.log("=== FIN: Inversión agregada exitosamente ===");
     } catch (error) {
       console.error("=== ERROR al agregar inversión ===");
@@ -517,13 +309,53 @@ export class InvestmentsComponent {
         if (this.requiereTarjeta(updatedInvestment.withdrawalMethod)) {
           updatedInvestment.commission = 0;
         } else if (this.esBitcoin(updatedInvestment.withdrawalMethod)) {
-          // Si es Purchase con Bitcoin: mantener el valor ingresado manualmente (o 0 si no se ingresó)
-          // No calcular automáticamente
-          if (
-            !updatedInvestment.commission &&
-            updatedInvestment.commission !== 0
-          ) {
-            updatedInvestment.commission = 0;
+          // Si es Purchase con Bitcoin: usar el servicio para determinar si debe calcularse
+          const transactionTypeInfo = this.transactionTypesInfo.get(
+            updatedInvestment.transactionType
+          );
+          const methodInfo = this.withdrawalMethodsInfo.get(
+            updatedInvestment.withdrawalMethod
+          );
+
+          if (transactionTypeInfo && methodInfo) {
+            const result =
+              this.commissionCalculationService.calculateCommission(
+                {
+                  amount: updatedInvestment.amount,
+                  withdrawalMethodId: updatedInvestment.withdrawalMethod,
+                  transactionTypeId: updatedInvestment.transactionType,
+                  libreDeComision: updatedInvestment.libreDeComision,
+                },
+                {
+                  id: updatedInvestment.withdrawalMethod,
+                  name: methodInfo.name,
+                  requiresCreditCard: methodInfo.requiresCreditCard,
+                },
+                {
+                  id: updatedInvestment.transactionType,
+                  name: transactionTypeInfo.name,
+                }
+              );
+
+            // Si no debe calcularse automáticamente, mantener el valor actual o 0
+            if (!result.shouldCalculateAutomatically) {
+              if (
+                !updatedInvestment.commission &&
+                updatedInvestment.commission !== 0
+              ) {
+                updatedInvestment.commission = 0;
+              }
+            } else {
+              updatedInvestment.commission = result.commission;
+            }
+          } else {
+            // Fallback: mantener valor actual o 0
+            if (
+              !updatedInvestment.commission &&
+              updatedInvestment.commission !== 0
+            ) {
+              updatedInvestment.commission = 0;
+            }
           }
         }
       } else {
@@ -549,107 +381,12 @@ export class InvestmentsComponent {
       updatedInvestment.creditCardId = 0;
     }
 
-    // Eliminar el campo libreDeComision antes de guardar (es solo para UI)
-    const { libreDeComision, ...investmentToSave } = updatedInvestment;
-
-    // Asegurar que los campos numéricos sean números y no strings
-    if (
-      investmentToSave.amount !== undefined &&
-      investmentToSave.amount !== null
-    ) {
-      investmentToSave.amount = Number(investmentToSave.amount);
-    }
-    if (
-      investmentToSave.commission !== undefined &&
-      investmentToSave.commission !== null
-    ) {
-      investmentToSave.commission = Number(investmentToSave.commission);
-    }
-    if (
-      investmentToSave.platformId !== undefined &&
-      investmentToSave.platformId !== null
-    ) {
-      investmentToSave.platformId = Number(investmentToSave.platformId);
-    }
-    if (
-      investmentToSave.transactionType !== undefined &&
-      investmentToSave.transactionType !== null
-    ) {
-      investmentToSave.transactionType = Number(
-        investmentToSave.transactionType
-      );
-    }
-    if (
-      investmentToSave.creditCardId !== undefined &&
-      investmentToSave.creditCardId !== null
-    ) {
-      investmentToSave.creditCardId = Number(investmentToSave.creditCardId);
-    }
-
-    // Mapear withdrawalMethod a withdrawalMethodId para la API
-    if (investmentToSave.hasOwnProperty("withdrawalMethod")) {
-      investmentToSave.withdrawalMethodId = Number(
-        investmentToSave.withdrawalMethod
-      );
-      delete investmentToSave.withdrawalMethod;
-    }
-
-    await this.dataService.actualizarRegistro(
-      this.investmentsService,
-      "editarInvestments",
-      investmentToSave,
-      "Inversión actualizada correctamente",
-      "Error al actualizar inversión"
-    );
-    await this.obtenerInvestments();
+    // Usar el Facade para actualizar la inversión (el Facade maneja la transformación)
+    await this.investmentsFacade.updateInvestment(updatedInvestment);
   }
 
   async onDeleteInvestment(investment: any): Promise<void> {
-    await this.dataService.eliminarRegistro(
-      this.investmentsService,
-      "eliminarInvestments",
-      investment.id,
-      "Inversión eliminada correctamente",
-      "Error al eliminar inversión"
-    );
-    await this.obtenerInvestments();
-  }
-
-  async obtenerPlatforms(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.platformsService,
-      "getPlatforms",
-      this.platformsList$,
-      "Error al cargar plataformas"
-    );
-  }
-
-  async obtenerTransactionTypes(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.transactionsService,
-      "getTransactionTypes",
-      this.transactionTypesList$,
-      "Error al cargar tipos de transacción"
-    );
-  }
-
-  async obtenerWithdrawalMethods(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.withdrawalMethodsService,
-      "getWithdrawalMethods",
-      this.withdrawalMethodsList$,
-      "Error al cargar métodos de retiro"
-    );
-  }
-
-  async obtenerCreditCards(): Promise<void> {
-    // getCreditCardCodes solo recibe token, no usuario
-    try {
-      const token = sessionStorage.getItem("authToken") || "";
-      const data = await this.creditcardService.getCreditCardCodes(token);
-      this.creditCardsList$.next(data);
-    } catch (error) {
-      console.error("Error al cargar tarjetas de crédito:", error);
-    }
+    // Usar el Facade para eliminar la inversión
+    await this.investmentsFacade.deleteInvestment(investment.id);
   }
 }

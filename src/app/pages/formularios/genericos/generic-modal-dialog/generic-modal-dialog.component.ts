@@ -12,6 +12,7 @@ import { ChangeDetectorRef } from "@angular/core";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { Subject } from "rxjs";
 import { debounceTime } from "rxjs/operators";
+import { CommissionCalculationService } from "src/app/core/services/commission-calculation.service";
 
 @Component({
   selector: "app-generic-modal-dialog",
@@ -62,7 +63,8 @@ export class GenericModalDialogComponent implements OnDestroy {
   isSaving: boolean = false;
   constructor(
     public activeModal: NgbActiveModal,
-    private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef,
+    private commissionCalculationService: CommissionCalculationService
   ) {
     // Suscribirse al Subject con debounce de 300ms para el cálculo de comisión
     this.commissionCalculationSubject.pipe(debounceTime(300)).subscribe(() => {
@@ -624,6 +626,7 @@ export class GenericModalDialogComponent implements OnDestroy {
 
   /**
    * Calcula la comisión para inversiones basándose en el método de retiro y tipo de transacción
+   * Usa el servicio de cálculo de comisiones para eliminar duplicación
    */
   private calcularComisionInversiones(): void {
     // Solo calcular si es un formulario de inversiones (tiene los campos necesarios)
@@ -640,113 +643,20 @@ export class GenericModalDialogComponent implements OnDestroy {
     const withdrawalMethodId = Number(this.data["withdrawalMethod"]) || 0;
     const transactionTypeId = Number(this.data["transactionType"]) || 0;
     const libreDeComision = this.data["libreDeComision"] || false;
+    const currentCommission = this.data["commission"];
 
-    if (
-      libreDeComision ||
-      amount <= 0 ||
-      !withdrawalMethodId ||
-      !transactionTypeId
-    ) {
-      this.data["commission"] = 0;
-      return;
-    }
-
-    // Obtener información del tipo de transacción desde las opciones
-    const transactionTypeOptions = this.selectOptions["transactionType"] || [];
-    const transactionTypeOption = transactionTypeOptions.find(
-      (opt: any) => opt.value === transactionTypeId
-    );
-
-    if (!transactionTypeOption) {
-      this.data["commission"] = 0;
-      return;
-    }
-
-    const transactionTypeName = (
-      transactionTypeOption.label || ""
-    ).toLowerCase();
-    const esPurchase =
-      transactionTypeName.includes("purchase") ||
-      transactionTypeName.includes("compra");
-
-    // Si es Purchase (compra)
-    if (esPurchase) {
-      // Obtener información del método de retiro desde las opciones
-      const withdrawalMethodOptions =
-        this.selectOptions["withdrawalMethod"] || [];
-      const methodOption = withdrawalMethodOptions.find(
-        (opt: any) => opt.value === withdrawalMethodId
+    // Usar el servicio de cálculo de comisiones
+    const calculatedCommission =
+      this.commissionCalculationService.calculateCommissionFromSelectOptions(
+        amount,
+        withdrawalMethodId,
+        transactionTypeId,
+        libreDeComision,
+        this.selectOptions,
+        currentCommission
       );
 
-      if (!methodOption) {
-        this.data["commission"] = 0;
-        return;
-      }
-
-      const methodName = (methodOption.label || "").toLowerCase();
-      const esTarjeta =
-        methodName.includes("tarjeta") ||
-        methodName.includes("credito") ||
-        methodName.includes("card");
-      const esBitcoin =
-        methodName.includes("bitcoin") || methodName.includes("btc");
-
-      // Si es Purchase con tarjeta: comisión = 0
-      if (esTarjeta) {
-        this.data["commission"] = 0;
-        return;
-      }
-
-      // Si es Purchase con Bitcoin: NO calcular automáticamente (mantener valor actual o 0)
-      // El usuario debe ingresar la comisión manualmente
-      if (esBitcoin) {
-        // No cambiar el valor, dejar que el usuario lo ingrese
-        if (
-          this.data["commission"] === undefined ||
-          this.data["commission"] === null
-        ) {
-          this.data["commission"] = 0;
-        }
-        return;
-      }
-
-      // Por defecto para Purchase, comisión 0
-      this.data["commission"] = 0;
-      return;
-    }
-
-    // Si es Payment: calcular automáticamente según el método de retiro
-    const withdrawalMethodOptions =
-      this.selectOptions["withdrawalMethod"] || [];
-    const methodOption = withdrawalMethodOptions.find(
-      (opt: any) => opt.value === withdrawalMethodId
-    );
-
-    if (!methodOption) {
-      this.data["commission"] = 0;
-      return;
-    }
-
-    const methodName = (methodOption.label || "").toLowerCase();
-
-    // Bitcoin: 1% del monto
-    if (methodName.includes("bitcoin") || methodName.includes("btc")) {
-      this.data["commission"] = amount * 0.01;
-      return;
-    }
-
-    // Tarjeta de crédito: 2.6% del monto + $1.3 fijo
-    if (
-      methodName.includes("tarjeta") ||
-      methodName.includes("credito") ||
-      methodName.includes("card")
-    ) {
-      this.data["commission"] = amount * 0.026 + 1.3;
-      return;
-    }
-
-    // Por defecto, comisión 0
-    this.data["commission"] = 0;
+    this.data["commission"] = calculatedCommission;
   }
   /**
    * Muestra un mensaje de confirmación antes de realizar una acción.

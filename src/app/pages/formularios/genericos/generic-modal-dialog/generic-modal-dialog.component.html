@@ -10,88 +10,92 @@
 
 <div class="modal-body">
   <!-- Mostrar formulario solo si NO es una confirmación -->
-  <form *ngIf="!showConfirmButtons" #form="ngForm" (submit)="save()">
+  @if (!showConfirmButtons) {
+  <form #form="ngForm" (submit)="save()">
     <div class="row g-3">
+      @for (field of fields; track field.key || $index) {
       <div
-        *ngFor="let field of fields"
         [class.col-xxl-6]="multiColumnLayout"
         [class.col-xxl-12]="!multiColumnLayout"
         class="col-12 col-md-12"
       >
         <label [for]="field.key" class="form-label">{{ field.label }}</label>
 
-        <!-- <ng-container [ngSwitch]="field.type"> -->
-        <ng-container [ngSwitch]="getInputType(field.key)">
-          <!-- Checkbox para booleanos -->
-          <div *ngSwitchCase="'checkbox'" class="form-check form-switch">
-            <input
-              type="checkbox"
-              class="form-check-input"
-              role="switch"
-              [id]="field.key"
-              [ngModel]="data[field.key]"
-              [name]="field.key"
-              [disabled]="field.readonly || (field.disabled ?? false)"
-              (ngModelChange)="onFieldChange(field.key, $event)"
-            />
-          </div>
-
-          <!-- Select para opciones desplegables -->
-          <select
-            *ngSwitchCase="'select'"
-            class="form-select"
+        <!-- Control de flujo moderno con @switch -->
+        @switch (getInputType(field.key)) { @case ('checkbox') {
+        <div class="form-check form-switch">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            role="switch"
+            [id]="field.key"
             [ngModel]="data[field.key]"
             [name]="field.key"
             [disabled]="field.readonly || (field.disabled ?? false)"
-            [required]="isRequiredField(field.key)"
-            (ngModelChange)="onFieldChange(field.key, $event)"
-          >
-            <option [ngValue]="" disabled selected>SELECCIONE</option>
-            <option
-              *ngFor="let option of field.options"
-              [ngValue]="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
-
-          <!-- Input de fecha -->
-          <input
-            *ngSwitchCase="'date'"
-            type="date"
-            class="form-control"
-            [id]="field.key"
-            [ngModel]="data[field.key] | date : 'yyyy-MM-dd'"
-            [name]="field.key"
-            (ngModelChange)="onDateChange(field.key, $event)"
-            [readonly]="field.readonly"
-          />
-
-          <!-- Campo por defecto -->
-          <input
-            *ngSwitchDefault
-            [type]="field.type"
-            class="form-control"
-            [id]="field.key"
-            [ngModel]="data[field.key]"
-            [name]="field.key"
-            [required]="isRequiredField(field.key)"
-            [readonly]="field.readonly"
-            [disabled]="field.disabled ?? false"
-            [ngClass]="{ 'readonly-field': field.readonly }"
             (ngModelChange)="onFieldChange(field.key, $event)"
           />
-        </ng-container>
-        <!-- Mensajes de error -->
-        <div *ngIf="showError(field)" class="invalid-feedback d-block">
-          <span *ngIf="form.controls[field.key]?.errors?.['required']">
-            Campo obligatorio
-          </span>
-          <span *ngIf="field.type === 'select' && !data[field.key]">
-            Debe seleccionar una opción válida
-          </span>
         </div>
+        }
+
+        <!-- Select para opciones desplegables -->
+        @case ('select') {
+        <select
+          class="form-select"
+          [ngModel]="data[field.key]"
+          [name]="field.key"
+          [disabled]="field.readonly || (field.disabled ?? false)"
+          [required]="isRequiredField(field.key)"
+          (ngModelChange)="onFieldChange(field.key, $event)"
+        >
+          <option [ngValue]="" disabled selected>SELECCIONE</option>
+          @for (option of field.options; track option.value || $index) {
+          <option [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+          }
+        </select>
+        }
+
+        <!-- Input de fecha -->
+        @case ('date') {
+        <input
+          type="date"
+          class="form-control"
+          [id]="field.key"
+          [ngModel]="data[field.key] | date : 'yyyy-MM-dd'"
+          [name]="field.key"
+          (ngModelChange)="onDateChange(field.key, $event)"
+          [readonly]="field.readonly"
+        />
+        }
+
+        <!-- Campo por defecto -->
+        @default {
+        <input
+          [type]="field.type"
+          class="form-control"
+          [id]="field.key"
+          [ngModel]="data[field.key]"
+          [name]="field.key"
+          [required]="isRequiredField(field.key)"
+          [readonly]="field.readonly"
+          [disabled]="field.disabled ?? false"
+          [ngClass]="{ 'readonly-field': field.readonly }"
+          (ngModelChange)="onFieldChange(field.key, $event)"
+        />
+        } }
+        <!-- Mensajes de error -->
+        @if (showError(field)) {
+        <div class="invalid-feedback d-block">
+          @if (form.controls[field.key]?.errors?.['required']) {
+          <span> Campo obligatorio </span>
+          } @if (field.type === 'select' && !data[field.key]) {
+          <span> Debe seleccionar una opción válida </span>
+          }
+        </div>
+        }
       </div>
+      }
     </div>
     <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-3">
       <button
@@ -110,9 +114,11 @@
       </button>
     </div>
   </form>
+  }
 
   <!-- Mostrar mensaje de confirmación cuando showConfirmButtons sea true -->
-  <div *ngIf="showConfirmButtons">
+  @if (showConfirmButtons) {
+  <div>
     <p>{{ actionConfig[actionType].message }}</p>
     <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-3">
       <button
@@ -126,4 +132,5 @@
       </button>
     </div>
   </div>
+  }
 </div>

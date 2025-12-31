@@ -1,4 +1,5 @@
-import { Component } from "@angular/core";
+import { Component, inject, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BehaviorSubject } from "rxjs";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { TransactionsDTO } from "src/app/application/transactions/DTO/TransactionsDTO";
@@ -9,6 +10,7 @@ import { ITransactionsCreate } from "src/app/application/transactions/Interfaces
 import { CreditcardService } from "src/app/application/creditcard/Services/Creditcard.service";
 import { CreditcardDTO } from "src/app/application/creditcard/DTO/CreditcardDTO";
 import { MerchantsService } from "src/app/application/Merchants/Services/Merchants.service";
+import { SelectOptionsMapperService } from "src/app/core/services/select-options-mapper.service";
 
 @Component({
   selector: "app-transactions",
@@ -38,6 +40,9 @@ export class TransactionsComponent {
   // Select options
   selectOptions: { [key: string]: any[] } = {};
 
+  private selectOptionsMapper = inject(SelectOptionsMapperService);
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private dataService: DataService,
     private transactionsService: TransactionsService,
@@ -62,45 +67,34 @@ export class TransactionsComponent {
   }
 
   private setupSubscriptions(): void {
-    this.creditCardCodesList$.subscribe((creditCardCodes) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        creditCardId: this.mapCreditCardCodes(creditCardCodes),
-      };
-    });
-    this.transactionTypesList$.subscribe((transactionTypes) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        type: this.mapTransactionTypes(transactionTypes),
-      };
-    });
-    this.merchantList$.subscribe((merchants) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        merchantId: this.mapMerchants(merchants),
-      };
-    });
-  }
+    // Suscripciones con takeUntilDestroyed para limpieza automática
+    this.creditCardCodesList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((creditCardCodes) => {
+        this.selectOptions = {
+          ...this.selectOptions,
+          creditCardId:
+            this.selectOptionsMapper.mapCreditCardCodes(creditCardCodes),
+        };
+      });
 
-  private mapCreditCardCodes(creditCardCodes: any[]): any[] {
-    return creditCardCodes.map((c: any) => ({
-      value: c.codigo,
-      label: c.descripcion,
-    }));
-  }
+    this.transactionTypesList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((transactionTypes) => {
+        this.selectOptions = {
+          ...this.selectOptions,
+          type: this.selectOptionsMapper.mapTransactionTypes(transactionTypes),
+        };
+      });
 
-  private mapTransactionTypes(transactionTypes: any[]): any[] {
-    return transactionTypes.map((t: any) => ({
-      value: t.id,
-      label: t.name,
-    }));
-  }
-
-  private mapMerchants(merchants: any[]): any[] {
-    return merchants.map((m: any) => ({
-      value: m.id,
-      label: m.name,
-    }));
+    this.merchantList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((merchants) => {
+        this.selectOptions = {
+          ...this.selectOptions,
+          merchantId: this.selectOptionsMapper.mapMerchants(merchants),
+        };
+      });
   }
 
   private mapToTransactionCreate(newTransaction: any): ITransactionsCreate {
@@ -235,30 +229,36 @@ export class TransactionsComponent {
    */
   private generateCustomColumns(): TableColumn[] {
     const baseColumns = generateTableColumns(this.transactionsDTO);
-    
+
     // Personalizar encabezados y ocultar columnas innecesarias
-    return baseColumns.map(column => {
-      // Personalizar encabezados
-      switch (column.property) {
-        case 'amount':
-          return { ...column, header: 'Monto' };
-        case 'type':
-          return { ...column, header: 'Tipo' };
-        case 'description':
-          return { ...column, header: 'Descripción' };
-        case 'transactionDate':
-          return { ...column, header: 'Fecha de Transacción', format: 'yyyy-MM-dd' };
-        case 'creditCardId':
-          return { ...column, header: 'Tarjeta de Crédito' };
-        case 'merchantId':
-          return { ...column, header: 'Comercio' };
-        default:
-          return column;
-      }
-    }).filter(column => {
-      // Ocultar columnas que no queremos mostrar
-      const hiddenProps = ['id', 'isProcessed', 'creditCard', 'date'];
-      return !hiddenProps.includes(column.property);
-    });
+    return baseColumns
+      .map((column) => {
+        // Personalizar encabezados
+        switch (column.property) {
+          case "amount":
+            return { ...column, header: "Monto" };
+          case "type":
+            return { ...column, header: "Tipo" };
+          case "description":
+            return { ...column, header: "Descripción" };
+          case "transactionDate":
+            return {
+              ...column,
+              header: "Fecha de Transacción",
+              format: "yyyy-MM-dd",
+            };
+          case "creditCardId":
+            return { ...column, header: "Tarjeta de Crédito" };
+          case "merchantId":
+            return { ...column, header: "Comercio" };
+          default:
+            return column;
+        }
+      })
+      .filter((column) => {
+        // Ocultar columnas que no queremos mostrar
+        const hiddenProps = ["id", "isProcessed", "creditCard", "date"];
+        return !hiddenProps.includes(column.property);
+      });
   }
 }

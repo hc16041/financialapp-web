@@ -15,6 +15,9 @@ import { TableColumn } from "./table-column.interface";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { GenericModalDialogComponent } from "../generic-modal-dialog/generic-modal-dialog.component";
 import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
+import { GenericTableHeaderComponent } from "./generic-table-header/generic-table-header.component";
+import { GenericTableBodyComponent } from "./generic-table-body/generic-table-body.component";
+import { GenericTablePaginationComponent } from "./generic-table-pagination/generic-table-pagination.component";
 
 @Component({
   selector: "app-generic-table",
@@ -22,464 +25,74 @@ import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
     <div class="row">
       <div class="col-lg-12">
         <div class="card">
-          <div class="card-header">
-            <!-- Primera fila: Título y botones principales -->
-            <div class="row mb-3">
-              <div class="col-12">
-                <div
-                  class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3"
-                >
-                  <h4 class="card-title mb-0">{{ title }}</h4>
-                  <div class="d-flex flex-wrap gap-2">
-                    <button
-                      *ngIf="showNewRegister"
-                      class="btn btn-outline-info btn-sm waves-effect waves-light"
-                      (click)="onNew()"
-                      id="btn_insertar"
-                    >
-                      <i class="mdi mdi-plus d-md-none"></i>
-                      <span class="d-none d-md-inline">Nuevo Registro</span>
-                      <span class="d-md-none">Nuevo</span>
-                    </button>
-                    <button
-                      *ngIf="showXmlDownload && hasPermission('descargaXml')"
-                      class="btn btn-outline-warning btn-sm waves-effect waves-light d-none d-md-inline-flex"
-                      (click)="onXmlDownload()"
-                      id="btn_descarga_xml"
-                    >
-                      Descargar XML
-                    </button>
-                    <button
-                      *ngIf="
-                        showExcelDownload && hasPermission('descargaExcel')
-                      "
-                      class="btn btn-outline-success btn-sm waves-effect waves-light d-none d-md-inline-flex"
-                      (click)="onExcelDownload()"
-                      id="btn_descarga_excel"
-                    >
-                      Descargar Excel
-                    </button>
-                    <button
-                      *ngIf="
-                        showTextoDownload && hasPermission('descargaTextoPlano')
-                      "
-                      class="btn btn-outline-secondary btn-sm waves-effect waves-light d-none d-lg-inline-flex"
-                      (click)="onTextoDownload()"
-                      id="btn_descarga_texto_plano"
-                    >
-                      Descargar Texto
-                    </button>
-                    <button
-                      *ngIf="showPdfDownload && hasPermission('descargaPdf')"
-                      class="btn btn-outline-danger btn-sm waves-effect waves-light d-none d-lg-inline-flex"
-                      (click)="onPdfDownload()"
-                      id="btn_descarga_pdf"
-                    >
-                      Descargar PDF
-                    </button>
-                    <button
-                      *ngIf="
-                        showReporteDownload &&
-                        hasPermission('descargaExcelPlantilla')
-                      "
-                      class="btn btn-outline-dark btn-sm waves-effect waves-light d-none d-lg-inline-flex"
-                      (click)="onRporteDownload()"
-                      id="btn_descarga_excel_plantilla"
-                    >
-                      Descargar Reporte
-                    </button>
-                    <button
-                      class="btn btn-outline-info btn-sm waves-effect waves-light"
-                      (click)="toggleShowAll()"
-                    >
-                      <span class="d-none d-md-inline">{{
-                        showAll ? "Ver menos" : "Ver todo"
-                      }}</span>
-                      <span class="d-md-none">{{
-                        showAll ? "Menos" : "Todo"
-                      }}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <!-- Header Component -->
+          <app-generic-table-header
+            [title]="title"
+            [showNewRegister]="showNewRegister"
+            [showXmlDownload]="showXmlDownload"
+            [showExcelDownload]="showExcelDownload"
+            [showTextoDownload]="showTextoDownload"
+            [showPdfDownload]="showPdfDownload"
+            [showReporteDownload]="showReporteDownload"
+            [showAll]="showAll"
+            [searchEnabled]="searchEnabled"
+            [showStatusFilter]="showStatusFilter"
+            [showDateRangeFilter]="showDateRangeFilter"
+            [dateRangeLabel]="dateRangeLabel"
+            [hasData]="data.length > 0"
+            [validatePermissions]="validatePermissions"
+            [startDate]="startDate"
+            [endDate]="endDate"
+            (newClick)="onNew()"
+            (xmlDownloadClick)="onXmlDownload()"
+            (excelDownloadClick)="onExcelDownload()"
+            (textoDownloadClick)="onTextoDownload()"
+            (pdfDownloadClick)="onPdfDownload()"
+            (reporteDownloadClick)="onRporteDownload()"
+            (toggleShowAllClick)="toggleShowAll()"
+            (search)="onSearchFromHeader($event)"
+            (statusChange)="onStatusChangeFromHeader($event)"
+            (dateRangeSearch)="onDateRangeSearchFromHeader($event)"
+          >
+            <ng-content select="[tableActions]"></ng-content>
+          </app-generic-table-header>
 
-            <!-- Segunda fila: Filtros y búsqueda -->
-            <div class="row g-3">
-              <div class="col-12">
-                <div
-                  class="d-flex flex-column flex-md-row gap-3 align-items-stretch align-items-md-center"
-                >
-                  <!-- Filtro de estado -->
-                  <div
-                    *ngIf="showStatusFilter"
-                    class="flex-shrink-0"
-                    style="min-width: 150px;"
-                  >
-                    <select
-                      class="form-select form-select-sm"
-                      (change)="onStatusChange($event)"
-                      [disabled]="!data.length"
-                    >
-                      <option
-                        *ngFor="let opt of statusFilterOptions"
-                        [value]="opt.value"
-                      >
-                        {{ opt.label }}
-                      </option>
-                    </select>
-                  </div>
+          <!-- Body Component -->
+          <app-generic-table-body
+            [visibleColumns]="visibleColumns"
+            [paginatedData]="paginatedData"
+            [showActions]="showActions"
+            [allowedActions]="allowedActions"
+            [actionConfig]="actionConfig"
+            [searchTerm]="searchTerm"
+            [selectOptions]="selectOptions"
+            [selectFields]="selectFields"
+            [sumColumns]="sumColumns"
+            [columnSums]="columnSums"
+            [columnFilters]="columnFilters"
+            [sortColumn]="sortColumn"
+            [sortDirection]="sortDirection"
+            [validatePermissions]="validatePermissions"
+            [getValueFn]="getValue.bind(this)"
+            [shouldShowActionFn]="shouldShowAction.bind(this)"
+            (actionClick)="onActionClick($event.action, $event.item)"
+            (sort)="onSort($event)"
+            (columnFilter)="onColumnFilter($event.property, $event.value)"
+            (clearColumnFilterEvent)="clearColumnFilter($event)"
+          ></app-generic-table-body>
 
-                  <!-- Filtro de rango de fechas -->
-                  <div *ngIf="showDateRangeFilter" class="flex-grow-1">
-                    <div
-                      class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center"
-                    >
-                      <label
-                        class="form-label mb-0 d-none d-md-inline-block me-2"
-                        style="white-space: nowrap;"
-                      >
-                        {{ dateRangeLabel }}:
-                      </label>
-                      <div class="d-flex gap-2 align-items-center flex-grow-1">
-                        <input
-                          type="date"
-                          class="form-control form-control-sm"
-                          [(ngModel)]="startDate"
-                          placeholder="Fecha inicio"
-                        />
-                        <span class="text-muted d-none d-md-inline">-</span>
-                        <input
-                          type="date"
-                          class="form-control form-control-sm"
-                          [(ngModel)]="endDate"
-                          placeholder="Fecha fin"
-                        />
-                        <button
-                          class="btn btn-primary btn-sm flex-shrink-0"
-                          (click)="onDateRangeSearch()"
-                          [disabled]="!startDate || !endDate"
-                        >
-                          <i class="bi bi-search d-md-none"></i>
-                          <span class="d-none d-md-inline">Buscar</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Búsqueda -->
-                  <div
-                    *ngIf="searchEnabled"
-                    class="flex-shrink-0"
-                    style="min-width: 200px;"
-                  >
-                    <input
-                      type="text"
-                      class="form-control form-control-sm search"
-                      placeholder="Buscar..."
-                      (input)="onSearch($event)"
-                    />
-                  </div>
-
-                  <ng-content select="[tableActions]"></ng-content>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-body">
-            <!-- Vista de tabla para desktop -->
-            <div class="table-responsive d-none d-md-block">
-              <table class="table table-gridjs">
-                <thead>
-                  <tr>
-                    <th
-                      *ngFor="let column of visibleColumns"
-                      [ngClass]="{
-                        sort: column.sortable,
-                        sorted: column.property === sortColumn
-                      }"
-                      (click)="column.sortable && onSort(column.property)"
-                    >
-                      <div
-                        class="d-flex justify-content-between align-items-center"
-                      >
-                        <span
-                          (click)="column.sortable && onSort(column.property)"
-                        >
-                          {{ column.header }}
-                        </span>
-                        <i
-                          *ngIf="column.sortable"
-                          class="bi"
-                          [ngClass]="{
-                            'bi-arrow-down':
-                              sortColumn === column.property &&
-                              sortDirection === 'desc',
-                            'bi-arrow-up':
-                              sortColumn === column.property &&
-                              sortDirection === 'asc',
-                            'bi-arrow-down text-secondary':
-                              sortColumn !== column.property
-                          }"
-                        ></i>
-                      </div>
-
-                      <!-- Input de filtro para la columna -->
-                      <div class="position-relative mt-1">
-                        <input
-                          type="text"
-                          class="form-control form-control-sm"
-                          placeholder="Filtrar..."
-                          [value]="columnFilters[column.property] || ''"
-                          (input)="
-                            onColumnFilter(
-                              column.property,
-                              getInputValue($event)
-                            )
-                          "
-                        />
-
-                        <!-- Botón para limpiar filtro - Corregido -->
-                        <span
-                          *ngIf="columnFilters[column.property]"
-                          class="position-absolute end-0 top-50 translate-middle-y me-1"
-                          style="cursor: pointer; z-index: 10;"
-                          (click)="
-                            clearColumnFilter(column.property);
-                            $event.stopPropagation()
-                          "
-                        >
-                          <i class="bi bi-x-circle-fill text-muted"></i>
-                        </span>
-                      </div>
-                    </th>
-                    <th *ngIf="showActions">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let item of paginatedData; trackBy: trackByFn">
-                    <td *ngFor="let column of visibleColumns">
-                      <ng-container [ngSwitch]="column.type">
-                        <ng-container *ngSwitchCase="'date'">
-                          {{
-                            getValue(item, column.property)
-                              | date : column.format || "yyyy-MM-dd"
-                          }}
-                        </ng-container>
-                        <ng-container *ngSwitchDefault>
-                          <ngb-highlight
-                            [result]="
-                              getValue(item, column.property) ||
-                              column.defaultValue ||
-                              '-'
-                            "
-                            [term]="searchTerm"
-                          ></ngb-highlight>
-                        </ng-container>
-                      </ng-container>
-                    </td>
-                    <td *ngIf="showActions" class="text-center">
-                      <div class="action-menu-container">
-                        <button
-                          class="btn btn-icon btn-sm btn-light"
-                          [ngbPopover]="popContent"
-                          [placement]="'bottom-end'"
-                          [container]="'body'"
-                          triggers="manual"
-                          #p="ngbPopover"
-                          (click)="toggleMenu($event, p)"
-                        >
-                          <i class="mdi mdi-dots-horizontal"></i>
-                        </button>
-
-                        <ng-template #popContent>
-                          <div class="action-menu-items">
-                            <ng-container *ngFor="let action of allowedActions">
-                              <button
-                                class="menu-item"
-                                *ngIf="
-                                  actionConfig[action] &&
-                                  (actionConfig[action].bypassPermission ||
-                                    hasPermission(
-                                      actionConfig[action].permission!
-                                    )) &&
-                                  shouldShowAction(action, item)
-                                "
-                                (click)="
-                                  onActionClick(
-                                    actionConfig[action].action,
-                                    item
-                                  );
-                                  p.close()
-                                "
-                              >
-                                <i
-                                  class="mdi {{ actionConfig[action].icon }} {{
-                                    actionConfig[action].color
-                                  }}"
-                                ></i>
-                                <span>{{ actionConfig[action].text }}</span>
-                              </button>
-                            </ng-container>
-                          </div>
-                        </ng-template>
-                      </div>
-                    </td>
-                  </tr>
-                  <!-- Fila de sumatoria -->
-                  <tr *ngIf="sumColumns?.length">
-                    <td *ngFor="let column of visibleColumns">
-                      <ng-container
-                        *ngIf="
-                          sumColumns.includes(column.property);
-                          else emptyCell
-                        "
-                      >
-                        <b>{{
-                          columnSums[column.property] | number : "1.2-2"
-                        }}</b>
-                      </ng-container>
-                      <ng-template #emptyCell>
-                        <span *ngIf="column === visibleColumns[0]"
-                          ><b>Total</b></span
-                        >
-                      </ng-template>
-                    </td>
-                    <td *ngIf="showActions"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Vista de cards para móviles -->
-            <div class="d-md-none">
-              <div class="row g-3">
-                <div
-                  class="col-12"
-                  *ngFor="let item of paginatedData; trackBy: trackByFn"
-                >
-                  <div class="card shadow-sm">
-                    <div class="card-body">
-                      <div
-                        class="d-flex justify-content-between align-items-start mb-2"
-                      >
-                        <h6 class="card-title mb-0">
-                          {{
-                            visibleColumns[0]
-                              ? getValue(item, visibleColumns[0].property)
-                              : "-"
-                          }}
-                        </h6>
-                        <div class="action-menu-container" *ngIf="showActions">
-                          <button
-                            class="btn btn-icon btn-sm btn-light"
-                            [ngbPopover]="popContentMobile"
-                            [placement]="'bottom-end'"
-                            [container]="'body'"
-                            triggers="manual"
-                            #pMobile="ngbPopover"
-                            (click)="toggleMenu($event, pMobile)"
-                          >
-                            <i class="mdi mdi-dots-horizontal"></i>
-                          </button>
-                          <ng-template #popContentMobile>
-                            <div class="action-menu-items">
-                              <ng-container
-                                *ngFor="let action of allowedActions"
-                              >
-                                <button
-                                  class="menu-item"
-                                  *ngIf="
-                                    actionConfig[action] &&
-                                    (actionConfig[action].bypassPermission ||
-                                      hasPermission(
-                                        actionConfig[action].permission!
-                                      )) &&
-                                    shouldShowAction(action, item)
-                                  "
-                                  (click)="
-                                    onActionClick(
-                                      actionConfig[action].action,
-                                      item
-                                    );
-                                    pMobile.close()
-                                  "
-                                >
-                                  <i
-                                    class="mdi {{
-                                      actionConfig[action].icon
-                                    }} {{ actionConfig[action].color }}"
-                                  ></i>
-                                  <span>{{ actionConfig[action].text }}</span>
-                                </button>
-                              </ng-container>
-                            </div>
-                          </ng-template>
-                        </div>
-                      </div>
-                      <div class="row g-2">
-                        <div
-                          class="col-6"
-                          *ngFor="let column of visibleColumns.slice(1)"
-                        >
-                          <small class="text-muted d-block"
-                            >{{ column.header }}:</small
-                          >
-                          <div class="fw-medium">
-                            <ng-container [ngSwitch]="column.type">
-                              <ng-container *ngSwitchCase="'date'">
-                                {{
-                                  getValue(item, column.property)
-                                    | date : column.format || "yyyy-MM-dd"
-                                }}
-                              </ng-container>
-                              <ng-container *ngSwitchDefault>
-                                <ngb-highlight
-                                  [result]="
-                                    getValue(item, column.property) ||
-                                    column.defaultValue ||
-                                    '-'
-                                  "
-                                  [term]="searchTerm"
-                                ></ngb-highlight>
-                              </ng-container>
-                            </ng-container>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="row justify-content-between align-items-center mt-3"
-              *ngIf="!showAll"
-            >
-              <div class="col-sm-12 col-md-5">
-                <div class="dataTables_info">
-                  Mostrando {{ startIndex + 1 }} a {{ endIndex }} de
-                  {{ totalItems }} registros
-                </div>
-              </div>
-              <div class="col-sm-12 col-md-5">
-                <div class="text-md-right float-md-end">
-                  <ngb-pagination
-                    [collectionSize]="totalItems"
-                    [(page)]="currentPage"
-                    [pageSize]="pageSize"
-                    [maxSize]="maxPages"
-                    [rotate]="true"
-                    [boundaryLinks]="true"
-                    (pageChange)="onPageChange($event)"
-                  >
-                  </ngb-pagination>
-                </div>
-              </div>
-            </div>
-          </div>
+          <!-- Pagination Component -->
+          <app-generic-table-pagination
+            *ngIf="!showAll"
+            [totalItems]="totalItems"
+            [currentPage]="currentPage"
+            [pageSize]="pageSize"
+            [maxPages]="maxPages"
+            [showAll]="showAll"
+            [startIndex]="startIndex"
+            [endIndex]="endIndex"
+            (pageChange)="onPageChange($event)"
+          ></app-generic-table-pagination>
         </div>
       </div>
     </div>
@@ -1335,6 +948,32 @@ export class GenericTableComponent<T> implements OnChanges {
   onSearch(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.searchSubject.next(value);
+  }
+
+  /**
+   * Handler para búsqueda desde el header component
+   */
+  onSearchFromHeader(value: string): void {
+    this.searchSubject.next(value);
+  }
+
+  /**
+   * Handler para cambio de estado desde el header component
+   */
+  onStatusChangeFromHeader(status: number | null): void {
+    this.statusFilterSubject.next(status);
+  }
+
+  /**
+   * Handler para búsqueda por rango de fechas desde el header component
+   */
+  onDateRangeSearchFromHeader(event: {
+    startDate: string;
+    endDate: string;
+  }): void {
+    this.startDate = event.startDate;
+    this.endDate = event.endDate;
+    this.onDateRangeSearch();
   }
 
   /**
