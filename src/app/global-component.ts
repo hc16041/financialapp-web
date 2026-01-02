@@ -1,4 +1,5 @@
 export const GlobalComponent = {
+  API_URL: "https://api-node.themesbrand.website/",
  
   // Auth Api
   //AUTH_API: "http://194.163.182.246:8080/api/",
