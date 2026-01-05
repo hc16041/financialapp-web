@@ -1,0 +1,67 @@
+.navbar-brand-box {
+  padding: 10px 5px !important;
+  width: 100%;
+  text-align: center;
+  
+  // Asegurar que solo se muestre un logo a la vez (el que corresponda según el tema)
+  .logo {
+    display: block;
+    width: 100%;
+    
+    // Solo mostrar el span que corresponda (logo-lg o logo-sm)
+    .logo-lg {
+      display: block;
+      width: 100%;
+      
+      img {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 60px !important;
+        object-fit: cover;
+        object-position: center;
+        padding: 5px 10px;
+        display: block;
+        margin: 0 auto;
+      }
+    }
+    
+    .logo-sm {
+      width: 100%;
+      
+      img {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 35px !important;
+        object-fit: cover;
+        object-position: center;
+        padding: 3px 8px;
+        display: block;
+        margin: 0 auto;
+      }
+    }
+  }
+}
+
+// Reglas globales para asegurar que solo se muestre un logo
+// Estas reglas refuerzan el CSS global que debería estar manejando esto
+:host ::ng-deep {
+  [data-sidebar="dark"] .navbar-brand-box {
+    .logo-dark {
+      display: none !important;
+    }
+    .logo-light {
+      display: block !important;
+    }
+  }
+  
+  [data-sidebar="light"] .navbar-brand-box,
+  :not([data-sidebar]) .navbar-brand-box {
+    .logo-dark {
+      display: block !important;
+    }
+    .logo-light {
+      display: none !important;
+    }
+  }
+}
+

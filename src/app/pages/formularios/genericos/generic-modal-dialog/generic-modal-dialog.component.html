@@ -87,7 +87,7 @@
         <!-- Mensajes de error -->
         @if (showError(field)) {
         <div class="invalid-feedback d-block">
-          @if (form.controls[field.key]?.errors?.['required']) {
+          @if (form.controls[field.key].errors?.['required']) {
           <span> Campo obligatorio </span>
           } @if (field.type === 'select' && !data[field.key]) {
           <span> Debe seleccionar una opción válida </span>
