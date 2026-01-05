@@ -50,4 +50,10 @@ export const MENU: MenuItem[] = [
       },
     ],
   },
+  {
+    id: 9,
+    label: "Reportes",
+    icon: "mdi mdi-chart-box-outline",
+    link: "/formularios/reports",
+  },
 ];

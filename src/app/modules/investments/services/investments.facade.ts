@@ -95,44 +95,106 @@ export class InvestmentsFacade {
    */
   async loadInvestments(): Promise<void> {
     try {
-      // Crear un BehaviorSubject temporal para usar con DataService
-      const tempSubject = new BehaviorSubject<InvestmentsDTO[]>([]);
+      // Establecer fechas por defecto (primer y último día del mes actual)
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-      await this.dataService.obtenerDatos(
-        this.investmentsService,
-        "getInvestments",
-        tempSubject,
-        "Error al cargar inversiones"
+      // Formatear fechas al formato YYYY-MM-DD
+      const formatDateForInput = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const startDate = formatDateForInput(firstDayOfMonth);
+      const endDate = formatDateForInput(lastDayOfMonth);
+
+      // Llamar al método con fechas por defecto
+      await this.loadInvestmentsByDateRange(startDate, endDate);
+    } catch (error) {
+      console.error("Error al cargar inversiones:", error);
+      this.alertService.showError("Error al cargar inversiones");
+    }
+  }
+
+  /**
+   * Carga las inversiones por rango de fechas
+   */
+  async loadInvestmentsByDateRange(
+    startDate: string,
+    endDate: string
+  ): Promise<void> {
+    try {
+      // Obtener token y username del LoginService
+      const token = this.loginService.token || "";
+      const username = this.loginService.username || "";
+
+      // Si las fechas están vacías, establecer fechas por defecto
+      let finalStartDate = startDate;
+      let finalEndDate = endDate;
+
+      if (!finalStartDate || !finalEndDate) {
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDayOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0
+        );
+
+        const formatDateForInput = (date: Date): string => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
+        finalStartDate = formatDateForInput(firstDayOfMonth);
+        finalEndDate = formatDateForInput(lastDayOfMonth);
+      }
+
+      const data = await this.investmentsService.getInvestmentsByDateRange(
+        token,
+        username,
+        finalStartDate,
+        finalEndDate
       );
 
-      // Obtener los datos y transformarlos
-      const data = tempSubject.value;
-
-      // Mapear withdrawalMethodId a withdrawalMethod cuando se reciben datos del servidor
+      // Mapear withdrawalMethodId o withdrawalMethod cuando se reciben datos del servidor
       const mappedData = data.map((investment: any) => {
-        // Si el servidor envía withdrawalMethodId como objeto, extraer solo el ID
-        if (
-          investment.hasOwnProperty("withdrawalMethodId") &&
-          !investment.hasOwnProperty("withdrawalMethod")
-        ) {
+        const mappedInvestment = { ...investment };
+
+        // Caso 1: El servidor envía withdrawalMethodId (puede ser objeto o número)
+        if (investment.hasOwnProperty("withdrawalMethodId")) {
           const withdrawalMethodValue =
-            typeof investment.withdrawalMethodId === "object"
+            typeof investment.withdrawalMethodId === "object" &&
+            investment.withdrawalMethodId !== null
               ? investment.withdrawalMethodId?.id ||
                 investment.withdrawalMethodId
               : investment.withdrawalMethodId;
 
-          return {
-            ...investment,
-            withdrawalMethod: withdrawalMethodValue,
-          };
+          mappedInvestment.withdrawalMethod = withdrawalMethodValue;
         }
-        return investment;
+        // Caso 2: El servidor envía withdrawalMethod como objeto (extraer solo el ID)
+        else if (
+          investment.hasOwnProperty("withdrawalMethod") &&
+          typeof investment.withdrawalMethod === "object" &&
+          investment.withdrawalMethod !== null
+        ) {
+          // Si es un objeto, extraer solo el ID
+          mappedInvestment.withdrawalMethod =
+            investment.withdrawalMethod?.id || investment.withdrawalMethod;
+        }
+
+        return mappedInvestment;
       });
 
       this.investmentsList$.next(mappedData);
     } catch (error) {
-      console.error("Error al cargar inversiones:", error);
-      this.alertService.showError("Error al cargar inversiones");
+      console.error("Error al cargar inversiones por fecha:", error);
+      this.alertService.showError("Error al cargar inversiones por fecha");
     }
   }
 

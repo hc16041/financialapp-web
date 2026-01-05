@@ -1315,4 +1315,59 @@ export const MENU: MenuItem[] = [
       },
     ],
   },
+  {
+    id: 200,
+    label: "Formularios",
+    isTitle: true,
+  },
+  {
+    id: 201,
+    label: "Mantenimientos",
+    icon: "mdi mdi-file-document-edit-outline",
+    isCollapsed: true,
+    subItems: [
+      {
+        id: 202,
+        label: "Tarjetas de Crédito",
+        link: "/formularios/creditcard",
+        parentId: 201,
+      },
+      {
+        id: 203,
+        label: "Transacciones",
+        link: "/formularios/transactions",
+        parentId: 201,
+      },
+      {
+        id: 204,
+        label: "Comercios",
+        link: "/formularios/merchants",
+        parentId: 201,
+      },
+      {
+        id: 205,
+        label: "Inversiones",
+        link: "/formularios/investments",
+        parentId: 201,
+      },
+      {
+        id: 206,
+        label: "Plataformas",
+        link: "/formularios/platforms",
+        parentId: 201,
+      },
+      {
+        id: 207,
+        label: "Métodos de Retiro",
+        link: "/formularios/withdrawal-methods",
+        parentId: 201,
+      },
+    ],
+  },
+  {
+    id: 208,
+    label: "Reportes",
+    icon: "mdi mdi-chart-box-outline",
+    link: "/formularios/reports",
+  },
 ];

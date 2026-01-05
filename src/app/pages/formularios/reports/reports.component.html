@@ -1,0 +1,699 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title mb-0">
+            <i class="mdi mdi-chart-line me-2"></i>
+            Reportes Financieros
+          </h4>
+        </div>
+        <div class="card-body">
+          <!-- Tabs para diferentes tipos de reportes -->
+          <ul
+            ngbNav
+            #nav="ngbNav"
+            [(activeId)]="activeTab"
+            class="nav-tabs nav-tabs-custom nav-justified"
+            role="tablist"
+          >
+            <li [ngbNavItem]="'investments'">
+              <a ngbNavLink>
+                <span class="d-block d-sm-none"
+                  ><i class="mdi mdi-chart-bar"></i
+                ></span>
+                <span class="d-none d-sm-block">Inversiones Mensuales</span>
+              </a>
+              <ng-template ngbNavContent>
+                <!-- Tab: Reporte de Inversiones Mensuales -->
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Año</label>
+                    <select
+                      class="form-select"
+                      [(ngModel)]="selectedYear"
+                      (change)="onYearChange()"
+                    >
+                      @for (year of availableYears; track year) {
+                      <option [value]="year">{{ year }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-md-8 d-flex align-items-end">
+                    @if (investmentsReport) {
+                    <div class="row w-100">
+                      <div class="col-md-4">
+                        <div class="card border-primary">
+                          <div class="card-body">
+                            <h6 class="text-muted mb-2">Total Ingresos</h6>
+                            <h4 class="text-success mb-0">
+                              ${{
+                                investmentsReport.totalIngresos
+                                  | number : "1.2-2"
+                              }}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="card border-danger">
+                          <div class="card-body">
+                            <h6 class="text-muted mb-2">Total Retiros</h6>
+                            <h4 class="text-danger mb-0">
+                              ${{
+                                investmentsReport.totalRetiros
+                                  | number : "1.2-2"
+                              }}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div
+                          class="card"
+                          [class.border-success]="
+                            investmentsReport.netBalance >= 0
+                          "
+                          [class.border-danger]="
+                            investmentsReport.netBalance < 0
+                          "
+                        >
+                          <div class="card-body">
+                            <h6 class="text-muted mb-2">Balance Neto</h6>
+                            <h4
+                              class="mb-0"
+                              [class.text-success]="
+                                investmentsReport.netBalance >= 0
+                              "
+                              [class.text-danger]="
+                                investmentsReport.netBalance < 0
+                              "
+                            >
+                              ${{
+                                investmentsReport.netBalance | number : "1.2-2"
+                              }}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    }
+                  </div>
+                </div>
+
+                @if (isLoadingInvestments) {
+                <div class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                  </div>
+                </div>
+                } @else if (investmentsReport) {
+                <div class="row">
+                  <!-- Gráfico de Ingresos vs Retiros -->
+                  <div class="col-lg-6">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">
+                          Ingresos vs Retiros por Mes
+                        </h5>
+                      </div>
+                      <div class="card-body">
+                        @if (investmentsChart) {
+                        <apx-chart
+                          [series]="investmentsChart.series"
+                          [chart]="investmentsChart.chart"
+                          [plotOptions]="investmentsChart.plotOptions"
+                          [dataLabels]="investmentsChart.dataLabels"
+                          [stroke]="investmentsChart.stroke"
+                          [colors]="investmentsChart.colors"
+                          [xaxis]="investmentsChart.xaxis"
+                          [yaxis]="investmentsChart.yaxis"
+                          [fill]="investmentsChart.fill"
+                          [tooltip]="investmentsChart.tooltip"
+                          [legend]="investmentsChart.legend"
+                        ></apx-chart>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Gráfico de Balance Neto -->
+                  <div class="col-lg-6">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">Balance Neto por Mes</h5>
+                      </div>
+                      <div class="card-body">
+                        @if (monthlyBalanceChart) {
+                        <apx-chart
+                          [series]="monthlyBalanceChart.series"
+                          [chart]="monthlyBalanceChart.chart"
+                          [stroke]="monthlyBalanceChart.stroke"
+                          [colors]="monthlyBalanceChart.colors"
+                          [xaxis]="monthlyBalanceChart.xaxis"
+                          [yaxis]="monthlyBalanceChart.yaxis"
+                          [markers]="monthlyBalanceChart.markers"
+                          [tooltip]="monthlyBalanceChart.tooltip"
+                        ></apx-chart>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tabla de resumen mensual -->
+                <div class="row mt-4">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">Resumen Mensual</h5>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-bordered table-striped">
+                            <thead>
+                              <tr>
+                                <th>Mes</th>
+                                <th class="text-end">Ingresos</th>
+                                <th class="text-end">Retiros</th>
+                                <th class="text-end">Balance Neto</th>
+                                <th class="text-center"># Ingresos</th>
+                                <th class="text-center"># Retiros</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for ( summary of
+                              investmentsReport.monthlySummaries; track
+                              summary.month ) {
+                              <tr>
+                                <td>
+                                  <strong>{{ summary.monthName }}</strong>
+                                </td>
+                                <td class="text-end text-success">
+                                  ${{
+                                    summary.totalIngresos | number : "1.2-2"
+                                  }}
+                                </td>
+                                <td class="text-end text-danger">
+                                  ${{ summary.totalRetiros | number : "1.2-2" }}
+                                </td>
+                                <td
+                                  class="text-end"
+                                  [class.text-success]="summary.netBalance >= 0"
+                                  [class.text-danger]="summary.netBalance < 0"
+                                >
+                                  <strong
+                                    >${{
+                                      summary.netBalance | number : "1.2-2"
+                                    }}</strong
+                                  >
+                                </td>
+                                <td class="text-center">
+                                  {{ summary.ingresoCount }}
+                                </td>
+                                <td class="text-center">
+                                  {{ summary.retiroCount }}
+                                </td>
+                              </tr>
+                              }
+                            </tbody>
+                            <tfoot>
+                              <tr class="table-active">
+                                <td><strong>TOTAL</strong></td>
+                                <td class="text-end text-success">
+                                  <strong
+                                    >${{
+                                      investmentsReport.totalIngresos
+                                        | number : "1.2-2"
+                                    }}</strong
+                                  >
+                                </td>
+                                <td class="text-end text-danger">
+                                  <strong
+                                    >${{
+                                      investmentsReport.totalRetiros
+                                        | number : "1.2-2"
+                                    }}</strong
+                                  >
+                                </td>
+                                <td
+                                  class="text-end"
+                                  [class.text-success]="
+                                    investmentsReport.netBalance >= 0
+                                  "
+                                  [class.text-danger]="
+                                    investmentsReport.netBalance < 0
+                                  "
+                                >
+                                  <strong
+                                    >${{
+                                      investmentsReport.netBalance
+                                        | number : "1.2-2"
+                                    }}</strong
+                                  >
+                                </td>
+                                <td class="text-center">
+                                  <strong>{{ totalIngresoCount }}</strong>
+                                </td>
+                                <td class="text-center">
+                                  <strong>{{ totalRetiroCount }}</strong>
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Detalle de inversiones por mes -->
+                <div class="row mt-4">
+                  @for ( summary of investmentsReport.monthlySummaries; track
+                  summary.month ) { @if (summary.investments &&
+                  summary.investments.length > 0) {
+                  <div class="col-12 mb-4">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">
+                          Detalle de {{ summary.monthName }} {{ summary.year }}
+                        </h5>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-sm table-bordered">
+                            <thead>
+                              <tr>
+                                <th>Fecha</th>
+                                <th>Plataforma</th>
+                                <th class="text-end">Monto</th>
+                                <th class="text-end">Comisión</th>
+                                <th class="text-end">Total</th>
+                                <th>Tipo</th>
+                                <th>Método de Retiro</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for ( investment of summary.investments; track
+                              investment.investmentId ) {
+                              <tr>
+                                <td>
+                                  {{
+                                    investment.transactionDate
+                                      | date : "yyyy-MM-dd"
+                                  }}
+                                </td>
+                                <td>{{ investment.platformName }}</td>
+                                <td class="text-end">
+                                  ${{ investment.amount | number : "1.2-2" }}
+                                </td>
+                                <td class="text-end">
+                                  ${{
+                                    investment.commission | number : "1.2-2"
+                                  }}
+                                </td>
+                                <td class="text-end">
+                                  <strong
+                                    >${{
+                                      investment.total | number : "1.2-2"
+                                    }}</strong
+                                  >
+                                </td>
+                                <td>
+                                  <span
+                                    class="badge"
+                                    [class.bg-success]="
+                                      investment.transactionType === 'Ingreso'
+                                    "
+                                    [class.bg-danger]="
+                                      investment.transactionType === 'Retiro'
+                                    "
+                                    >{{ investment.transactionType }}</span
+                                  >
+                                </td>
+                                <td>{{ investment.withdrawalMethodName }}</td>
+                              </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  } }
+                </div>
+                }
+              </ng-template>
+            </li>
+            <li [ngbNavItem]="'cards'">
+              <a ngbNavLink>
+                <span class="d-block d-sm-none"
+                  ><i class="mdi mdi-credit-card"></i
+                ></span>
+                <span class="d-none d-sm-block">Tarjetas de Crédito</span>
+              </a>
+              <ng-template ngbNavContent>
+                <!-- Tab: Reportes de Tarjetas -->
+                <div class="row mb-3">
+                  <div class="col-md-3">
+                    <label class="form-label">Tarjeta</label>
+                    <select
+                      class="form-select"
+                      [(ngModel)]="selectedCardId"
+                      (change)="onCardChange()"
+                    >
+                      @for (card of creditCards; track card.codigo || card.id) {
+                      <option [value]="card.codigo || card.id">
+                        {{ card.descripcion || card.bankName }}
+                      </option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      [(ngModel)]="startDate"
+                    />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Fecha Fin</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      [(ngModel)]="endDate"
+                    />
+                  </div>
+                  <div class="col-md-3 d-flex align-items-end">
+                    <button
+                      class="btn btn-primary w-100"
+                      (click)="onDateRangeSearch()"
+                    >
+                      <i class="mdi mdi-magnify me-1"></i>Buscar
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Reporte de Gastos por Tarjeta -->
+                @if (cardExpensesData) {
+                <div class="row mb-4">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">
+                          Gastos - {{ cardExpensesData.bankName }}
+                        </h5>
+                      </div>
+                      <div class="card-body">
+                        <div class="row mb-3">
+                          <div class="col-md-4">
+                            <div class="card border-primary">
+                              <div class="card-body">
+                                <h6 class="text-muted mb-2">Total Gastos</h6>
+                                <h4 class="text-primary mb-0">
+                                  ${{
+                                    cardExpensesData.totalExpenses
+                                      | number : "1.2-2"
+                                  }}
+                                </h4>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="card border-info">
+                              <div class="card-body">
+                                <h6 class="text-muted mb-2"># Transacciones</h6>
+                                <h4 class="text-info mb-0">
+                                  {{ cardExpensesData.transactionCount }}
+                                </h4>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="card border-secondary">
+                              <div class="card-body">
+                                <h6 class="text-muted mb-2">Período</h6>
+                                <h6 class="mb-0">
+                                  {{
+                                    cardExpensesData.periodStart
+                                      | date : "dd/MM/yyyy"
+                                  }}
+                                  -
+                                  {{
+                                    cardExpensesData.periodEnd
+                                      | date : "dd/MM/yyyy"
+                                  }}
+                                </h6>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        @if (cardConsumptionChart) {
+                        <apx-chart
+                          [series]="cardConsumptionChart.series"
+                          [chart]="cardConsumptionChart.chart"
+                          [labels]="cardConsumptionChart.labels"
+                          [colors]="cardConsumptionChart.colors"
+                          [legend]="cardConsumptionChart.legend"
+                          [tooltip]="cardConsumptionChart.tooltip"
+                        ></apx-chart>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                }
+
+                <!-- Reporte de Pagos por Tarjeta -->
+                @if (cardPaymentsData) {
+                <div class="row mb-4">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">
+                          Pagos - {{ cardPaymentsData.bankName }}
+                        </h5>
+                      </div>
+                      <div class="card-body">
+                        <div class="row mb-3">
+                          <div class="col-md-6">
+                            <div class="card border-success">
+                              <div class="card-body">
+                                <h6 class="text-muted mb-2">Total Pagos</h6>
+                                <h4 class="text-success mb-0">
+                                  ${{
+                                    cardPaymentsData.totalPayments
+                                      | number : "1.2-2"
+                                  }}
+                                </h4>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                            <div class="card border-info">
+                              <div class="card-body">
+                                <h6 class="text-muted mb-2"># Pagos</h6>
+                                <h4 class="text-info mb-0">
+                                  {{ cardPaymentsData.paymentCount }}
+                                </h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                }
+
+                <!-- Reporte de Consumo de Tarjetas -->
+                @if (cardsConsumptionData && cardsConsumptionData.length > 0) {
+                <div class="row">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">Consumo de Tarjetas</h5>
+                      </div>
+                      <div class="card-body">
+                        @if (cardConsumptionChart) {
+                        <apx-chart
+                          [series]="cardConsumptionChart.series"
+                          [chart]="cardConsumptionChart.chart"
+                          [plotOptions]="cardConsumptionChart.plotOptions"
+                          [colors]="cardConsumptionChart.colors"
+                          [xaxis]="cardConsumptionChart.xaxis"
+                          [yaxis]="cardConsumptionChart.yaxis"
+                          [tooltip]="cardConsumptionChart.tooltip"
+                        ></apx-chart>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                }
+              </ng-template>
+            </li>
+            <li [ngbNavItem]="'merchants'">
+              <a ngbNavLink>
+                <span class="d-block d-sm-none"
+                  ><i class="mdi mdi-store"></i
+                ></span>
+                <span class="d-none d-sm-block">Gastos por Comercios</span>
+              </a>
+              <ng-template ngbNavContent>
+                <!-- Tab: Gastos por Comercios -->
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      [(ngModel)]="startDate"
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Fecha Fin</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      [(ngModel)]="endDate"
+                    />
+                  </div>
+                  <div class="col-md-4 d-flex align-items-end">
+                    <button
+                      class="btn btn-primary w-100"
+                      (click)="onDateRangeSearch()"
+                    >
+                      <i class="mdi mdi-magnify me-1"></i>Buscar
+                    </button>
+                  </div>
+                </div>
+
+                @if (merchantsExpensesData) {
+                <div class="row mb-4">
+                  <div class="col-md-4">
+                    <div class="card border-primary">
+                      <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Gastos</h6>
+                        <h4 class="text-primary mb-0">
+                          ${{
+                            merchantsExpensesData.totalExpenses
+                              | number : "1.2-2"
+                          }}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card border-info">
+                      <div class="card-body">
+                        <h6 class="text-muted mb-2"># Transacciones</h6>
+                        <h4 class="text-info mb-0">
+                          {{ merchantsExpensesData.totalTransactions }}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card border-secondary">
+                      <div class="card-body">
+                        <h6 class="text-muted mb-2"># Comercios</h6>
+                        <h4 class="mb-0">
+                          {{ merchantsExpensesData.merchants?.length || 0 }}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                @if (merchantsChart) {
+                <div class="row mb-4">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">
+                          Top 10 Comercios por Gastos
+                        </h5>
+                      </div>
+                      <div class="card-body">
+                        <apx-chart
+                          [series]="merchantsChart.series"
+                          [chart]="merchantsChart.chart"
+                          [plotOptions]="merchantsChart.plotOptions"
+                          [dataLabels]="merchantsChart.dataLabels"
+                          [colors]="merchantsChart.colors"
+                          [xaxis]="merchantsChart.xaxis"
+                          [yaxis]="merchantsChart.yaxis"
+                          [tooltip]="merchantsChart.tooltip"
+                        ></apx-chart>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                }
+
+                <!-- Tabla de comercios -->
+                @if (merchantsExpensesData.merchants &&
+                merchantsExpensesData.merchants.length > 0) {
+                <div class="row">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">Detalle por Comercio</h5>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-bordered table-striped">
+                            <thead>
+                              <tr>
+                                <th>Comercio</th>
+                                <th>Categoría</th>
+                                <th class="text-end">Total Gastos</th>
+                                <th class="text-center"># Transacciones</th>
+                                <th class="text-end">% del Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for ( merchant of
+                              merchantsExpensesData.merchants; track
+                              merchant.merchantId ) {
+                              <tr>
+                                <td>{{ merchant.merchantName }}</td>
+                                <td>{{ merchant.category || "-" }}</td>
+                                <td class="text-end">
+                                  <strong
+                                    >${{
+                                      merchant.totalAmount | number : "1.2-2"
+                                    }}</strong
+                                  >
+                                </td>
+                                <td class="text-center">
+                                  {{ merchant.transactionCount }}
+                                </td>
+                                <td class="text-end">
+                                  {{
+                                    merchant.percentageOfTotal
+                                      | number : "1.2-2"
+                                  }}%
+                                </td>
+                              </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                } }
+              </ng-template>
+            </li>
+          </ul>
+          <div [ngbNavOutlet]="nav" class="mt-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -8,7 +8,10 @@ import {
   NgbDropdownModule,
   NgbTypeaheadModule,
   NgbPopoverModule,
+  NgbNavModule,
 } from "@ng-bootstrap/ng-bootstrap";
+// ApexCharts
+import { NgApexchartsModule } from "ng-apexcharts";
 import { GenericTableComponent } from "./genericos/generictable/generictable.component";
 import { GenericModalDialogComponent } from "./genericos/generic-modal-dialog/generic-modal-dialog.component";
 import { GenericTableHeaderComponent } from "./genericos/generictable/generic-table-header/generic-table-header.component";
@@ -20,6 +23,7 @@ import { MerchantsComponent } from "./merchants/merchants.component";
 import { InvestmentsComponent } from "./investments/investments.component";
 import { PlatformsComponent } from "./platforms/platforms.component";
 import { WithdrawalMethodsComponent } from "./withdrawal-methods/withdrawal-methods.component";
+import { ReportsComponent } from "./reports/reports.component";
 
 @NgModule({
   declarations: [
@@ -31,6 +35,7 @@ import { WithdrawalMethodsComponent } from "./withdrawal-methods/withdrawal-meth
     InvestmentsComponent,
     PlatformsComponent,
     WithdrawalMethodsComponent,
+    ReportsComponent,
   ],
   imports: [
     CommonModule,
@@ -42,6 +47,8 @@ import { WithdrawalMethodsComponent } from "./withdrawal-methods/withdrawal-meth
     NgbDropdownModule,
     NgbTypeaheadModule,
     NgbPopoverModule,
+    NgbNavModule,
+    NgApexchartsModule,
     // Standalone components
     GenericTableHeaderComponent,
     GenericTableBodyComponent,

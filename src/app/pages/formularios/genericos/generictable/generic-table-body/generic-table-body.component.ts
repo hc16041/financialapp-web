@@ -152,7 +152,7 @@ import { TableColumn } from "../table-column.interface";
               </td>
             </tr>
             <!-- Fila de sumatoria -->
-            <tr *ngIf="sumColumns?.length">
+            <tr *ngIf="sumColumns.length > 0">
               <td *ngFor="let column of visibleColumns">
                 <ng-container
                   *ngIf="sumColumns.includes(column.property); else emptyCell"

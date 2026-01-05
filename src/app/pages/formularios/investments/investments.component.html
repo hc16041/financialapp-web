@@ -8,18 +8,22 @@
   [readonlyFields]="readonlyFields"
   [disabledFields]="disabledFields"
   [fieldsOrder]="['id', 'withdrawalMethod', 'creditCardId', 'platformId', 'transactionType', 'transactionDate', 'libreDeComision', 'amount', 'commission']"
+  [sumColumns]="['amount', 'commission']"
   [allowedActions]="['edit', 'delete']"
   [data]="(investmentsList$ | async)!"
   [showActions]="true"
   [searchEnabled]="true"
   [showNewRegister]="true"
   [showStatusFilter]="false"
+  [showDateRangeFilter]="true"
+  [dateRangeLabel]="'Rango de fechas'"
   [entityDTO]="investmentsDTO"
   [hiddenColumns]="['id']"
   (new)="onAddInvestment($event)"
   (edit)="onEditInvestment($event)"
   (delete)="onDeleteInvestment($event)"
   (fieldValueChange)="onFieldChange($event)"
+  (dateRangeSearch)="onDateRangeSearch($event)"
 >
 </app-generic-table>
 

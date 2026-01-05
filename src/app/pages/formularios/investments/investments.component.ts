@@ -389,4 +389,35 @@ export class InvestmentsComponent {
     // Usar el Facade para eliminar la inversión
     await this.investmentsFacade.deleteInvestment(investment.id);
   }
+
+  /**
+   * Maneja la búsqueda por rango de fechas
+   */
+  async onDateRangeSearch(dateRange: {
+    startDate: string;
+    endDate: string;
+  }): Promise<void> {
+    // Si las fechas están vacías, establecer fechas por defecto
+    let startDate = dateRange.startDate;
+    let endDate = dateRange.endDate;
+
+    if (!startDate || !endDate) {
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Formatear fechas al formato YYYY-MM-DD
+      const formatDateForInput = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      startDate = formatDateForInput(firstDayOfMonth);
+      endDate = formatDateForInput(lastDayOfMonth);
+    }
+
+    await this.investmentsFacade.loadInvestmentsByDateRange(startDate, endDate);
+  }
 }

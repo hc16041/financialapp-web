@@ -7,6 +7,7 @@ import { MerchantsComponent } from "./merchants/merchants.component";
 import { InvestmentsComponent } from "./investments/investments.component";
 import { PlatformsComponent } from "./platforms/platforms.component";
 import { WithdrawalMethodsComponent } from "./withdrawal-methods/withdrawal-methods.component";
+import { ReportsComponent } from "./reports/reports.component";
 
 const routes: Routes = [
   {
@@ -37,6 +38,11 @@ const routes: Routes = [
   {
     path: "withdrawal-methods",
     component: WithdrawalMethodsComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "reports",
+    component: ReportsComponent,
     canActivate: [AuthGuard],
   },
 ];

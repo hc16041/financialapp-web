@@ -898,6 +898,17 @@ export class GenericTableComponent<T> implements OnChanges {
       .split(".")
       .reduce((obj: any, prop: string) => obj?.[prop], item);
 
+    // Si el valor es un objeto, extraer el ID antes de procesarlo
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      value !== null
+    ) {
+      // Intentar extraer el ID del objeto
+      value = value.id || value.value || value;
+    }
+
     // Manejo de campos select con carga asincrónica
     if (this.selectFields.includes(property)) {
       const options = this.selectOptions[property];
@@ -1252,7 +1263,20 @@ export class GenericTableComponent<T> implements OnChanges {
 
     this.sumColumns.forEach((col) => {
       sums[col] = this.filteredData
-        .map((item: any) => Number(item[col]) || 0)
+        .map((item: any) => {
+          // Obtener el valor usando getValue para manejar transformaciones
+          // pero para campos numéricos simples, usar acceso directo es más eficiente
+          const rawValue = item[col];
+          // Si el valor es un objeto, intentar extraer el valor numérico
+          if (
+            rawValue &&
+            typeof rawValue === "object" &&
+            !Array.isArray(rawValue)
+          ) {
+            return Number(rawValue.value || rawValue.id || rawValue) || 0;
+          }
+          return Number(rawValue) || 0;
+        })
         .reduce((acc, val) => acc + val, 0);
     });
     return sums;

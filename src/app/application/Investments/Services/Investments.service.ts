@@ -12,7 +12,10 @@ export class InvestmentsService implements IInvestments {
   /**
    * Obtiene todas las inversiones del usuario autenticado
    */
-  async getInvestments(token: string, usuario: string): Promise<InvestmentsDTO[]> {
+  async getInvestments(
+    token: string,
+    usuario: string
+  ): Promise<InvestmentsDTO[]> {
     try {
       const url = `Investments`;
       return await this.apiConnectionService.sendRequestAsync<InvestmentsDTO[]>(
@@ -23,6 +26,43 @@ export class InvestmentsService implements IInvestments {
       );
     } catch (error) {
       console.error("Error en getInvestments:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene inversiones por rango de fechas
+   */
+  async getInvestmentsByDateRange(
+    token: string,
+    usuario: string,
+    startDate: string,
+    endDate: string
+  ): Promise<InvestmentsDTO[]> {
+    try {
+      // Formatear fechas para el backend (formato YYYY-MM-DD)
+      const formatDateForBackend = (dateString: string): string => {
+        // Si la fecha viene en formato DD/MM/YYYY, convertirla a YYYY-MM-DD
+        if (dateString.includes("/")) {
+          const [day, month, year] = dateString.split("/");
+          return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        }
+        // Si ya viene en formato YYYY-MM-DD, retornarla tal cual
+        return dateString;
+      };
+
+      const formattedStart = formatDateForBackend(startDate);
+      const formattedEnd = formatDateForBackend(endDate);
+      const url = `Investments/by-date?startDate=${formattedStart}&endDate=${formattedEnd}`;
+
+      return await this.apiConnectionService.sendRequestAsync<InvestmentsDTO[]>(
+        url,
+        "GET",
+        null,
+        { Authorization: token }
+      );
+    } catch (error) {
+      console.error("Error en getInvestmentsByDateRange:", error);
       throw error;
     }
   }
@@ -64,7 +104,7 @@ export class InvestmentsService implements IInvestments {
       console.log("Datos:", JSON.stringify(datos, null, 2));
       console.log("Token:", token ? "Presente" : "Ausente");
       console.log("Usuario:", usuario);
-      
+
       const url = `Investments`;
       const resultado = await this.apiConnectionService.sendRequestAsync<any>(
         url,
@@ -72,7 +112,7 @@ export class InvestmentsService implements IInvestments {
         datos,
         { Authorization: token }
       );
-      
+
       console.log("Respuesta exitosa:", resultado);
       return resultado;
     } catch (error: any) {
@@ -131,4 +171,3 @@ export class InvestmentsService implements IInvestments {
     }
   }
 }
-
