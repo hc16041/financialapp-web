@@ -98,13 +98,6 @@ export class InvestmentsService implements IInvestments {
     usuario: string
   ): Promise<any> {
     try {
-      console.log("=== InvestmentsService.guardarInvestments ===");
-      console.log("URL:", "Investments");
-      console.log("Método: POST");
-      console.log("Datos:", JSON.stringify(datos, null, 2));
-      console.log("Token:", token ? "Presente" : "Ausente");
-      console.log("Usuario:", usuario);
-
       const url = `Investments`;
       const resultado = await this.apiConnectionService.sendRequestAsync<any>(
         url,
@@ -113,7 +106,6 @@ export class InvestmentsService implements IInvestments {
         { Authorization: token }
       );
 
-      console.log("Respuesta exitosa:", resultado);
       return resultado;
     } catch (error: any) {
       console.error("=== ERROR en guardarInvestments ===");

@@ -75,14 +75,12 @@ export class LoginService {
       : null;
   }
   saveToken(token: string): void {
-    console.log("Guardando token:", token);
     // Limpiar posible prefijo Bearer
     const cleanToken = token.replace("Bearer ", "");
     this.storage.setItem("authToken", cleanToken);
 
     // Eliminar datos redundantes en sessionStorage
     const user = this.decodeToken(cleanToken);
-    console.log(user);
     if (user) {
       // Guardar solo lo estrictamente necesario
       this.storage.setItem("profile", user.permisos[0]?.perfil || "");
@@ -94,8 +92,6 @@ export class LoginService {
         JSON.stringify(this.normalizeButtonKeys(user?.botones))
       );
     }
-
-    console.log(user);
   }
 
   logout(): void {
@@ -169,7 +165,6 @@ export class LoginService {
   decodeToken(token: string): LoginDTO | null {
     try {
       const decoded: any = jwtDecode(token);
-      console.log(decoded);
       return {
         id: Number(decoded.Id),
         usuario: decoded.Usuario,
@@ -194,8 +189,7 @@ export class LoginService {
     if (tokenWithBearer) {
       const tokenWithoutBearer = tokenWithBearer.replace("Bearer ", "");
       try {
-        const decodedToken = jwtDecode(tokenWithoutBearer);
-        console.log(decodedToken);
+        jwtDecode(tokenWithoutBearer);
       } catch (error) {
         console.error("Error decoding token:", error);
       }

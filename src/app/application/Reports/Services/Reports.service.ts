@@ -47,11 +47,6 @@ export class ReportsService {
         );
       }
 
-      console.log("=== ReportsService.getCardExpenses ===");
-      console.log("cardId:", cardId);
-      console.log("startDate:", cleanStartDate);
-      console.log("endDate:", cleanEndDate);
-
       // Construir la URL base - usar /expenses según la documentación
       const url = `reports/cards/${cardId}/expenses`;
 
@@ -68,9 +63,6 @@ export class ReportsService {
         { Authorization: token },
         params
       );
-
-      console.log("=== Respuesta de getCardExpenses ===");
-      console.log("Response:", response);
 
       return response;
     } catch (error: any) {
@@ -133,11 +125,6 @@ export class ReportsService {
         );
       }
 
-      console.log("=== ReportsService.getCardPayments ===");
-      console.log("cardId:", cardId);
-      console.log("startDate:", cleanStartDate);
-      console.log("endDate:", cleanEndDate);
-
       // Construir la URL base - usar /payments según la documentación
       const url = `reports/cards/${cardId}/payments`;
 
@@ -154,9 +141,6 @@ export class ReportsService {
         { Authorization: token },
         params
       );
-
-      console.log("=== Respuesta de getCardPayments ===");
-      console.log("Response:", response);
 
       return response;
     } catch (error: any) {
@@ -218,14 +202,6 @@ export class ReportsService {
         );
       }
 
-      console.log("=== ReportsService.getMerchantsExpenses ===");
-      console.log("startDate original:", startDate);
-      console.log("startDate limpio:", cleanStartDate);
-      console.log("endDate original:", endDate);
-      console.log("endDate limpio:", cleanEndDate);
-      console.log("Token:", token ? "Presente" : "Ausente");
-      console.log("Usuario:", usuario);
-
       // Construir la URL base
       const url = `reports/merchants/expenses`;
 
@@ -235,9 +211,6 @@ export class ReportsService {
         endDate: cleanEndDate,
       };
 
-      console.log("URL base:", url);
-      console.log("Parámetros:", params);
-
       const response = await this.apiConnectionService.sendRequestAsync<any>(
         url,
         "GET",
@@ -245,29 +218,6 @@ export class ReportsService {
         { Authorization: token },
         params
       );
-
-      console.log("=== Respuesta de getMerchantsExpenses ===");
-      console.log("Response:", response);
-      console.log("Tipo de respuesta:", typeof response);
-
-      if (response && typeof response === "object") {
-        console.log("Propiedades:", Object.keys(response));
-        console.log("totalExpenses:", response.totalExpenses);
-        console.log("totalTransactions:", response.totalTransactions);
-        console.log("merchants array length:", response.merchants?.length || 0);
-
-        if (response.totalExpenses === 0 && response.totalTransactions === 0) {
-          console.warn(
-            "⚠️ No hay gastos ni transacciones en el período especificado"
-          );
-          console.warn("⚠️ Verifica que:");
-          console.warn("   1. Las fechas sean correctas (no en el futuro)");
-          console.warn("   2. Haya transacciones registradas en ese período");
-          console.warn("   3. Las transacciones tengan merchantId asociado");
-        }
-
-        console.log("Contenido completo:", JSON.stringify(response, null, 2));
-      }
 
       return response;
     } catch (error: any) {
@@ -326,10 +276,6 @@ export class ReportsService {
         params["endDate"] = cleanEndDate;
       }
 
-      console.log("=== ReportsService.getCardsConsumption ===");
-      console.log("startDate:", cleanStartDate || "No proporcionado");
-      console.log("endDate:", cleanEndDate || "No proporcionado");
-
       const response = await this.apiConnectionService.sendRequestAsync<any>(
         url,
         "GET",
@@ -337,13 +283,6 @@ export class ReportsService {
         { Authorization: token },
         params
       );
-
-      console.log("=== Respuesta de getCardsConsumption ===");
-      console.log("Response:", response);
-      console.log("Es array?", Array.isArray(response));
-      if (Array.isArray(response)) {
-        console.log("Número de tarjetas:", response.length);
-      }
 
       return response;
     } catch (error: any) {
@@ -365,18 +304,10 @@ export class ReportsService {
     year: number
   ): Promise<any> {
     try {
-      console.log("=== ReportsService.getInvestmentsMonthly ===");
-      console.log("year:", year);
-      console.log("Token:", token ? "Presente" : "Ausente");
-      console.log("Usuario:", usuario);
-
       const url = `reports/investments/monthly`;
       const params: Record<string, string> = {
         year: year.toString(),
       };
-
-      console.log("URL:", url);
-      console.log("Parámetros:", params);
 
       const response = await this.apiConnectionService.sendRequestAsync<any>(
         url,
@@ -385,19 +316,6 @@ export class ReportsService {
         { Authorization: token },
         params
       );
-
-      console.log("=== Respuesta de getInvestmentsMonthly ===");
-      console.log("Response:", response);
-      if (response && typeof response === "object") {
-        console.log("Propiedades:", Object.keys(response));
-        console.log("Total ingresos:", response.totalIngresos);
-        console.log("Total retiros:", response.totalRetiros);
-        console.log("Balance neto:", response.netBalance);
-        console.log(
-          "Resúmenes mensuales:",
-          response.monthlySummaries?.length || 0
-        );
-      }
 
       return response;
     } catch (error: any) {

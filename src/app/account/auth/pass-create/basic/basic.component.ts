@@ -168,7 +168,6 @@ export class BasicComponent implements OnInit {
         this.passresetForm.value.cpassword
       ),
     });
-    console.log(changedData);
 
     this.loginService.changedPassword(changedData).then(
       (response: LoginResponseDTO) => {

@@ -177,8 +177,7 @@ export class TransactionsComponent {
       );
       this.transactionsList$.next(data);
     } catch (error) {
-      console.error("Error al cargar transacciones por fecha:", error);
-      // Aquí podrías usar el alertService si está disponible
+      // Error al cargar transacciones por fecha
     }
   }
 

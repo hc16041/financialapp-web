@@ -95,7 +95,7 @@ export class CentriesPermisoperfilComponent {
         ...this.permisosPerfilNoAsignadosList$.getValue(),
       ]);
     } catch (error) {
-      console.error("Error al cambiar el perfil:", error);
+      // Error al cambiar el perfil
     }
   }
 
@@ -140,7 +140,7 @@ export class CentriesPermisoperfilComponent {
       this.cdRef.markForCheck();
       this.cdRef.detectChanges();
     } catch (error) {
-      console.error("Error al obtener permisos no asignados:", error);
+      // Error al obtener permisos no asignados
     }
   }
 

@@ -39,7 +39,6 @@ export class CentriesBitacoraComponent {
   }
 
   async descargarArchivo(archivo: any): Promise<void> {
-    console.log(archivo);
 
     const tipo = archivo.tipo_archivo.split("/")[1]?.toLowerCase();
 

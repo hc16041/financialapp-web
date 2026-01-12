@@ -48,8 +48,6 @@ export class CentriesUsuarioComponent {
 
     this.initializeSelectOptions();
     this.setupSubscriptions();
-
-    console.log(this.usuariosList$);
   }
 
   private mapToUsuarioEdit(editUsuario: any): IUsuarioEdit {

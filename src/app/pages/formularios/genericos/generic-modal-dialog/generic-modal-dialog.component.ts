@@ -103,8 +103,6 @@ export class GenericModalDialogComponent implements OnDestroy {
       this.form.statusChanges?.subscribe(() => {
         this.cdRef.detectChanges(); // Forzar actualización de la vista
       });
-    } else {
-      console.warn("El formulario no está inicializado en ngAfterViewInit");
     }
   }
 
@@ -305,7 +303,7 @@ export class GenericModalDialogComponent implements OnDestroy {
           key
         )?.name.toLowerCase();
       } catch (e) {
-        console.warn("Error obteniendo metadata para", key, e);
+        // Error obteniendo metadata
       }
     }
     return null;

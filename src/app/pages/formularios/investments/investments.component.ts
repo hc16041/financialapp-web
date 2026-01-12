@@ -188,12 +188,6 @@ export class InvestmentsComponent {
   }
 
   async onAddInvestment(newInvestment: any): Promise<void> {
-    console.log("=== INICIO: Agregar Inversión ===");
-    console.log(
-      "Datos recibidos del formulario:",
-      JSON.stringify(newInvestment, null, 2)
-    );
-
     // Calcular comisión según el tipo de transacción
     if (
       !newInvestment.libreDeComision &&
@@ -202,15 +196,12 @@ export class InvestmentsComponent {
       newInvestment.transactionType
     ) {
       const esPurchase = this.esPurchase(newInvestment.transactionType);
-      console.log("Es Purchase?", esPurchase);
 
       if (esPurchase) {
         // Si es Purchase con tarjeta: comisión = 0
         if (this.requiereTarjeta(newInvestment.withdrawalMethod)) {
-          console.log("Purchase con tarjeta - comisión = 0");
           newInvestment.commission = 0;
         } else if (this.esBitcoin(newInvestment.withdrawalMethod)) {
-          console.log("Purchase con Bitcoin - mantener comisión manual");
           // Si es Purchase con Bitcoin: usar el servicio para determinar si debe calcularse
           const transactionTypeInfo = this.transactionTypesInfo.get(
             newInvestment.transactionType
@@ -255,7 +246,6 @@ export class InvestmentsComponent {
           }
         }
       } else {
-        console.log("Es Payment - calcular comisión automáticamente");
         // Si es Payment: calcular automáticamente
         newInvestment.commission = this.calcularComision(
           newInvestment.amount,
@@ -263,33 +253,22 @@ export class InvestmentsComponent {
           newInvestment.transactionType,
           newInvestment.libreDeComision
         );
-        console.log("Comisión calculada:", newInvestment.commission);
       }
     } else if (newInvestment.libreDeComision) {
-      console.log("Libre de comisión - comisión = 0");
       newInvestment.commission = 0;
     } else if (!newInvestment.commission && newInvestment.commission !== 0) {
-      console.log("Sin condiciones especiales - comisión = 0");
       newInvestment.commission = 0;
     }
 
     // Limpiar creditCardId si no requiere tarjeta
     if (!this.requiereTarjeta(newInvestment.withdrawalMethod)) {
-      console.log("No requiere tarjeta - creditCardId = 0");
       newInvestment.creditCardId = 0;
     }
 
     try {
       // Usar el Facade para agregar la inversión (el Facade maneja la transformación)
       await this.investmentsFacade.addInvestment(newInvestment);
-      console.log("=== FIN: Inversión agregada exitosamente ===");
     } catch (error) {
-      console.error("=== ERROR al agregar inversión ===");
-      console.error("Error completo:", error);
-      console.error(
-        "Stack trace:",
-        error instanceof Error ? error.stack : "No stack trace"
-      );
       throw error;
     }
   }

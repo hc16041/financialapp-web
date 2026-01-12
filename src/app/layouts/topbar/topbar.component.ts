@@ -405,7 +405,6 @@ export class TopbarComponent implements OnInit, OnDestroy {
           checkedVal.push(result);
         }
       }
-      console.log(checkedVal);
       this.checkedValGet = checkedVal;
     }
 

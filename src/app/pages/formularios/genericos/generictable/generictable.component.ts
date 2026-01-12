@@ -1210,7 +1210,6 @@ export class GenericTableComponent<T> implements OnChanges {
       const botones = JSON.parse(sessionStorage.getItem("botones") || "{}");
       return botones?.[permissionKey] === true;
     } catch (error) {
-      console.error("Error al leer permisos:", error);
       return false;
     }
   }

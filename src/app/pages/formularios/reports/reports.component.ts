@@ -102,7 +102,7 @@ export class ReportsComponent implements OnInit {
           this.creditCards[0].codigo || this.creditCards[0].id;
       }
     } catch (error) {
-      console.error("Error al cargar tarjetas:", error);
+      // Error al cargar tarjetas
     }
   }
 
@@ -121,7 +121,7 @@ export class ReportsComponent implements OnInit {
       );
       this.generateInvestmentsCharts();
     } catch (error) {
-      console.error("Error al cargar reporte de inversiones:", error);
+      // Error al cargar reporte de inversiones
     } finally {
       this.isLoadingInvestments = false;
     }
@@ -144,7 +144,7 @@ export class ReportsComponent implements OnInit {
       );
       this.generateCardExpensesChart();
     } catch (error) {
-      console.error("Error al cargar gastos por tarjeta:", error);
+      // Error al cargar gastos por tarjeta
     }
   }
 
@@ -164,7 +164,7 @@ export class ReportsComponent implements OnInit {
         this.endDate
       );
     } catch (error) {
-      console.error("Error al cargar pagos por tarjeta:", error);
+      // Error al cargar pagos por tarjeta
     }
   }
 
@@ -185,7 +185,7 @@ export class ReportsComponent implements OnInit {
       );
       this.generateCardsConsumptionChart();
     } catch (error) {
-      console.error("Error al cargar consumo de tarjetas:", error);
+      // Error al cargar consumo de tarjetas
     }
   }
 
@@ -205,7 +205,7 @@ export class ReportsComponent implements OnInit {
         );
       this.generateMerchantsChart();
     } catch (error) {
-      console.error("Error al cargar gastos por comercios:", error);
+      // Error al cargar gastos por comercios
     }
   }
 

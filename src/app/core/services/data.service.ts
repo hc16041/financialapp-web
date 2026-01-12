@@ -156,15 +156,7 @@ export class DataService {
     mensajeError: string
   ): Promise<void> {
     try {
-      console.log("=== DataService.agregarRegistro ===");
-      console.log("Servicio:", servicio);
-      console.log("Método:", metodo);
-      console.log("Datos a enviar:", JSON.stringify(datos, null, 2));
-      console.log("Token:", this.token ? "Presente" : "Ausente");
-      console.log("Username:", this.username);
-      
       const resultado = await servicio[metodo](datos, this.token, this.username);
-      console.log("Respuesta del servidor:", resultado);
       this.alertService.showSuccess(mensajeExito);
     } catch (error: any) {
       console.error("=== ERROR en agregarRegistro ===");
@@ -201,7 +193,6 @@ export class DataService {
     headers: string = ""
   ): Promise<void> {
     try {
-      console.log("Datos a actualizar:", datos);
       await servicio[metodo](datos, this.token, this.username);
       this.alertService.showSuccess(mensajeExito);
     } catch (error) {
