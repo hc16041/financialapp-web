@@ -1,0 +1,93 @@
+<div class="savings-dashboard">
+  <!-- Tarjetas de Resumen -->
+  <div class="row mb-4">
+    <!-- Saldo Actual -->
+    <div class="col-md-4">
+      <div class="card border-primary">
+        <div class="card-body">
+          <h5 class="card-title text-muted mb-2">Saldo Actual</h5>
+          <h2 class="mb-0" [class.text-success]="balance() >= 0" [class.text-danger]="balance() < 0">
+            {{ balance() | currency: 'USD':'symbol':'1.2-2' }}
+          </h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Depósitos -->
+    <div class="col-md-4">
+      <div class="card border-success">
+        <div class="card-body">
+          <h5 class="card-title text-muted mb-2">Total Depósitos</h5>
+          <h2 class="mb-0 text-success">
+            {{ totalDeposits() | currency: 'USD':'symbol':'1.2-2' }}
+          </h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Retiros -->
+    <div class="col-md-4">
+      <div class="card border-danger">
+        <div class="card-body">
+          <h5 class="card-title text-muted mb-2">Total Retiros</h5>
+          <h2 class="mb-0 text-danger">
+            {{ totalWithdrawals() | currency: 'USD':'symbol':'1.2-2' }}
+          </h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial de Transacciones -->
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Historial de Transacciones</h5>
+    </div>
+    <div class="card-body">
+      @if (loading()) {
+      <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+      } @else if (transactions().length === 0) {
+      <div class="text-center py-4 text-muted">
+        <p class="mb-0">No hay transacciones registradas</p>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+              <th class="text-end">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (transaction of transactions(); track transaction.id) {
+            <tr>
+              <td>{{ transaction.date | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <span [class]="getTransactionTypeClass(transaction.transactionType)">
+                  {{ getTransactionTypeLabel(transaction.transactionType) }}
+                </span>
+              </td>
+              <td>{{ transaction.description }}</td>
+              <td class="text-end" [class.text-success]="transaction.transactionType === transactionTypeEnum.Deposit" [class.text-danger]="transaction.transactionType === transactionTypeEnum.Withdrawal">
+                @if (transaction.transactionType === transactionTypeEnum.Deposit) {
+                +{{ transaction.amount | currency: 'USD':'symbol':'1.2-2' }}
+                } @else {
+                -{{ transaction.amount | currency: 'USD':'symbol':'1.2-2' }}
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+</div>

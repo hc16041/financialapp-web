@@ -1,0 +1,138 @@
+<form [formGroup]="savingsForm" (ngSubmit)="onSubmit($event)" class="row g-3">
+  <!-- Fecha -->
+  <div class="col-12">
+    <label for="date" class="form-label">Fecha</label>
+    <input
+      type="date"
+      id="date"
+      class="form-control"
+      formControlName="date"
+      [class.is-invalid]="
+        savingsForm.get('date')?.invalid && savingsForm.get('date')?.touched
+      "
+    />
+    @if (
+      savingsForm.get('date')?.invalid && savingsForm.get('date')?.touched
+    ) {
+    <div class="invalid-feedback">La fecha es requerida</div>
+    }
+  </div>
+
+  <!-- Tipo de Transacción -->
+  <div class="col-12">
+    <label for="transactionType" class="form-label">Tipo de Transacción</label>
+    <select
+      id="transactionType"
+      class="form-select"
+      formControlName="transactionType"
+      [class.is-invalid]="
+        savingsForm.get('transactionType')?.invalid &&
+        savingsForm.get('transactionType')?.touched
+      "
+    >
+      @for (type of transactionTypes; track type.value) {
+      <option [value]="type.value">{{ type.label }}</option>
+      }
+    </select>
+    @if (
+      savingsForm.get('transactionType')?.invalid &&
+      savingsForm.get('transactionType')?.touched
+    ) {
+    <div class="invalid-feedback">El tipo de transacción es requerido</div>
+    }
+  </div>
+
+  <!-- Monto -->
+  <div class="col-12">
+    <label for="amount" class="form-label">Monto</label>
+    <div class="input-group">
+      <span class="input-group-text">$</span>
+      <input
+        type="number"
+        id="amount"
+        class="form-control"
+        formControlName="amount"
+        step="0.01"
+        min="0.01"
+        placeholder="0.00"
+        [class.is-invalid]="
+          savingsForm.get('amount')?.invalid &&
+          savingsForm.get('amount')?.touched
+        "
+      />
+    </div>
+    @if (
+      savingsForm.get('amount')?.invalid && savingsForm.get('amount')?.touched
+    ) {
+    <div class="invalid-feedback">
+      @if (savingsForm.get('amount')?.errors?.['required']) {
+      El monto es requerido
+      } @else if (savingsForm.get('amount')?.errors?.['min']) {
+      El monto debe ser mayor a cero
+      } @else if (savingsForm.get('amount')?.errors?.['max']) {
+      El monto excede el límite permitido
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Descripción -->
+  <div class="col-12">
+    <label for="description" class="form-label">Descripción</label>
+    <textarea
+      id="description"
+      class="form-control"
+      formControlName="description"
+      rows="3"
+      placeholder="Ingrese una descripción..."
+      [class.is-invalid]="
+        savingsForm.get('description')?.invalid &&
+        savingsForm.get('description')?.touched
+      "
+    ></textarea>
+    @if (
+      savingsForm.get('description')?.invalid &&
+      savingsForm.get('description')?.touched
+    ) {
+    <div class="invalid-feedback">
+      @if (savingsForm.get('description')?.errors?.['required']) {
+      La descripción es requerida
+      } @else if (savingsForm.get('description')?.errors?.['minlength']) {
+      La descripción debe tener al menos 1 carácter
+      } @else if (savingsForm.get('description')?.errors?.['maxlength']) {
+      La descripción no puede exceder 500 caracteres
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Botones -->
+  <div class="col-12">
+    <div class="d-flex gap-2 justify-content-end">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="loading()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="savingsForm.invalid || loading()"
+      >
+        @if (loading()) {
+        <span
+          class="spinner-border spinner-border-sm me-2"
+          role="status"
+          aria-hidden="true"
+        ></span>
+        Guardando...
+        } @else {
+        Guardar
+        }
+      </button>
+    </div>
+  </div>
+</form>

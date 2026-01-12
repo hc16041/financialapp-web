@@ -48,10 +48,16 @@ export const MENU: MenuItem[] = [
         link: "/withdrawal-methods",
         parentId: 2,
       },
+      {
+        id: 9,
+        label: "Ahorros",
+        link: "/formularios/savings",
+        parentId: 2,
+      },
     ],
   },
   {
-    id: 9,
+    id: 10,
     label: "Reportes",
     icon: "mdi mdi-chart-box-outline",
     link: "/formularios/reports",

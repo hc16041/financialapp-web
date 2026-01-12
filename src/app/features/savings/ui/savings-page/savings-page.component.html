@@ -1,0 +1,74 @@
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+        <h4 class="mb-sm-0">Ahorros</h4>
+        <div class="page-title-right">
+          <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item"><a href="javascript: void(0);">Inicio</a></li>
+            <li class="breadcrumb-item active">Ahorros</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Lista de Transacciones y Saldo -->
+    <div class="col-lg-8">
+      <app-savings-list
+        [balance]="balance()"
+        [transactions]="transactions()"
+        [loading]="loading()"
+      />
+    </div>
+
+    <!-- Formulario de Nueva Transacción -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Nueva Transacción</h5>
+          @if (showForm()) {
+          <button
+            type="button"
+            class="btn-close"
+            (click)="toggleForm()"
+            aria-label="Cerrar"
+          ></button>
+          }
+        </div>
+        <div class="card-body">
+          @if (!showForm()) {
+          <div class="text-center py-4">
+            <p class="text-muted mb-3">
+              Registre un nuevo depósito o retiro de ahorros
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="toggleForm()"
+            >
+              <i class="mdi mdi-plus-circle me-1"></i>
+              Nueva Transacción
+            </button>
+          </div>
+          } @else {
+          <app-savings-form
+            [loading]="loading()"
+            (submit)="onFormSubmit($event)"
+            (cancel)="onFormCancel()"
+          />
+          }
+        </div>
+      </div>
+
+      <!-- Mensaje de Error -->
+      @if (error()) {
+      <div class="alert alert-danger mt-3" role="alert">
+        <i class="mdi mdi-alert-circle me-2"></i>
+        {{ error() }}
+      </div>
+      }
+    </div>
+  </div>
+</div>

@@ -8,6 +8,7 @@ import { InvestmentsComponent } from "./investments/investments.component";
 import { PlatformsComponent } from "./platforms/platforms.component";
 import { WithdrawalMethodsComponent } from "./withdrawal-methods/withdrawal-methods.component";
 import { ReportsComponent } from "./reports/reports.component";
+import { SavingsPageComponent } from "src/app/features/savings/ui/savings-page/savings-page.component";
 
 const routes: Routes = [
   {
@@ -43,6 +44,11 @@ const routes: Routes = [
   {
     path: "reports",
     component: ReportsComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "savings",
+    component: SavingsPageComponent,
     canActivate: [AuthGuard],
   },
 ];

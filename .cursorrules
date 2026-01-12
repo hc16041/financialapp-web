@@ -1,27 +1,60 @@
 # Angular Clean Architecture & Best Practices
 
-You are a Senior Angular Architect. You must enforce a strict Clean Architecture separation of concerns.
+You are a Senior Angular Architect. You must enforce a strict Clean Architecture separation of concerns, utilizing the latest Angular features (v17+).
 
 ## Architectural Layers
+
 1.  **Presentation Layer (Components):**
     -   Must be **Standalone**.
-    -   **Smart Components (Pages):** Only orchestrate data. Connect Facades/Services to UI. NO business logic.
-    -   **Dumb Components (UI):** Receive data via `input()`, emit events via `output()`. Purely visual.
-    -   **View:** Use modern Control Flow (`@if`, `@for`) instead of `*ngIf`/`*ngFor`.
-2.  **Domain/Application Layer (Facades/Services):**
+    -   **Smart Components (Pages/Containers):**
+        -   Orchestrate data.
+        -   Inject Facades/Stores.
+        -   Use `model()` for two-way binding if needed.
+        -   Pass data to Dumb Components via signals.
+    -   **Dumb Components (UI):**
+        -   Receive data via `input.required()` or `input()`.
+        -   Emit events via `output()`.
+        -   **No** dependencies on Services/Facades. Purely visual.
+    -   **View:**
+        -   Use modern Control Flow (`@if`, `@for`, `@switch`).
+        -   Use **Deferrable Views** (`@defer`) for heavy components or content below the fold.
+        -   Use `NgOptimizedImage` for images.
+
+2.  **Domain/Application Layer (Facades/State):**
     -   Contains ALL business logic and state management.
-    -   Uses **Signals** for state.
-    -   Components should never call HTTP clients directly; they call Facades/Services.
+    -   **Reactive State:** Expose data as `Signal<T>` (Read-only) to components.
+    -   **RxJS Interop:** Use `toSignal()` to convert HTTP Observables into Signals for the view.
+    -   **Mappers:** Transform API DTOs (from .NET) into clean UI Models inside this layer. Do not leak Backend DTO structures directly to the HTML.
+
 3.  **Infrastructure Layer (Data Services):**
-    -   Pure HTTP calls. Returns Observables or Promises.
-    -   Uses interceptors for global handling.
+    -   Pure HTTP calls using `HttpClient`.
+    -   Returns `Observable<T>`.
+    -   Uses interceptors for global error handling and JWT injection.
+    -   Define API URLs in environment files.
+
+## Folder Structure Guidelines
+-   `src/app/core`: Singleton services, Interceptors, Global Guards (Auth).
+-   `src/app/shared`: Reusable UI components (Buttons, Inputs), Pipes, Directives.
+-   `src/app/features`: Business logic modules (e.g., `dashboard`, `users`).
+    -   `.../ui`: Dumb components specific to this feature.
+    -   `.../data-access`: Facades, Services, API interfaces.
 
 ## Refactoring Rules (DRY & Clean Code)
--   **No Logic in HTML:** If an expression in the template is complex, move it to a `computed` signal or a pipe.
--   **Strict Typing:** No `any`. Define interfaces for all models/DTOs.
--   **Subscription Management:** NEVER use manual `.subscribe()` inside components. Use `async` pipe or Signals.
--   **DRY:** If logic repeats in 2+ files, extract to a Utility or Shared Service.
+-   **No Logic in HTML:** Move complex expressions to `computed()` signals or pure Pipes.
+-   **Strict Typing:** NO `any`. Define interfaces for all Models and DTOs.
+-   **Subscription Management:** NEVER use manual `.subscribe()` inside components. Use the `async` pipe (only if necessary) or preferably Signals.
+-   **Forms:** Use **Strictly Typed Reactive Forms**. Do not use Template Driven Forms for complex logic.
 
-## Style
--   Use `inject()` over constructor dependency injection.
--   Use `changeDetection: ChangeDetectionStrategy.OnPush` everywhere.
+## Style & Syntax
+-   Use `inject()` function over constructor dependency injection.
+-   Use `changeDetection: ChangeDetectionStrategy.OnPush` is MANDATORY.
+-   **Naming:**
+    -   Components: `kebab-case` (e.g., `user-profile.component.ts`).
+    -   Services: `user.service.ts`.
+    -   Interfaces: `user.interface.ts` or `user.model.ts`.
+    -   Signals: Suffix with `Signal` is optional, but clarity is key (e.g., `users = signal([])`).
+
+## Testing Strategy (If requested)
+-   Use **Spectator** or standard `TestBed`.
+-   Mock all external dependencies in Unit Tests.
+-   Focus on testing "User Interactions" in components and "Business Logic" in Services.
