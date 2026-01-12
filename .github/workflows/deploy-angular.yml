@@ -33,3 +33,7 @@ jobs:
           push: true
           # OJO: Cambia "tu_usuario" por tu usuario REAL de Docker Hub
           tags: ${{ secrets.DOCKER_USERNAME }}/velzon-frontend:latest
+          # --- ZONA DE OPTIMIZACIÓN ---
+          # Esto le dice a GitHub: "Usa el caché interno para no instalar todo de nuevo"
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
