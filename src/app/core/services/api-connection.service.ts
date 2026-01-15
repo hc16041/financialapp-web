@@ -122,7 +122,18 @@ export class ApiConnectionService {
         );
       }
 
-      const responseData = await response.json();
+      // Algunos endpoints (ej. DELETE) responden 204 sin body; evitar parseo JSON
+      if (response.status === 204) {
+        return undefined as unknown as T;
+      }
+
+      // Leer cuerpo seguro: si está vacío, devolver undefined
+      const rawText = await response.text();
+      if (!rawText) {
+        return undefined as unknown as T;
+      }
+
+      const responseData = JSON.parse(rawText);
 
       // Si classType es Array (por defecto), retorna los datos sin mapeo
       if (!classType) {
