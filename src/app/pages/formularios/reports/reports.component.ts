@@ -44,6 +44,7 @@ export class ReportsComponent implements OnInit {
   cardPaymentsData: any = null;
   cardsConsumptionData: any[] = [];
   merchantsExpensesData: any = null;
+  cashExpensesData: any = null;
 
   // Gráficos
   investmentsChart: ChartType | null = null;
@@ -206,6 +207,24 @@ export class ReportsComponent implements OnInit {
       this.generateMerchantsChart();
     } catch (error) {
       // Error al cargar gastos por comercios
+    }
+  }
+
+  /**
+   * Carga el reporte de gastos en efectivo
+   */
+  async loadCashExpenses(): Promise<void> {
+    try {
+      const token = this.loginService.token || "";
+      const username = this.loginService.username || "";
+      this.cashExpensesData = await this.reportsService.getCashExpenses(
+        token,
+        username,
+        this.startDate,
+        this.endDate
+      );
+    } catch (error) {
+      // Error al cargar gastos en efectivo
     }
   }
 
@@ -493,6 +512,7 @@ export class ReportsComponent implements OnInit {
     this.loadCardPayments();
     this.loadCardsConsumption();
     this.loadMerchantsExpenses();
+    this.loadCashExpenses();
   }
 
   /**

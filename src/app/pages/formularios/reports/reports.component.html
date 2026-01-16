@@ -535,6 +535,130 @@
                 }
               </ng-template>
             </li>
+            <li [ngbNavItem]="'cash'">
+              <a ngbNavLink>
+                <span class="d-block d-sm-none"
+                  ><i class="mdi mdi-cash"></i
+                ></span>
+                <span class="d-none d-sm-block">Gastos en Efectivo</span>
+              </a>
+              <ng-template ngbNavContent>
+                <!-- Tab: Gastos en Efectivo -->
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      [(ngModel)]="startDate"
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Fecha Fin</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      [(ngModel)]="endDate"
+                    />
+                  </div>
+                  <div class="col-md-4 d-flex align-items-end">
+                    <button
+                      class="btn btn-primary w-100"
+                      (click)="onDateRangeSearch()"
+                    >
+                      <i class="mdi mdi-magnify me-1"></i>Buscar
+                    </button>
+                  </div>
+                </div>
+
+                @if (cashExpensesData) {
+                <div class="row mb-4">
+                  <div class="col-md-4">
+                    <div class="card border-primary">
+                      <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Gastos Efectivo</h6>
+                        <h4 class="text-primary mb-0">
+                          ${{
+                            cashExpensesData.totalExpenses | number : "1.2-2"
+                          }}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card border-info">
+                      <div class="card-body">
+                        <h6 class="text-muted mb-2"># Transacciones</h6>
+                        <h4 class="text-info mb-0">
+                          {{ cashExpensesData.transactionCount }}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card border-secondary">
+                      <div class="card-body">
+                        <h6 class="text-muted mb-2">Período</h6>
+                        <h6 class="mb-0">
+                          {{
+                            cashExpensesData.periodStart | date : "dd/MM/yyyy"
+                          }}
+                          -
+                          {{ cashExpensesData.periodEnd | date : "dd/MM/yyyy" }}
+                        </h6>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title mb-0">
+                          Detalle de gastos en efectivo
+                        </h5>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-striped">
+                            <thead>
+                              <tr>
+                                <th>Fecha</th>
+                                <th>Descripción</th>
+                                <th>Comercio</th>
+                                <th class="text-end">Monto</th>
+                                <th>Tipo</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (expense of cashExpensesData.expenses; track
+                              expense.transactionId) {
+                              <tr>
+                                <td>
+                                  {{
+                                    expense.transactionDate
+                                      | date : "dd/MM/yyyy"
+                                  }}
+                                </td>
+                                <td>{{ expense.description }}</td>
+                                <td>{{ expense.merchantName }}</td>
+                                <td class="text-end">
+                                  ${{ expense.amount | number : "1.2-2" }}
+                                </td>
+                                <td>{{ expense.transactionType }}</td>
+                              </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                }
+              </ng-template>
+            </li>
             <li [ngbNavItem]="'merchants'">
               <a ngbNavLink>
                 <span class="d-block d-sm-none"

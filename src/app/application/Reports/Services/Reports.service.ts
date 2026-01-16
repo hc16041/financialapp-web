@@ -241,6 +241,66 @@ export class ReportsService {
   }
 
   /**
+   * Obtiene el reporte de gastos en efectivo del usuario autenticado.
+   * GET /api/reports/cash/expenses
+   * @param token Token de autenticación
+   * @param usuario Usuario autenticado
+   * @param startDate Fecha de inicio (requerido, YYYY-MM-DD)
+   * @param endDate Fecha de fin (requerido, YYYY-MM-DD)
+   * @returns Reporte con totales y detalle de gastos en efectivo
+   */
+  async getCashExpenses(
+    token: string,
+    usuario: string,
+    startDate: string,
+    endDate: string
+  ): Promise<any> {
+    try {
+      const cleanDate = (date?: string): string | undefined => {
+        if (!date) return undefined;
+        const cleaned = date.trim().replace(/^['"]+|['"]+$/g, "");
+        if (cleaned && !/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
+          console.warn(
+            `⚠️ Formato de fecha inválido: ${date}. Se espera YYYY-MM-DD`
+          );
+        }
+        return cleaned || undefined;
+      };
+
+      const cleanStartDate = cleanDate(startDate);
+      const cleanEndDate = cleanDate(endDate);
+
+      if (!cleanStartDate || !cleanEndDate) {
+        throw new Error(
+          "startDate y endDate son requeridos para gastos en efectivo"
+        );
+      }
+
+      const url = `reports/cash/expenses`;
+      const params: Record<string, string> = {
+        startDate: cleanStartDate,
+        endDate: cleanEndDate,
+      };
+
+      const response = await this.apiConnectionService.sendRequestAsync<any>(
+        url,
+        "GET",
+        null,
+        { Authorization: token },
+        params
+      );
+
+      return response;
+    } catch (error) {
+      console.error("=== ERROR en getCashExpenses ===");
+      console.error("startDate:", startDate);
+      console.error("endDate:", endDate);
+      console.error("Error completo:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Obtiene reporte de consumo de todas las tarjetas
    * GET /api/reports/cards/consumption
    * @param token Token de autenticación
