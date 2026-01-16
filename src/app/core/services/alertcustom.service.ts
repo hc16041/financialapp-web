@@ -8,16 +8,15 @@ export class AlertcustomService {
   constructor() {}
 
   /**
-   * Displays an alert with specified parameters using SweetAlert2.
+   * Muestra una alerta usando SweetAlert2 con configuración personalizada.
    *
-   * @param title - The title of the alert.
-   * @param text - The text content of the alert.
-   * @param icon - The icon type for the alert, defaults to "info".
-   * @param position - The position of the alert on the screen, defaults to "center".
-   * @param timer - The duration (in milliseconds) the alert should be displayed, defaults to 2000.
-   * @param showConfirmButton - Whether to show a confirm button, defaults to false.
+   * @param title Título de la alerta.
+   * @param text Contenido de la alerta.
+   * @param icon Tipo de icono; por defecto `"info"`.
+   * @param position Posición en pantalla; por defecto `"center"`.
+   * @param timer Duración en ms; por defecto `2000`.
+   * @param showConfirmButton Si se muestra botón de confirmación; por defecto `false`.
    */
-
   showAlert(
     title: string,
     text: string,
@@ -37,52 +36,45 @@ export class AlertcustomService {
   }
 
   /**
-   * Displays a success alert with the specified message and title.
+   * Muestra una alerta de éxito.
    *
-   * @param message - The message to display in the alert.
-   * @param title - The title of the alert, defaults to "Success".
+   * @param message Mensaje a mostrar.
+   * @param title Título de la alerta; por defecto `"Success"`.
    */
-
   showSuccess(message: string, title: string = "Success") {
     this.showAlert(title, message, "success", "center");
   }
 
-  /**
-   * Displays an error alert with the specified message and title.
-   *
-   * @param message - The message to display in the alert.
-   * @param title - The title of the alert, defaults to "Error".
-   */
   showError(message: string, title: string = "Error") {
     this.showAlert(title, message, "error", "center", 0, true);
   }
 
   /**
-   * Displays a warning alert with the specified message and title.
+   * Muestra una alerta de advertencia.
    *
-   * @param message - The message to display in the alert.
-   * @param title - The title of the alert, defaults to "Warning".
+   * @param message Mensaje a mostrar.
+   * @param title Título; por defecto `"Warning"`.
    */
   showWarning(message: string, title: string = "Warning") {
     this.showAlert(title, message, "warning");
   }
 
   /**
-   * Displays an information alert with the specified message and title.
+   * Muestra una alerta informativa.
    *
-   * @param message - The message to display in the alert.
-   * @param title - The title of the alert, defaults to "Information".
+   * @param message Mensaje a mostrar.
+   * @param title Título; por defecto `"Information"`.
    */
   showInfo(message: string, title: string = "Information") {
     this.showAlert(title, message, "info");
   }
 
   /**
-   * Displays a confirmation dialog and returns a promise with the result.
+   * Muestra un cuadro de confirmación.
    *
-   * @param message - The confirmation message.
-   * @param title - The dialog title, defaults to "Confirmación".
-   * @returns Promise<boolean> - Resolves to true if confirmed, false otherwise.
+   * @param message Mensaje de confirmación.
+   * @param title Título del diálogo; por defecto `"Confirmación"`.
+   * @returns Promesa que resuelve `true` si el usuario confirma, `false` en caso contrario.
    */
   confirm(message: string, title: string = "Confirmación"): Promise<boolean> {
     return Swal.fire({

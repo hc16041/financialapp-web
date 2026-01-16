@@ -8,6 +8,12 @@ import { TipocapacitacionDTO } from "../DTO/TipocapacitacionDTO";
 export class TipocapacitacionService {
   constructor(private apiConnectionService: ApiConnectionService) {}
 
+  /**
+   * Obtiene el listado de tipos de capacitación.
+   * @param token JWT de autorización.
+   * @param usuario Usuario solicitante.
+   * @returns Promesa con el catálogo de tipos de capacitación.
+   */
   async getListadoTipoCapacitacion(
     token: string,
     usuario: string

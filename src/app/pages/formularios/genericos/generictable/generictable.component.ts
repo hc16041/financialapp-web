@@ -1100,7 +1100,10 @@ export class GenericTableComponent<T> implements OnChanges {
   //   this.sortCache = null;
   // }
 
-  // Modificar el método applyFilters para incluir filtros por columna
+  /**
+   * Aplica filtros combinados: estado, búsqueda global y filtros por columna.
+   * Resetea el caché de ordenamiento para recalcular con los nuevos datos filtrados.
+   */
   private applyFilters(): void {
     const searchRegex = new RegExp(this.searchTerm, "i");
 
@@ -1138,19 +1141,29 @@ export class GenericTableComponent<T> implements OnChanges {
     this.sortCache = null;
   }
 
-  // Método para manejar el cambio en los filtros de columna
+  /**
+   * Actualiza el filtro de una columna y reaplica todos los filtros.
+   * @param property Propiedad a filtrar.
+   * @param value Valor de filtro ingresado.
+   */
   onColumnFilter(property: string, value: string): void {
     this.columnFilters[property] = value;
     this.applyFilters();
   }
 
-  // Método para limpiar un filtro de columna
+  /**
+   * Limpia el filtro de una columna específica y reaplica filtros.
+   * @param property Propiedad a limpiar.
+   */
   clearColumnFilter(property: string): void {
     delete this.columnFilters[property];
     this.applyFilters();
   }
 
-  // Añade este nuevo método para manejar el cambio de estado
+  /**
+   * Maneja el cambio de filtro de estado desde el select interno.
+   * @param event Evento de cambio del select.
+   */
   onStatusChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.statusFilterSubject.next(value === "null" ? null : Number(value));
@@ -1202,7 +1215,11 @@ export class GenericTableComponent<T> implements OnChanges {
     return sortedData;
   }
 
-  // generic-table.component.ts
+  /**
+   * Valida si el usuario tiene permiso para la clave indicada.
+   * @param permissionKey Clave de permiso buscada en sessionStorage.
+   * @returns `true` si el permiso está habilitado o si la validación está desactivada.
+   */
   hasPermission(permissionKey: string): boolean {
     if (!this.validatePermissions) return true; // Bypass si está desactivada la validación
 
@@ -1252,6 +1269,11 @@ export class GenericTableComponent<T> implements OnChanges {
     this.reporteDownload.emit();
   }
 
+  /**
+   * Extrae el valor de un input de evento DOM.
+   * @param event Evento del input.
+   * @returns Valor actual del campo.
+   */
   getInputValue(event: Event): string {
     return (event.target && (event.target as HTMLInputElement).value) || "";
   }

@@ -24,7 +24,7 @@ const httpOptions = {
 @Injectable({ providedIn: "root" })
 
 /**
- * Auth-service Component
+ * Servicio de autenticación (legacy) que gestiona login/register y logout.
  */
 export class AuthenticationService {
   user!: User;
@@ -41,9 +41,11 @@ export class AuthenticationService {
   }
 
   /**
-   * Performs the register
-   * @param email email
-   * @param password password
+   * Registra un usuario contra el endpoint `signup`.
+   * @param email Correo del usuario.
+   * @param first_name Nombre.
+   * @param password Contraseña.
+   * @returns Observable con el usuario creado.
    */
   register(email: string, first_name: string, password: string) {
     // return getFirebaseBackend()!.registerUser(email, password).then((response: any) => {
@@ -76,9 +78,10 @@ export class AuthenticationService {
   }
 
   /**
-   * Performs the auth
-   * @param email email of user
-   * @param password password of user
+   * Autentica al usuario contra el endpoint `signin`.
+   * @param email Correo del usuario.
+   * @param password Contraseña.
+   * @returns Observable con el usuario autenticado.
    */
   login(email: string, password: string) {
     // return getFirebaseBackend()!.loginUser(email, password).then((response: any) => {
@@ -108,14 +111,16 @@ export class AuthenticationService {
   }
 
   /**
-   * Returns the current user
+   * Retorna el usuario autenticado desde Firebase backend.
+   * @returns Usuario actual.
    */
   public currentUser(): any {
     return getFirebaseBackend()!.getAuthenticatedUser();
   }
 
   /**
-   * Logout the user
+   * Cierra sesión removiendo datos en sessionStorage y disparando acción de logout.
+   * @returns Observable vacío.
    */
   logout() {
     this.store.dispatch(logout());
@@ -129,8 +134,9 @@ export class AuthenticationService {
   }
 
   /**
-   * Reset password
-   * @param email email
+   * Solicita reset de contraseña a Firebase backend.
+   * @param email Correo del usuario.
+   * @returns Mensaje de respuesta del backend.
    */
   resetPassword(email: string) {
     return getFirebaseBackend()!

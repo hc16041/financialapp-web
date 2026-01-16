@@ -18,19 +18,20 @@ export class EventService {
     constructor() { }
 
     /**
-     * Broadcast the event
-     * @param type type of event
-     * @param payload payload
-     */
+   * Publica un evento en el bus interno.
+   * @param type Tipo de evento a notificar.
+   * @param payload Carga útil opcional a entregar.
+   */
     broadcast(type: string, payload = {}) {
         this.handler.next({ type, payload });
     }
 
     /**
-     * Subscribe to event
-     * @param type type of event
-     * @param callback call back function
-     */
+   * Suscribe a un evento concreto y ejecuta el callback con su payload.
+   * @param type Tipo de evento a escuchar.
+   * @param callback Función a ejecutar con el payload.
+   * @returns Suscripción RxJS para permitir cancelación.
+   */
     subscribe(type: string, callback: EventCallback): Subscription {
         return this.handler.pipe(
             filter(event => event.type === type)).pipe(

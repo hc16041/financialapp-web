@@ -8,6 +8,12 @@ import { ModalidadDTO } from "../DTO/ModalidadDTO";
 export class ModalidadService {
   constructor(private apiConnectionService: ApiConnectionService) {}
 
+  /**
+   * Obtiene la lista de modalidades desde backend.
+   * @param token JWT de autorización.
+   * @param usuario Usuario solicitante.
+   * @returns Promesa con el catálogo de modalidades.
+   */
   async getListadoModalidad(
     token: string,
     usuario: string

@@ -8,12 +8,11 @@ export class FileDownloadService {
   constructor(private alertService: AlertcustomService) {}
 
   /**
-   * Descarga un archivo XML con el contenido especificado en "data" y lo guarda
-   * en el disco duro con el nombre especificado en "fileName". Si no se especifica
-   * un nombre de archivo, se llama "download.xml".
-   * Emite un mensaje de error si ocurre un error al descargar el archivo.
-   * @param data Contenido del archivo XML a descargar.
-   * @param fileName Nombre del archivo a descargar. Opcional.
+   * Descarga un XML y notifica el resultado.
+   *
+   * @param data Contenido del XML.
+   * @param fileName Nombre sugerido del archivo.
+   * @param validacion Indicador `"S"` si se validó contra XSD (para ajustar mensaje).
    */
   downloadXmlFile(data: any, fileName: string, validacion: string): void {
     let url: string | null = null;
@@ -43,14 +42,11 @@ export class FileDownloadService {
   }
 
   /**
-   * Descarga un archivo Excel con el contenido especificado en "data" y lo guarda
-   * en el disco duro con el nombre especificado en "fileName". Si no se especifica
-   * un nombre de archivo, se llama "download.xlsx".
-   * Emite un mensaje de error si ocurre un error al descargar el archivo.
-   * @param data Contenido del archivo Excel a descargar.
-   * @param fileName Nombre del archivo a descargar. Opcional.
+   * Descarga un archivo Excel y muestra feedback de éxito/error.
+   *
+   * @param data Contenido del Excel.
+   * @param fileName Nombre sugerido del archivo.
    */
-
   downloadExcelFile(data: any, fileName: string): void {
     let url: string | null = null;
     try {
@@ -74,12 +70,10 @@ export class FileDownloadService {
   }
 
   /**
-   * Descarga un archivo PDF con el contenido especificado en "data" y lo guarda
-   * en el disco duro con el nombre especificado en "fileName". Si no se especifica
-   * un nombre de archivo, se llama "download.pdf".
-   * Emite un mensaje de error si ocurre un error al descargar el archivo.
-   * @param data Contenido del archivo PDF a descargar.
-   * @param fileName Nombre del archivo a descargar. Opcional.
+   * Descarga un PDF y muestra feedback de éxito/error.
+   *
+   * @param data Contenido del PDF.
+   * @param fileName Nombre sugerido del archivo.
    */
   downloadPdfFile(data: any, fileName: string): void {
     let url: string | null = null;
@@ -104,12 +98,10 @@ export class FileDownloadService {
   }
 
   /**
-   * Descarga un archivo de texto con el contenido especificado en "data" y lo guarda
-   * en el disco duro con el nombre especificado en "fileName". Si no se especifica
-   * un nombre de archivo, se llama "download.txt".
-   * Emite un mensaje de error si ocurre un error al descargar el archivo.
-   * @param data Contenido del archivo de texto a descargar.
-   * @param fileName Nombre del archivo a descargar. Opcional.
+   * Descarga un archivo de texto plano y muestra feedback.
+   *
+   * @param data Contenido del TXT.
+   * @param fileName Nombre sugerido del archivo.
    */
   downloadTextFile(data: any, fileName: string): void {
     let url: string | null = null;
@@ -134,12 +126,10 @@ export class FileDownloadService {
   }
 
   /**
-   * Descarga un archivo de texto con el contenido especificado en "data" de errores 
-   * y lo guarda en el disco duro con el nombre especificado en "fileName". 
-   * Si no se especifica un nombre de archivo, se llama "download.txt".
-   * Emite un mensaje de error si ocurre un error al descargar el archivo.
-   * @param data Contenido del archivo de texto de los errores a descargar.
-   * @param fileName Nombre del archivo a descargar. Opcional.
+   * Descarga un archivo de texto con errores de validación y alerta al usuario.
+   *
+   * @param data Contenido del TXT de errores.
+   * @param fileName Nombre sugerido del archivo.
    */
   downloadTextFileErrors(data: any, fileName: string): void {
     let url: string | null = null;

@@ -43,6 +43,11 @@ export class TransactionsComponent {
   private selectOptionsMapper = inject(SelectOptionsMapperService);
   private destroyRef = inject(DestroyRef);
 
+  paymentMethods = [
+    { value: 1, label: "Tarjeta de Crédito" },
+    { value: 2, label: "Efectivo" },
+  ];
+
   constructor(
     private dataService: DataService,
     private transactionsService: TransactionsService,
@@ -50,6 +55,9 @@ export class TransactionsComponent {
     private merchantService: MerchantsService
   ) {}
 
+  /**
+   * Inicializa la pantalla cargando catálogos y armando las opciones de selects.
+   */
   ngOnInit(): void {
     this.obtenerTransactions();
     this.obtenerCreditCardCodes();
@@ -59,13 +67,20 @@ export class TransactionsComponent {
     this.setupSubscriptions();
   }
 
+  /**
+   * Define el estado inicial de las opciones de select a partir de los BehaviorSubjects.
+   */
   private initializeSelectOptions(): void {
     this.selectOptions = {
       creditCardId: this.creditCardCodesList$.getValue(),
       type: this.transactionTypesList$.getValue(),
+      paymentMethod: this.paymentMethods,
     };
   }
 
+  /**
+   * Suscribe a los catálogos para mantener sincronizadas las opciones de los selects.
+   */
   private setupSubscriptions(): void {
     // Suscripciones con takeUntilDestroyed para limpieza automática
     this.creditCardCodesList$
@@ -87,6 +102,8 @@ export class TransactionsComponent {
         };
       });
 
+    // paymentMethod es estático; no requiere suscripción
+
     this.merchantList$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((merchants) => {
@@ -97,17 +114,29 @@ export class TransactionsComponent {
       });
   }
 
+  /**
+   * Mapea el objeto proveniente del formulario al contrato `ITransactionsCreate`.
+   * @param newTransaction Valor crudo emitido por el formulario/modal.
+   * @returns Objeto con la forma esperada por el backend.
+   */
   private mapToTransactionCreate(newTransaction: any): ITransactionsCreate {
+    const isCash = Number(newTransaction.paymentMethod) === 2;
+    const creditCardId = isCash ? null : newTransaction.creditCardId;
+
     return {
       amount: newTransaction.amount,
       type: newTransaction.type,
       description: newTransaction.description,
-      creditCardId: newTransaction.creditCardId,
+      paymentMethod: Number(newTransaction.paymentMethod) || 1,
+      creditCardId,
       transactionDate: newTransaction.transactionDate,
       merchantId: newTransaction.merchantId,
     };
   }
 
+  /**
+   * Obtiene la lista de comercios y la publica en su BehaviorSubject.
+   */
   async obtenerMerchants(): Promise<void> {
     return this.dataService.obtenerDatos(
       this.merchantService,
@@ -117,6 +146,9 @@ export class TransactionsComponent {
     );
   }
 
+  /**
+   * Obtiene la lista de tipos de transacción y la publica en su BehaviorSubject.
+   */
   async obtenerTiposTransacciones(): Promise<void> {
     return this.dataService.obtenerDatos(
       this.transactionsService,
@@ -126,6 +158,9 @@ export class TransactionsComponent {
     );
   }
 
+  /**
+   * Obtiene la lista de códigos de tarjeta de crédito y la publica en su BehaviorSubject.
+   */
   async obtenerCreditCardCodes(): Promise<void> {
     return this.dataService.obtenerDatos(
       this.creditcardService,
@@ -135,6 +170,9 @@ export class TransactionsComponent {
     );
   }
 
+  /**
+   * Carga transacciones usando el rango de fechas por defecto (mes actual).
+   */
   async obtenerTransactions(): Promise<void> {
     // Obtener token y username del sessionStorage
     const token = sessionStorage.getItem("authToken") || "";
@@ -160,6 +198,11 @@ export class TransactionsComponent {
     await this.obtenerTransactionsByDateRange(startDate, endDate);
   }
 
+  /**
+   * Obtiene transacciones en un rango de fechas y actualiza el estado de la tabla.
+   * @param startDate Fecha de inicio en formato YYYY-MM-DD.
+   * @param endDate Fecha de fin en formato YYYY-MM-DD.
+   */
   async obtenerTransactionsByDateRange(
     startDate: string,
     endDate: string
@@ -181,6 +224,10 @@ export class TransactionsComponent {
     }
   }
 
+  /**
+   * Acción del filtro de fechas; aplica rango personalizado o usa el mes actual por defecto.
+   * @param dateRange Rango de fechas recibido desde el componente de filtro.
+   */
   async onDateRangeSearch(dateRange: {
     startDate: string;
     endDate: string;
@@ -209,6 +256,10 @@ export class TransactionsComponent {
     await this.obtenerTransactionsByDateRange(startDate, endDate);
   }
 
+  /**
+   * Crea una transacción y recarga la tabla para reflejar el nuevo registro.
+   * @param newTransaction Datos crudos provenientes del formulario/modal.
+   */
   async onAddTransaction(newTransaction: any): Promise<void> {
     const transactionFiltrado: ITransactionsCreate =
       this.mapToTransactionCreate(newTransaction);
@@ -224,7 +275,8 @@ export class TransactionsComponent {
   }
 
   /**
-   * Genera columnas personalizadas para la tabla de transacciones
+   * Genera las columnas de la tabla ajustando cabeceras y ocultando campos internos.
+   * @returns Configuración de columnas para el componente de tabla genérica.
    */
   private generateCustomColumns(): TableColumn[] {
     const baseColumns = generateTableColumns(this.transactionsDTO);

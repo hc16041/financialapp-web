@@ -8,6 +8,12 @@ import { RegistroasistenciaDTO } from "../DTO/RegistroasistenciaDTO";
 export class RegistroasistenciaService {
   constructor(private apiConnectionService: ApiConnectionService) {}
 
+  /**
+   * Recupera el catálogo de registros de asistencia.
+   * @param token JWT de autorización.
+   * @param usuario Usuario solicitante.
+   * @returns Promesa con la lista de registros.
+   */
   async getListadoRegistroAsistencia(
     token: string,
     usuario: string

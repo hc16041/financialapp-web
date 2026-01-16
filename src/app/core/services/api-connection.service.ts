@@ -18,15 +18,19 @@ export class ApiConnectionService {
   constructor(private http: HttpClient, private authService: AuthNewService) {}
 
   /**
-   * Envia una solicitud HTTP a la API y devuelve la respuesta
-   * como un objeto de tipo T. Si la respuesta no es exitosa, lanza
-   * un error con el mensaje de error correspondiente.
-   * @param apiUrl Endpoint de la API
-   * @param method Verbo HTTP a utilizar
-   * @param body Cuerpo de la solicitud (opcional)
-   * @param headers Encabezados de la solicitud (opcional)
-   * @param parameters Par metros de la solicitud (opcional)
-   * @returns La respuesta de la API como un objeto de tipo T
+   * Envía una solicitud HTTP usando `fetch` y retorna la respuesta tipada.
+   *
+   * - Anexa automáticamente el `AUTH_API` base.
+   * - Si hay token y no es endpoint `/auth/`, agrega `Authorization: Bearer`.
+   * - Puede mapear la respuesta a instancias de clase usando `class-transformer`.
+   *
+   * @param apiUrl Ruta relativa del endpoint.
+   * @param method Verbo HTTP a utilizar.
+   * @param body Cuerpo de la solicitud; serializa a JSON si se envía.
+   * @param headers Encabezados adicionales.
+   * @param parameters Parámetros de consulta a agregar al URL.
+   * @param classType Clase destino para mapear la respuesta (opcional).
+   * @returns Promesa con la respuesta tipada.
    */
   async sendRequestAsync<T>(
     apiUrl: string,
@@ -157,7 +161,17 @@ export class ApiConnectionService {
     }
   }
 
-  //mejoras
+  /**
+   * Envía una solicitud de archivo y devuelve metadatos + payload en el tipo indicado.
+   *
+   * @param apiUrl Ruta relativa del endpoint.
+   * @param method Verbo HTTP a utilizar.
+   * @param fileTypeConfig Configuración de nombre por defecto y tipo de respuesta.
+   * @param body Cuerpo de la solicitud.
+   * @param headers Encabezados adicionales.
+   * @param parameters Parámetros de consulta.
+   * @returns Promesa con nombre de archivo detectado y los datos.
+   */
   async sendFileRequestAsync<T>(
     apiUrl: string,
     method: "GET" | "POST" | "PUT" | "DELETE",
@@ -227,7 +241,12 @@ export class ApiConnectionService {
     }
   }
 
-  // Función helper para extraer el nombre del archivo
+  /**
+   * Extrae el nombre de archivo de los headers HTTP o usa un valor por defecto.
+   * @param headers Headers de la respuesta.
+   * @param defaultName Nombre a usar cuando no hay `content-disposition`.
+   * @returns Nombre de archivo limpio.
+   */
   private getFileNameFromHeaders(
     headers: Headers,
     defaultName: string
@@ -249,7 +268,14 @@ export class ApiConnectionService {
     return fileName;
   }
 
-  // Para XML
+  /**
+   * Helper para descargas XML en texto plano.
+   * @param apiUrl Ruta relativa.
+   * @param method Verbo HTTP.
+   * @param body Cuerpo opcional.
+   * @param headers Encabezados opcionales.
+   * @param parameters Parámetros de consulta.
+   */
   async sendRequestXMLAsync<T>(
     apiUrl: string,
     method: "GET" | "POST" | "PUT" | "DELETE",
@@ -270,7 +296,14 @@ export class ApiConnectionService {
     );
   }
 
-  // Para Excel
+  /**
+   * Helper para descargas de Excel.
+   * @param apiUrl Ruta relativa.
+   * @param method Verbo HTTP (GET/POST).
+   * @param body Cuerpo opcional.
+   * @param headers Encabezados opcionales.
+   * @param parameters Parámetros de consulta.
+   */
   async sendRequestExcelAsync<T>(
     apiUrl: string,
     method: "GET" | "POST",
@@ -291,7 +324,14 @@ export class ApiConnectionService {
     );
   }
 
-  // Para PDF
+  /**
+   * Helper para descargas de PDF.
+   * @param apiUrl Ruta relativa.
+   * @param method Verbo HTTP.
+   * @param body Cuerpo opcional.
+   * @param headers Encabezados opcionales.
+   * @param parameters Parámetros de consulta.
+   */
   async sendRequestPDFAsync<T>(
     apiUrl: string,
     method: "GET" | "POST" | "PUT" | "DELETE",
@@ -312,7 +352,14 @@ export class ApiConnectionService {
     );
   }
 
-  // Para texto plano
+  /**
+   * Helper para descargas de texto plano.
+   * @param apiUrl Ruta relativa.
+   * @param method Verbo HTTP.
+   * @param body Cuerpo opcional.
+   * @param headers Encabezados opcionales.
+   * @param parameters Parámetros de consulta.
+   */
   async sendRequestTextAsync<T>(
     apiUrl: string,
     method: "GET" | "POST" | "PUT" | "DELETE",

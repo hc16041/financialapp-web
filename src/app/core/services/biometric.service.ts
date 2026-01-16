@@ -33,7 +33,8 @@ export class BiometricService {
   ) {}
 
   /**
-   * Obtiene el estado de la autenticación biométrica del usuario actual
+   * Obtiene el estado de la autenticación biométrica del usuario actual.
+   * @returns Observable con `BiometricStatus` del backend.
    */
   getBiometricStatus(): Observable<BiometricStatus> {
     const token = this.authService.getToken();
@@ -50,7 +51,10 @@ export class BiometricService {
   }
 
   /**
-   * Registra las credenciales biométricas del usuario
+   * Registra una credencial biométrica para el usuario actual.
+   * @param credentialId Identificador de la credencial WebAuthn.
+   * @param publicKey Clave pública opcional devuelta por el navegador.
+   * @returns Observable con el nuevo estado biométrico.
    */
   registerBiometric(credentialId: string, publicKey?: string): Observable<BiometricStatus> {
     const token = this.authService.getToken();
@@ -72,7 +76,11 @@ export class BiometricService {
   }
 
   /**
-   * Autentica usando biometría
+   * Autentica usando credenciales biométricas existentes.
+   * @param email Correo del usuario.
+   * @param credentialId Id de la credencial registrada.
+   * @param signature Firma opcional devuelta por WebAuthn.
+   * @returns Observable con la respuesta de autenticación.
    */
   loginWithBiometric(email: string, credentialId: string, signature?: string): Observable<any> {
     const body: BiometricLoginRequest = {
@@ -85,7 +93,8 @@ export class BiometricService {
   }
 
   /**
-   * Desactiva la autenticación biométrica
+   * Desactiva la autenticación biométrica para el usuario actual.
+   * @returns Observable con el estado actualizado.
    */
   disableBiometric(): Observable<BiometricStatus> {
     const token = this.authService.getToken();
@@ -102,7 +111,8 @@ export class BiometricService {
   }
 
   /**
-   * Verifica si WebAuthn está disponible en el navegador
+   * Verifica si el navegador soporta WebAuthn.
+   * @returns `true` si WebAuthn está disponible.
    */
   isWebAuthnAvailable(): boolean {
     return typeof window !== 'undefined' && 
@@ -111,7 +121,11 @@ export class BiometricService {
   }
 
   /**
-   * Registra una credencial biométrica usando WebAuthn
+   * Registra una credencial biométrica usando WebAuthn.
+   * @param userId Id interno de usuario.
+   * @param userName Nombre para mostrar.
+   * @param userEmail Correo del usuario.
+   * @returns Credencial generada (id y publicKey opcional).
    */
   async registerWebAuthnCredential(userId: number, userName: string, userEmail: string): Promise<{ credentialId: string; publicKey?: string }> {
     if (!this.isWebAuthnAvailable()) {
@@ -167,7 +181,10 @@ export class BiometricService {
   }
 
   /**
-   * Autentica usando WebAuthn
+   * Autentica con WebAuthn usando una credencial registrada.
+   * @param email Correo del usuario.
+   * @param credentialId Id de la credencial WebAuthn.
+   * @returns Firma codificada en base64 si la autenticación es exitosa.
    */
   async authenticateWithWebAuthn(email: string, credentialId: string): Promise<{ signature?: string }> {
     if (!this.isWebAuthnAvailable()) {
@@ -204,7 +221,8 @@ export class BiometricService {
   }
 
   /**
-   * Genera un challenge aleatorio
+   * Genera un challenge aleatorio para WebAuthn.
+   * @returns ArrayBuffer con bytes aleatorios.
    */
   private generateChallenge(): ArrayBuffer {
     const array = new Uint8Array(32);
@@ -213,7 +231,9 @@ export class BiometricService {
   }
 
   /**
-   * Convierte ArrayBuffer a Base64
+   * Convierte `ArrayBuffer` a cadena Base64.
+   * @param buffer Datos en binario.
+   * @returns Cadena en Base64.
    */
   private arrayBufferToBase64(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
@@ -225,7 +245,9 @@ export class BiometricService {
   }
 
   /**
-   * Convierte Base64 a ArrayBuffer
+   * Convierte una cadena Base64 a `ArrayBuffer`.
+   * @param base64 Cadena codificada.
+   * @returns Buffer resultante.
    */
   private base64ToArrayBuffer(base64: string): ArrayBuffer {
     const binary = atob(base64);

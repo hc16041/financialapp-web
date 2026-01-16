@@ -87,16 +87,8 @@ export class GenericModalDialogComponent implements OnDestroy {
   }
 
   /**
-   * ngAfterViewInit lifecycle hook
-   *
-   * Suscribe al evento statusChanges del formulario y fuerza la actualización
-   * de la vista con ChangeDetectorRef.detectChanges(). Esto es necesario
-   * porque el formulario no se renderiza en el momento en que se inicializa
-   * en ngOnInit, por lo que no se puede suscribir al evento statusChanges
-   * en ese momento.
-   *
-   * Si el formulario no existe en este momento, se muestra un aviso en la
-   * consola.
+   * Hook lifecycle: sincroniza cambios de validación del formulario después de render.
+   * Suscribe a `statusChanges` y fuerza `detectChanges` para reflejar estado de validación.
    */
   ngAfterViewInit() {
     if (this.form) {
@@ -131,13 +123,8 @@ export class GenericModalDialogComponent implements OnDestroy {
   };
 
   /**
-   * Genera dinámicamente los campos para el formulario según los
-   * datos recibidos y los campos excluidos.
-   *
-   * Recibe los datos del objeto `data` y los campos excluidos en
-   * `excludedFields` y devuelve un array de objetos con
-   * la siguiente estructura:
-   *
+   * Genera dinámicamente los campos del formulario según datos y configuraciones.
+   * Respeta orden personalizado, campos excluidos, readonly/disabled y opciones select.
    */
   private generateFields(): void {
     let fieldKeys = Object.keys(this.data).filter(
@@ -177,18 +164,14 @@ export class GenericModalDialogComponent implements OnDestroy {
     this.multiColumnLayout = this.fields.length > 5;
   }
 
-  /**
-   * Comprueba si un campo está deshabilitado.
-   */
+  /** Comprueba si un campo está deshabilitado. */
   isDisabledField(key: string): boolean {
     return this.disabledFields.some(
       (f) => f.toLowerCase() === key.toLowerCase()
     );
   }
 
-  /**
-   * Actualiza dinámicamente el estado disabled de un campo
-   */
+  /** Actualiza dinámicamente el estado disabled de un campo. */
   updateFieldDisabled(key: string, disabled: boolean): void {
     const field = this.fields.find((f) => f.key === key);
     if (field) {
@@ -198,11 +181,7 @@ export class GenericModalDialogComponent implements OnDestroy {
   }
   /**
    * Inicializa los campos requeridos con valores predeterminados.
-   *
-   * Si el campo es un select y no tiene un valor válido, se
-   * establece el valor por defecto en una cadena vacía.
-   *
-   * @private
+   * Si un select requerido está vacío, lo setea a cadena vacía para forzar selección.
    */
   private initializeRequiredFields(): void {
     this.requiredFields.forEach((field) => {
@@ -215,11 +194,9 @@ export class GenericModalDialogComponent implements OnDestroy {
     });
   }
   /**
-   * Convierte el nombre de un campo en un formato más legible para el usuario.
-   * Reemplaza "_" por espacios, elimina "id_" si está al inicio y capitaliza
-   * cada palabra.
-   * @param key clave del campo
-   * @returns el nombre del campo en formato legible
+   * Convierte el nombre técnico de un campo en etiqueta legible.
+   * @param key Clave del campo.
+   * @returns Etiqueta amigable.
    */
   private formatLabel(key: string): string {
     return (
@@ -233,19 +210,10 @@ export class GenericModalDialogComponent implements OnDestroy {
     );
   }
   /**
-   * Detecta el tipo de campo según el nombre de la clave.
-   *
-   * - Si la clave contiene "email", el tipo es "email".
-   * - Si la clave contiene "password", el tipo es "password".
-   * - Si la clave contiene "fecha" o "fec", el tipo es "date".
-   * - Si la clave es un select (detectado con `isSelectField`), el tipo es "select".
-   * - De lo contrario, el tipo es "text".
-   *
-   * @param key clave del campo
-   * @returns el tipo de campo
-   * @private
+   * Determina el tipo de input para un campo usando selectFields, metadata y heurísticas.
+   * @param key Clave del campo.
+   * @returns Tipo de input: select/number/text/email/password/date/checkbox/etc.
    */
-
   public getInputType(key: string): string {
     // 0. Prioridad máxima: si está en selectFields, es select
     if (this.isSelectField(key)) {
@@ -351,16 +319,9 @@ export class GenericModalDialogComponent implements OnDestroy {
   }
 
   /**
-   * Retorna las opciones de un campo select según su clave.
-   *
-   * Normaliza la clave del campo (a minúsculas y sin espacios) y la
-   * compara con las claves de this.selectOptions (también normalizadas).
-   * Si coincide directamente o por singular/plural (Ej: cargo -> cargos),
-   * devuelve el array de opciones correspondiente. De lo contrario, devuelve
-   * un array vacío.
-   * @param key clave del campo
-   * @returns array de opciones del campo select
-   * @private
+   * Retorna opciones para un campo select intentando match directo o singular/plural.
+   * @param key Clave del campo.
+   * @returns Opciones encontradas o arreglo vacío.
    */
   private getOptions(key: string): any[] {
     // Normalizar el nombre del campo
@@ -379,13 +340,8 @@ export class GenericModalDialogComponent implements OnDestroy {
   }
 
   /**
-   * Comprueba si un campo es readonly.
-   *
-   * Busca la clave del campo en this.readonlyFields (también en minúsculas)
-   * y devuelve true si coincide.
-   * @param key clave del campo
-   * @returns true si el campo es readonly, false en caso contrario
-   * @private
+   * Comprueba si un campo es readonly usando la lista configurada.
+   * @param key Clave del campo.
    */
   private isReadonlyField(key: string): boolean {
     return this.readonlyFields.some(
@@ -502,13 +458,7 @@ export class GenericModalDialogComponent implements OnDestroy {
   }
 
   /**
-   * Guarda el formulario y cierra el modal.
-   *
-   * Primero verifica que todos los campos requeridos tengan un valor válido.
-   * Si no es así, marca todos los campos como touched y actualiza la validez
-   * del formulario. Si el formulario es válido, emite el evento onSave con
-   * el objeto de datos y cierra el modal.
-   * @returns {void}
+   * Valida campos requeridos, emite onSave y cierra el modal si es válido.
    */
   save() {
     if (
@@ -527,24 +477,15 @@ export class GenericModalDialogComponent implements OnDestroy {
     this.activeModal.close();
     this.isSaving = false;
   }
-  /**
-   * Cierra el modal sin guardar los cambios.
-   *
-   * Emite el evento onClose y cierra el modal.
-   * @returns {void}
-   */
+  /** Cierra el modal sin guardar y emite onClose. */
   close() {
     this.onClose.emit();
     this.activeModal.close();
   }
   /**
-   * Maneja el cambio en un campo del formulario.
-   *
-   * Si el campo es "id_perfil", resetea el campo "id_permiso" y emite el
-   * evento onProfileChange con el nuevo valor. Luego, espera a que el padre
-   * actualice y regenera los campos con nuevas opciones.
-   * @param fieldKey clave del campo
-   * @param value nuevo valor del campo
+   * Maneja cambios de campo: recalcula comisión (debounce), notifica al padre y regenera campos cuando aplica.
+   * @param fieldKey Clave del campo modificado.
+   * @param value Nuevo valor.
    */
   async onFieldChange(fieldKey: string, value: any) {
     // Actualizar el valor en los datos

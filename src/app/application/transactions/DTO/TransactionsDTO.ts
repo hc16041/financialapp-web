@@ -47,8 +47,14 @@ export class TransactionsDTO {
 
   @IsNumber()
   @Type(() => Number)
+  @Min(1, { message: "El paymentMethod debe ser un número mayor o igual a 1." })
+  paymentMethod: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
   @Min(1, { message: "El creditCardId debe ser un número mayor o igual a 1." })
-  creditCardId: number;
+  creditCardId?: number | null;
 
   @IsOptional()
   @IsObject()
@@ -66,7 +72,8 @@ export class TransactionsDTO {
     this.date = data?.date || new Date();
     this.transactionDate = data?.transactionDate || new Date();
     this.isProcessed = data?.isProcessed ?? false;
-    this.creditCardId = data?.creditCardId ?? 1;
+    this.paymentMethod = data?.paymentMethod ?? 1;
+    this.creditCardId = data?.creditCardId ?? undefined;
     this.creditCard = data?.creditCard
       ? new CreditcardDTO(data.creditCard)
       : undefined;

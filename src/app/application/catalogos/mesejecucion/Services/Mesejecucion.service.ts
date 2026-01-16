@@ -8,6 +8,12 @@ import { MesejecucionDTO } from "../DTO/MesejecucionDTO";
 export class MesejecucionService {
   constructor(private apiConnectionService: ApiConnectionService) {}
 
+  /**
+   * Obtiene la lista de meses de ejecución.
+   * @param token JWT de autorización.
+   * @param usuario Usuario solicitante (auditoría).
+   * @returns Promesa con el catálogo de meses.
+   */
   async getListadoMesEjecucion(
     token: string,
     usuario: string

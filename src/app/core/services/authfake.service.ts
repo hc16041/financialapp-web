@@ -17,16 +17,17 @@ export class AuthfakeauthenticationService {
   }
 
   /**
-   * current user
+   * Usuario actual en sesión (valor inmediato del BehaviorSubject).
    */
   public get currentUserValue(): User {
     return this.currentUserSubject.value;
   }
 
   /**
-   * Performs the auth
-   * @param email email of user
-   * @param password password of user
+   * Autentica contra endpoint fake `/users/authenticate`.
+   * @param email Correo del usuario.
+   * @param password Contraseña del usuario.
+   * @returns Observable con el usuario autenticado; persiste en sessionStorage si trae token.
    */
   login(email: string, password: string) {
     return this.http
@@ -46,7 +47,7 @@ export class AuthfakeauthenticationService {
   }
 
   /**
-   * Logout the user
+   * Cierra sesión removiendo el usuario de sessionStorage.
    */
   logout() {
     // remove user from local storage to log user out

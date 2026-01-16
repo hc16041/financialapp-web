@@ -58,3 +58,22 @@ You are a Senior Angular Architect. You must enforce a strict Clean Architecture
 -   Use **Spectator** or standard `TestBed`.
 -   Mock all external dependencies in Unit Tests.
 -   Focus on testing "User Interactions" in components and "Business Logic" in Services.
+
+# Reglas de Documentación
+
+Siempre que te pida documentar código o generes código nuevo:
+
+1. **Para C# (.NET):**
+   - Usa siempre `/// <summary>` XML comments.
+   - Incluye etiquetas `<param>`, `<returns>` y `<exception>` si aplica.
+   - El idioma debe ser Español.
+   - Ejemplo:
+     /// <summary>
+     /// Obtiene la lista de usuarios activos.
+     /// </summary>
+     /// <returns>Una lista de objetos UserDTO.</returns>
+
+2. **Para Angular (TypeScript):**
+   - Usa formato JSDoc `/** ... */`.
+   - Documenta claramente los `@Input`, `@Output` y los `Services` inyectados.
+   - Si es un método complejo, explica la lógica paso a paso dentro del bloque.

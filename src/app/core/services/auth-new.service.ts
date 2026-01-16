@@ -70,7 +70,9 @@ export class AuthNewService {
   }
 
   /**
-   * Inicia sesión con email y contraseña
+   * Inicia sesión con email y contraseña.
+   * @param credentials Credenciales de acceso.
+   * @returns Observable con el token y datos del usuario.
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http
@@ -93,7 +95,9 @@ export class AuthNewService {
   }
 
   /**
-   * Registra un nuevo usuario
+   * Registra un nuevo usuario.
+   * @param userData Datos de registro.
+   * @returns Observable con el token y datos del usuario.
    */
   register(userData: RegisterRequest): Observable<AuthResponse> {
     return this.http
@@ -122,7 +126,9 @@ export class AuthNewService {
   }
 
   /**
-   * Solicita restablecimiento de contraseña
+   * Solicita restablecimiento de contraseña.
+   * @param email Correo del usuario a recuperar.
+   * @returns Observable de la operación.
    */
   forgotPassword(email: string): Observable<any> {
     const request: ForgotPasswordRequest = { email };
@@ -134,7 +140,9 @@ export class AuthNewService {
   }
 
   /**
-   * Restablece la contraseña usando un token
+   * Restablece la contraseña usando un token.
+   * @param data Token, email y nueva contraseña.
+   * @returns Observable de la operación.
    */
   resetPassword(data: ResetPasswordRequest): Observable<any> {
     return this.http.post(
@@ -149,7 +157,7 @@ export class AuthNewService {
   }
 
   /**
-   * Cierra sesión
+   * Cierra sesión limpiando token/usuario en sessionStorage y redirige a login.
    */
   logout(): void {
     sessionStorage.removeItem(this.TOKEN_KEY);
@@ -159,7 +167,8 @@ export class AuthNewService {
   }
 
   /**
-   * Obtiene el token JWT almacenado
+   * Obtiene el token JWT almacenado en sessionStorage.
+   * @returns Token o `null` si no existe.
    */
   getToken(): string | null {
     const token = sessionStorage.getItem(this.TOKEN_KEY);
@@ -171,7 +180,8 @@ export class AuthNewService {
   }
 
   /**
-   * Verifica si el usuario está autenticado
+   * Verifica si el usuario está autenticado y el token no expiró.
+   * @returns `true` si el token es válido.
    */
   isAuthenticated(): boolean {
     const token = this.getToken();
@@ -195,14 +205,16 @@ export class AuthNewService {
   }
 
   /**
-   * Obtiene el usuario actual
+   * Obtiene el usuario actual almacenado en memoria.
+   * @returns Usuario autenticado o `null`.
    */
   getCurrentUser(): AuthResponse | null {
     return this.currentUserSubject.value;
   }
 
   /**
-   * Obtiene el ID del usuario desde el token
+   * Obtiene el ID del usuario desde el token JWT.
+   * @returns Id numérico o `null` si no está presente.
    */
   getUserId(): number | null {
     const token = this.getToken();
@@ -221,7 +233,8 @@ export class AuthNewService {
   }
 
   /**
-   * Obtiene el email del usuario desde el token
+   * Obtiene el email del usuario desde el token JWT.
+   * @returns Email o `null` si no existe.
    */
   getUserEmail(): string | null {
     const token = this.getToken();
@@ -239,7 +252,8 @@ export class AuthNewService {
   }
 
   /**
-   * Guarda los datos de autenticación
+   * Persiste token y datos de usuario en sessionStorage.
+   * @param response Respuesta de autenticación.
    */
   private saveAuthData(response: AuthResponse): void {
     sessionStorage.setItem(this.TOKEN_KEY, response.token);
@@ -247,7 +261,8 @@ export class AuthNewService {
   }
 
   /**
-   * Obtiene el usuario almacenado
+   * Lee el usuario almacenado en sessionStorage.
+   * @returns Usuario parseado o `null` si no hay datos válidos.
    */
   private getStoredUser(): AuthResponse | null {
     const userStr = sessionStorage.getItem(this.USER_KEY);

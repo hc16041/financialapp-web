@@ -20,11 +20,13 @@ export class DataService {
   private username = this.loginService.username || "";
 
   /**
-   * Obtiene datos de un servicio y los almacena en un BehaviorSubject.
-   * @param servicio Servicio que proporciona el método de obtención de datos.
-   * @param metodo Método del servicio a ejecutar.
-   * @param behaviorSubject BehaviorSubject donde se almacenarán los datos obtenidos.
-   * @param mensajeError Mensaje de error en caso de fallo.
+   * Obtiene datos de un servicio de infraestructura y los publica en un `BehaviorSubject`.
+   *
+   * @param servicio Servicio que contiene el método remoto.
+   * @param metodo Nombre del método a invocar en el servicio.
+   * @param behaviorSubject Subject donde se almacenará la respuesta.
+   * @param mensajeError Mensaje a mostrar en caso de fallo.
+   * @param id Identificador opcional cuando el endpoint lo requiere.
    */
   async obtenerDatos<T>(
     servicio: any,
@@ -46,9 +48,11 @@ export class DataService {
   }
 
   /**
-   * Verificar si existe archivo de validación XSD.
-   * @param servicio Servicio que proporciona el método de validacion.
-   * @param metodo Método del servicio a ejecutar.   
+   * Verifica si existe archivo XSD y ofrece validar el XML antes de descargarlo.
+   *
+   * @param servicio Servicio que expone métodos de validación/descarga.
+   * @param metodoXSD Nombre del método para validar/obtener el XSD.
+   * @param metodoXML Nombre del método que descarga el XML.
    */
   async existenciaxsd(
     servicio: any,
@@ -56,9 +60,8 @@ export class DataService {
     metodoXML: string
   ): Promise<void> {
     try {
-      const response = await servicio[metodoXSD](        
-      )
-
+      const response = await servicio[metodoXSD]();
+      
       let validar = "";
       if(response){
         const confirmar = await this.alertService.confirm(
@@ -75,19 +78,21 @@ export class DataService {
         metodoXML,
         "XML",
         "Error al descargar el archivo XML",
-        { validarXSD: validar });
-
+        { validarXSD: validar }
+      );
     } catch (error) {
       console.error(`Problema`, error);      
     }
   } 
 
   /**
-   * Descarga archivos en formato XML o Excel.
-   * @param servicio Servicio que proporciona el método de descarga.
-   * @param metodo Método del servicio a ejecutar.
-   * @param tipoArchivo Tipo de archivo ('XML' o 'Excel').
-   * @param mensajeError Mensaje de error en caso de fallo.
+   * Descarga archivos en formato XML, Excel, PDF o texto plano.
+   *
+   * @param servicio Servicio que expone el método de descarga.
+   * @param metodo Nombre del método remoto a ejecutar.
+   * @param tipoArchivo Tipo de archivo esperado.
+   * @param mensajeError Mensaje a mostrar en caso de fallo.
+   * @param archivo Payload opcional (por ejemplo filtros o parámetros).
    */
   async descargarArchivo(
     servicio: any,
@@ -139,14 +144,13 @@ export class DataService {
   }
 
   /**
-   * Agrega un registro a un servicio y muestra un mensaje de éxito o error
-   * dependiendo del resultado.
+   * Agrega un registro y notifica éxito o error en UI.
+   *
    * @param servicio Servicio que proporciona el método de agregación.
    * @param metodo Método del servicio a ejecutar.
    * @param datos Nuevos datos del registro.
-   * @param mensajeExito Mensaje de éxito a mostrar en caso de que se agregue
-   * correctamente.
-   * @param mensajeError Mensaje de error a mostrar en caso de fallo.
+   * @param mensajeExito Mensaje de éxito al completarse.
+   * @param mensajeError Mensaje de error al fallar.
    */
   async agregarRegistro<T>(
     servicio: any,
@@ -176,13 +180,14 @@ export class DataService {
   }
 
   /**
-   * Actualiza un registro en un servicio y muestra un mensaje de éxito o error
-   * dependiendo del resultado.
+   * Actualiza un registro y notifica el resultado.
+   *
    * @param servicio Servicio que proporciona el método de actualización.
    * @param metodo Método del servicio a ejecutar.
    * @param datos Nuevos datos del registro.
-   * @param mensajeExito Mensaje de éxito a mostrar en caso de que se actualice correctamente.
-   * @param mensajeError Mensaje de error a mostrar en caso de fallo.
+   * @param mensajeExito Mensaje de éxito al completarse.
+   * @param mensajeError Mensaje de error al fallar.
+   * @param headers Encabezados adicionales si el endpoint lo requiere.
    */
   async actualizarRegistro<T>(
     servicio: any,
@@ -200,13 +205,13 @@ export class DataService {
     }
   }
   /**
-   * Elimina un registro en un servicio y muestra un mensaje de éxito o error
-   * dependiendo del resultado.
+   * Elimina un registro y muestra el resultado en UI.
+   *
    * @param servicio Servicio que proporciona el método de eliminación.
    * @param metodo Método del servicio a ejecutar.
    * @param id Identificador del registro a eliminar.
-   * @param mensajeExito Mensaje de éxito a mostrar en caso de que se elimine correctamente.
-   * @param mensajeError Mensaje de error a mostrar en caso de fallo.
+   * @param mensajeExito Mensaje de éxito al eliminar.
+   * @param mensajeError Mensaje de error al fallar.
    */
   async eliminarRegistro(
     servicio: any,

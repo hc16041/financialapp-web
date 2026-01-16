@@ -61,6 +61,23 @@ export class TransactionsService implements ITransactions {
   }
 
   /**
+   * Obtiene transacciones en efectivo por rango de fechas.
+   */
+  async getCashTransactionsByDateRange(
+    startDate: string,
+    endDate: string,
+    token: string
+  ): Promise<TransactionsDTO[]> {
+    const url = `transactions/cash/by-date?startDate=${startDate}&endDate=${endDate}`;
+    return this.apiConnectionService.sendRequestAsync<TransactionsDTO[]>(
+      url,
+      "GET",
+      null,
+      { Authorization: token }
+    );
+  }
+
+  /**
    * Formatea una fecha del formato YYYY-MM-DD al formato MM-DD-YYYY requerido por el backend
    */
   private formatDateForBackend(dateString: string): string {

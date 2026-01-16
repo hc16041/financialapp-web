@@ -29,6 +29,11 @@ export interface ITransactions {
     token: string,
     usuario: string
   ): Promise<TransactionsDTO[]>;
+  getCashTransactionsByDateRange(
+    startDate: string,
+    endDate: string,
+    token: string
+  ): Promise<TransactionsDTO[]>;
   getTransactionsByDateRange(
     fechaInicio: string,
     fechaFin: string,
@@ -48,14 +53,17 @@ export interface ITransactionsEdit {
   description: string;
   date: Date;
   transactionDate: Date;
-  creditCardId: number;
+  paymentMethod: number;
+  creditCardId?: number | null;
+  merchantId: number;
 }
 
 export interface ITransactionsCreate {
   amount: number;
   type: number;
   description: string;
-  creditCardId: number;
+  paymentMethod: number;
+  creditCardId?: number | null;
   transactionDate: Date;
   merchantId: number;
 }

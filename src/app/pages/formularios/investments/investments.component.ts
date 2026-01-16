@@ -50,6 +50,9 @@ export class InvestmentsComponent {
   // Campos readonly dinámicamente
   readonlyFields: string[] = ["id", "commission"];
 
+  /**
+   * Inicializa la vista solicitando todos los catálogos y datos de inversiones.
+   */
   ngOnInit(): void {
     // Inicializar el Facade que carga todos los datos necesarios
     this.investmentsFacade.initialize();
@@ -57,7 +60,13 @@ export class InvestmentsComponent {
 
   /**
    * Calcula la comisión según el método de retiro y tipo de transacción
-   * Delega al servicio de cálculo de comisiones
+   * Delega al servicio de cálculo de comisiones.
+   *
+   * @param amount Monto de la inversión.
+   * @param withdrawalMethodId Método de retiro seleccionado.
+   * @param transactionTypeId Tipo de transacción seleccionado.
+   * @param libreDeComision Si está libre de comisión (default `false`).
+   * @returns Comisión calculada.
    */
   private calcularComision(
     amount: number,
@@ -101,7 +110,9 @@ export class InvestmentsComponent {
 
   /**
    * Verifica si un método de retiro requiere tarjeta de crédito
-   * Delega al Facade
+   * Delega al Facade.
+   * @param withdrawalMethodId Id del método.
+   * @returns `true` si requiere tarjeta.
    */
   private requiereTarjeta(withdrawalMethodId: number): boolean {
     return this.investmentsFacade.requiresCreditCard(withdrawalMethodId);
@@ -109,7 +120,9 @@ export class InvestmentsComponent {
 
   /**
    * Verifica si un tipo de transacción es Purchase
-   * Delega al Facade
+   * Delega al Facade.
+   * @param transactionTypeId Id del tipo.
+   * @returns `true` si es Purchase.
    */
   private esPurchase(transactionTypeId: number): boolean {
     return this.investmentsFacade.isPurchase(transactionTypeId);
@@ -117,7 +130,9 @@ export class InvestmentsComponent {
 
   /**
    * Verifica si un método de retiro es Bitcoin
-   * Delega al Facade
+   * Delega al Facade.
+   * @param withdrawalMethodId Id del método.
+   * @returns `true` si es Bitcoin.
    */
   private esBitcoin(withdrawalMethodId: number): boolean {
     return this.investmentsFacade.isBitcoin(withdrawalMethodId);
@@ -125,6 +140,7 @@ export class InvestmentsComponent {
 
   /**
    * Maneja los cambios de campo en el formulario
+   * @param change Evento emitido por el formulario con campo y valor.
    */
   onFieldChange(change: { field: string; value: any }): void {
     // Cuando cambia withdrawalMethod, actualizar disabledFields
@@ -154,6 +170,8 @@ export class InvestmentsComponent {
 
   /**
    * Actualiza los campos readonly según el tipo de transacción y método de retiro
+   * @param transactionTypeId Tipo de transacción seleccionado.
+   * @param withdrawalMethodId Método de retiro seleccionado.
    */
   private updateReadonlyFields(
     transactionTypeId: number | null,
@@ -187,6 +205,10 @@ export class InvestmentsComponent {
     }
   }
 
+  /**
+   * Crea una inversión aplicando las reglas de comisión y delegando en el Facade.
+   * @param newInvestment Datos del formulario/modal.
+   */
   async onAddInvestment(newInvestment: any): Promise<void> {
     // Calcular comisión según el tipo de transacción
     if (
@@ -273,6 +295,10 @@ export class InvestmentsComponent {
     }
   }
 
+  /**
+   * Edita una inversión aplicando las reglas de comisión y delegando en el Facade.
+   * @param updatedInvestment Datos editados del formulario/modal.
+   */
   async onEditInvestment(updatedInvestment: any): Promise<void> {
     // Calcular comisión según el tipo de transacción
     if (
@@ -364,6 +390,10 @@ export class InvestmentsComponent {
     await this.investmentsFacade.updateInvestment(updatedInvestment);
   }
 
+  /**
+   * Elimina una inversión por id a través del Facade.
+   * @param investment Entidad seleccionada a eliminar.
+   */
   async onDeleteInvestment(investment: any): Promise<void> {
     // Usar el Facade para eliminar la inversión
     await this.investmentsFacade.deleteInvestment(investment.id);
@@ -371,6 +401,7 @@ export class InvestmentsComponent {
 
   /**
    * Maneja la búsqueda por rango de fechas
+   * @param dateRange Rango de fechas seleccionado.
    */
   async onDateRangeSearch(dateRange: {
     startDate: string;

@@ -4,6 +4,13 @@ import { Injectable } from "@angular/core";
   providedIn: "root",
 })
 export class AsciiShiftService {
+  /**
+   * Aplica un corrimiento de 128 posiciones a cada carácter (IDA/REGRESO en ASCII extendido).
+   * Útil para ofuscar/recuperar cadenas simples en front sin exponer texto plano.
+   *
+   * @param value Cadena a transformar.
+   * @returns Cadena transformada; retorna cadena vacía si `value` es falsy.
+   */
   transform(value: string): string {
     if (!value) {
       return "";

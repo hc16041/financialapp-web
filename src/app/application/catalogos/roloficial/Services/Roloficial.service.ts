@@ -9,6 +9,12 @@ import { IRoloficial } from "../Interfaces/IRoloficial.interface";
 export class RoloficialService implements IRoloficial {
   constructor(private apiConnectionService: ApiConnectionService) {}
 
+  /**
+   * Obtiene el catálogo de roles oficiales.
+   * @param token JWT de autorización.
+   * @param usuario Usuario solicitante.
+   * @returns Promesa con la lista de roles oficiales.
+   */
   async getListadoRoloficial(
     token: string,
     usuario: string
