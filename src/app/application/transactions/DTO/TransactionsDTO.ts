@@ -72,7 +72,8 @@ export class TransactionsDTO {
     this.date = data?.date || new Date();
     this.transactionDate = data?.transactionDate || new Date();
     this.isProcessed = data?.isProcessed ?? false;
-    this.paymentMethod = data?.paymentMethod ?? 1;
+    // Iniciar en 0 para que el dropdown muestre "Seleccione" hasta que el usuario elija
+    this.paymentMethod = data?.paymentMethod ?? 0;
     this.creditCardId = data?.creditCardId ?? undefined;
     this.creditCard = data?.creditCard
       ? new CreditcardDTO(data.creditCard)
