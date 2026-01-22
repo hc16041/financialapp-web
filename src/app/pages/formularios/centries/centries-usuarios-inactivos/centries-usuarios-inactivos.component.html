@@ -12,7 +12,7 @@
   [readonlyFields]="['id']"
   [selectFields]="['id_cargo', 'id_perfil']"
   [allowedActions]="['activate']"
-  [data]="(usuariosInactivosList$ | async)!"
+  [data]="usuariosInactivosList"
   [showActions]="true"
   [searchEnabled]="true"
   [entityDTO]="usuarioDTO"

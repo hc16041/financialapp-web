@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Observable, BehaviorSubject, throwError } from "rxjs";
 import { map, catchError } from "rxjs/operators";
@@ -45,7 +45,7 @@ export interface DecodedToken {
   email?: string;
   name?: string;
   exp?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const httpOptions = {
@@ -56,12 +56,15 @@ const httpOptions = {
   providedIn: "root",
 })
 export class AuthNewService {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  
   private currentUserSubject: BehaviorSubject<AuthResponse | null>;
   public currentUser$: Observable<AuthResponse | null>;
   private readonly TOKEN_KEY = "authToken";
   private readonly USER_KEY = "currentUser";
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor() {
     const storedUser = this.getStoredUser();
     this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(
       storedUser
@@ -130,7 +133,7 @@ export class AuthNewService {
    * @param email Correo del usuario a recuperar.
    * @returns Observable de la operación.
    */
-  forgotPassword(email: string): Observable<any> {
+  forgotPassword(email: string): Observable<unknown> {
     const request: ForgotPasswordRequest = { email };
     return this.http.post(
       `${GlobalComponent.AUTH_API}auth/forgot-password`,
@@ -144,7 +147,7 @@ export class AuthNewService {
    * @param data Token, email y nueva contraseña.
    * @returns Observable de la operación.
    */
-  resetPassword(data: ResetPasswordRequest): Observable<any> {
+  resetPassword(data: ResetPasswordRequest): Observable<unknown> {
     return this.http.post(
       `${GlobalComponent.AUTH_API}auth/reset-password`,
       {

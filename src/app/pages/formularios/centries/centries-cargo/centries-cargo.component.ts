@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { DataService } from "src/app/core/services/data.service";
 import { generateTableColumns } from "src/app/utils/table-utils";
@@ -10,23 +10,30 @@ import { CargoService } from "src/app/application/centries/cargo/Services/Cargo.
   selector: "app-centries-cargo",
   templateUrl: "./centries-cargo.component.html",
   styleUrl: "./centries-cargo.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CentriesCargoComponent {
-  //Table data cargos
-  cargosList$: BehaviorSubject<CargoDTO[]> = new BehaviorSubject<CargoDTO[]>(
-    []
-  );
+export class CentriesCargoComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private dataService = inject(DataService);
+  private cargoService = inject(CargoService);
+
+  //Table data cargos - Mantener BehaviorSubject para DataService, pero exponer como signal
+  private cargosList$ = new BehaviorSubject<CargoDTO[]>([]);
+  private readonly cargosListSig = signal<CargoDTO[]>([]);
+  
+  get cargosList(): CargoDTO[] {
+    return this.cargosListSig();
+  }
 
   // Table data
   cargoDTO = new CargoDTO();
   tableColumns: TableColumn[] = generateTableColumns(this.cargoDTO);
 
-  constructor(
-    private dataService: DataService,
-    private cargoService: CargoService
-  ) {}
-
   ngOnInit(): void {
+    // Suscribirse al BehaviorSubject para actualizar el signal
+    this.cargosList$.subscribe(data => {
+      this.cargosListSig.set(data);
+    });
     this.obtenerCargos();
   }
 
@@ -47,7 +54,7 @@ export class CentriesCargoComponent {
       "Error al cargar cargos"
     );
   }
-  async onAddCargo(newCargo: any): Promise<void> {
+  async onAddCargo(newCargo: CargoDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.agregarRegistro(
       this.cargoService,
       "guardarCargo",
@@ -65,11 +72,11 @@ export class CentriesCargoComponent {
    * Hace una solicitud al servicio para actualizar el cargo y muestra un
    * mensaje de éxito o error según corresponda.
    *
-   * @param {any} updatedCargo Cargo a actualizar.
+   * @param {CargoDTO | Record<string, unknown>} updatedCargo Cargo a actualizar.
    * @returns {Promise<void>} Promesa que se resuelve cuando el registro se ha
    * actualizado.
    */
-  async onEditCargo(updatedCargo: any): Promise<void> {
+  async onEditCargo(updatedCargo: CargoDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.actualizarRegistro(
       this.cargoService,
       "editarCargo",
@@ -81,7 +88,7 @@ export class CentriesCargoComponent {
     await this.obtenerCargos(); // Refrescar la lista de cargos después de actualizar
   }
 
-  async onDeleteCargo(cargo: any): Promise<void> {
+  async onDeleteCargo(cargo: CargoDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.eliminarRegistro(
       this.cargoService,
       "eliminarCargo",

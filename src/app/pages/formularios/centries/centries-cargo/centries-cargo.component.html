@@ -2,7 +2,7 @@
   [title]="'Listado de Cargos'"
   [columns]="tableColumns"
   [readonlyFields]="['id_cargo']"
-  [data]="(cargosList$ | async)!"
+  [data]="cargosList"
   [showActions]="true"
   [requiredFields]="['cargo']"
   [allowedActions]="['edit']"

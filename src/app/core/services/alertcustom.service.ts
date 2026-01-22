@@ -1,11 +1,11 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import Swal, { SweetAlertIcon } from "sweetalert2";
 
 @Injectable({
   providedIn: "root",
 })
 export class AlertcustomService {
-  constructor() {}
+  // No necesita inyección de dependencias, pero mantenemos el patrón consistente
 
   /**
    * Muestra una alerta usando SweetAlert2 con configuración personalizada.

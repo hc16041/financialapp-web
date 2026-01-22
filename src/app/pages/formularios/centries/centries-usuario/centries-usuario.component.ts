@@ -1,4 +1,4 @@
-import { Component, inject, DestroyRef } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, DestroyRef, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BehaviorSubject } from "rxjs";
 import { UsuarioDTO } from "src/app/application/centries/usuario/DTO/UsuarioDTO";
@@ -12,36 +12,64 @@ import { PerfilService } from "src/app/application/centries/perfil/Services/Perf
 import { CargoService } from "src/app/application/centries/cargo/Services/Cargo.service";
 import { IUsuarioEdit } from "src/app/application/centries/usuario/Interfaces/IUsuario.interface";
 import { SelectOptionsMapperService } from "src/app/core/services/select-options-mapper.service";
+import { SelectOption } from "src/app/core/services/select-options-mapper.service";
 
 @Component({
   selector: "app-centries-usuario",
   templateUrl: "./centries-usuario.component.html",
   styleUrl: "./centries-usuario.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CentriesUsuarioComponent {
-  // Table data usuario
-  usuariosList$: BehaviorSubject<UsuarioDTO[]> = new BehaviorSubject<
-    UsuarioDTO[]
-  >([]);
-  cargosList$: BehaviorSubject<any[]> = new BehaviorSubject<CargoDTO[]>([]);
-  perfilesList$: BehaviorSubject<any[]> = new BehaviorSubject<PerfilDTO[]>([]);
+export class CentriesUsuarioComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private dataService = inject(DataService);
+  private usuarioService = inject(UsuarioService);
+  private cargosService = inject(CargoService);
+  private perfilesService = inject(PerfilService);
+  private selectOptionsMapper = inject(SelectOptionsMapperService);
+  private destroyRef = inject(DestroyRef);
+
+  // Table data usuario - Mantener BehaviorSubject para DataService, pero exponer como signal
+  private usuariosList$ = new BehaviorSubject<UsuarioDTO[]>([]);
+  private readonly usuariosListSig = signal<UsuarioDTO[]>([]);
+  
+  get usuariosList(): UsuarioDTO[] {
+    return this.usuariosListSig();
+  }
+
+  private cargosList$ = new BehaviorSubject<CargoDTO[]>([]);
+  private readonly cargosListSig = signal<CargoDTO[]>([]);
+  
+  get cargosList(): CargoDTO[] {
+    return this.cargosListSig();
+  }
+
+  private perfilesList$ = new BehaviorSubject<PerfilDTO[]>([]);
+  private readonly perfilesListSig = signal<PerfilDTO[]>([]);
+  
+  get perfilesList(): PerfilDTO[] {
+    return this.perfilesListSig();
+  }
+
   // Table data
   usuarioDTO = new UsuarioDTO();
   tableColumns: TableColumn[] = generateTableColumns(this.usuarioDTO);
 
   // Select options
-  selectOptions: { [key: string]: any[] } = {};
-  private selectOptionsMapper = inject(SelectOptionsMapperService);
-  private destroyRef = inject(DestroyRef);
-
-  constructor(
-    private dataService: DataService,
-    private usuarioService: UsuarioService,
-    private cargosService: CargoService,
-    private perfilesService: PerfilService
-  ) {}
+  selectOptions: { [key: string]: SelectOption[] } = {};
 
   ngOnInit(): void {
+    // Suscribirse a los BehaviorSubjects para actualizar los signals
+    this.usuariosList$.subscribe(data => {
+      this.usuariosListSig.set(data);
+    });
+    this.cargosList$.subscribe(data => {
+      this.cargosListSig.set(data);
+    });
+    this.perfilesList$.subscribe(data => {
+      this.perfilesListSig.set(data);
+    });
+
     this.obtenerUsuarios();
     this.obtenerCargos();
     this.obtenerPerfiles();
@@ -50,7 +78,8 @@ export class CentriesUsuarioComponent {
     this.setupSubscriptions();
   }
 
-  private mapToUsuarioEdit(editUsuario: any): IUsuarioEdit {
+  private mapToUsuarioEdit(editUsuario: UsuarioDTO | Record<string, unknown>): IUsuarioEdit {
+    const usuario = editUsuario as UsuarioDTO & Record<string, unknown>;
     return {
       id: editUsuario.id,
       usuario: editUsuario.usuario,
@@ -71,10 +100,8 @@ export class CentriesUsuarioComponent {
 
   private initializeSelectOptions(): void {
     this.selectOptions = {
-      cargo: this.selectOptionsMapper.mapCargos(this.cargosList$.getValue()),
-      perfil: this.selectOptionsMapper.mapPerfiles(
-        this.perfilesList$.getValue()
-      ),
+      cargo: this.selectOptionsMapper.mapCargos(this.cargosList),
+      perfil: this.selectOptionsMapper.mapPerfiles(this.perfilesList),
     };
   }
 
@@ -125,7 +152,7 @@ export class CentriesUsuarioComponent {
     );
   }
 
-  async onAddUsuario(newUsuario: any): Promise<void> {
+  async onAddUsuario(newUsuario: UsuarioDTO | Record<string, unknown>): Promise<void> {
     const usuarioFiltrado: IUsuarioEdit = this.mapToUsuarioEdit(newUsuario);
     await this.dataService.agregarRegistro(
       this.usuarioService,
@@ -138,7 +165,7 @@ export class CentriesUsuarioComponent {
     await this.obtenerUsuarios();
   }
 
-  async onEditUsuario(editUsuario: any): Promise<void> {
+  async onEditUsuario(editUsuario: UsuarioDTO | Record<string, unknown>): Promise<void> {
     const usuarioFiltrado: IUsuarioEdit = this.mapToUsuarioEdit(editUsuario);
     await this.dataService.actualizarRegistro(
       this.usuarioService,
@@ -151,11 +178,12 @@ export class CentriesUsuarioComponent {
     await this.obtenerUsuarios();
   }
 
-  async onDeactivateUsuario(usuario: any): Promise<void> {
+  async onDeactivateUsuario(usuario: UsuarioDTO | Record<string, unknown>): Promise<void> {
+    const usuarioObj = usuario as UsuarioDTO & Record<string, unknown>;
     await this.dataService.eliminarRegistro(
       this.usuarioService,
       "inactivarUsuario",
-      usuario.id,
+      usuarioObj.id,
       "Usuario inactivado correctamente",
       "Error al inactivar usuario"
     );
@@ -163,11 +191,12 @@ export class CentriesUsuarioComponent {
     await this.obtenerUsuarios();
   }
 
-  async onResetPassword(usuario: any): Promise<void> {
+  async onResetPassword(usuario: UsuarioDTO | Record<string, unknown>): Promise<void> {
+    const usuarioObj = usuario as UsuarioDTO & Record<string, unknown>;
     await this.dataService.eliminarRegistro(
       this.usuarioService,
       "resetearClave",
-      usuario.id,
+      usuarioObj.id,
       "Clave reseteada correctamente",
       "Error al resetear clave"
     );

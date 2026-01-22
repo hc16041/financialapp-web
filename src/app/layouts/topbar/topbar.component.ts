@@ -14,7 +14,6 @@ import { EventService } from "../../core/services/event.service";
 
 //Logout
 import { environment } from "../../../environments/environment";
-import { AuthenticationService } from "../../core/services/auth.service";
 import { AuthfakeauthenticationService } from "../../core/services/authfake.service";
 import { Router } from "@angular/router";
 import { TokenStorageService } from "../../core/services/token-storage.service";
@@ -64,7 +63,6 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private modalService: NgbModal,
     public _cookiesService: CookieService,
     public translate: TranslateService,
-    private authService: AuthenticationService,
     private loginService: LoginService,
     private authFackservice: AuthfakeauthenticationService,
     private router: Router,

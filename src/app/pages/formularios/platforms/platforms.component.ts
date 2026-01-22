@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { generateTableColumns } from "src/app/utils/table-utils";
@@ -10,24 +10,30 @@ import { PlatformsService } from "src/app/application/Platforms/Services/Platfor
   selector: "app-platforms",
   templateUrl: "./platforms.component.html",
   styleUrl: "./platforms.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlatformsComponent {
-  // Table data
-  platformsList$: BehaviorSubject<PlatformsDTO[]> = new BehaviorSubject<
-    PlatformsDTO[]
-  >([]);
+export class PlatformsComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private dataService = inject(DataService);
+  private platformsService = inject(PlatformsService);
+
+  // Table data - Mantener BehaviorSubject para DataService, pero exponer como signal
+  private platformsList$ = new BehaviorSubject<PlatformsDTO[]>([]);
+  private readonly platformsListSig = signal<PlatformsDTO[]>([]);
+  
+  get platformsList(): PlatformsDTO[] {
+    return this.platformsListSig();
+  }
 
   // Table data
   platformsDTO = new PlatformsDTO();
-
   tableColumns: TableColumn[] = generateTableColumns(this.platformsDTO);
 
-  constructor(
-    private dataService: DataService,
-    private platformsService: PlatformsService
-  ) {}
-
   ngOnInit(): void {
+    // Suscribirse al BehaviorSubject para actualizar el signal
+    this.platformsList$.subscribe(data => {
+      this.platformsListSig.set(data);
+    });
     this.obtenerPlatforms();
   }
 
@@ -40,7 +46,7 @@ export class PlatformsComponent {
     );
   }
 
-  async onAddPlatform(newPlatform: any): Promise<void> {
+  async onAddPlatform(newPlatform: PlatformsDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.agregarRegistro(
       this.platformsService,
       "guardarPlatforms",
@@ -51,7 +57,7 @@ export class PlatformsComponent {
     await this.obtenerPlatforms();
   }
 
-  async onEditPlatform(updatedPlatform: any): Promise<void> {
+  async onEditPlatform(updatedPlatform: PlatformsDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.actualizarRegistro(
       this.platformsService,
       "editarPlatforms",
@@ -62,11 +68,12 @@ export class PlatformsComponent {
     await this.obtenerPlatforms();
   }
 
-  async onDeletePlatform(platform: any): Promise<void> {
+  async onDeletePlatform(platform: PlatformsDTO | Record<string, unknown>): Promise<void> {
+    const platformObj = platform as PlatformsDTO & Record<string, unknown>;
     await this.dataService.eliminarRegistro(
       this.platformsService,
       "eliminarPlatforms",
-      platform.id,
+      platformObj.id,
       "Plataforma eliminada correctamente",
       "Error al eliminar plataforma"
     );

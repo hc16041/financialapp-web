@@ -29,17 +29,17 @@ export class GenericModalDialogComponent implements OnDestroy {
   private commissionCalculationSubject = new Subject<void>();
 
   @Input() title: string = "Formulario"; // Título del modal
-  @Input() data: any = {}; // Datos recibidos
+  @Input() data: Record<string, unknown> = {}; // Datos recibidos
   fields: {
     key: string;
     label: string;
     type: string;
     readonly: boolean;
     disabled?: boolean; // Nueva propiedad para campos deshabilitados
-    options?: any[]; // Nueva propiedad para opciones
+    options?: unknown[]; // Nueva propiedad para opciones
   }[] = []; // Campos generados dinámicamente
 
-  @Input() selectOptions: { [key: string]: any[] } = {};
+  @Input() selectOptions: { [key: string]: unknown[] } = {};
   @Input() excludedFields: string[] = []; // Recibe desde generic-table
   @Input() readonlyFields: string[] = []; // Campos bloqueados por defecto
   @Input() disabledFields: string[] = []; // Campos deshabilitados dinámicamente
@@ -48,15 +48,15 @@ export class GenericModalDialogComponent implements OnDestroy {
   @Input() actionType: "delete" | "activate" | "deactivate" = "delete"; // Acción por defecto
   @Input() actionLabel: string = ""; // Etiqueta personalizada opcional
   @Input() requiredFields: string[] = []; // Campos requeridos
-  @Input() entityType: any; // Recibir la clase del DTO
+  @Input() entityType: unknown; // Recibir la clase del DTO
   @Input() fieldsOrder: string[] = []; // Orden personalizado de campos
 
-  @Output() onSave = new EventEmitter<any>(); // Evento para guardar datos
+  @Output() onSave = new EventEmitter<unknown>(); // Evento para guardar datos
   @Output() onClose = new EventEmitter<void>(); // Evento para cerrar modal
   @Output() onProfileChange = new EventEmitter<number>();
   @Output() onFieldValueChange = new EventEmitter<{
     field: string;
-    value: any;
+    value: unknown;
   }>(); // Evento para cambios de campo
 
   multiColumnLayout = false;
@@ -187,7 +187,7 @@ export class GenericModalDialogComponent implements OnDestroy {
     this.requiredFields.forEach((field) => {
       if (
         this.isSelectField(field) &&
-        this.isInvalidValue(this.data[field], field)
+        this.isInvalidValue(this.data[field as keyof typeof this.data], field)
       ) {
         this.data[field] = "";
       }
@@ -265,9 +265,14 @@ export class GenericModalDialogComponent implements OnDestroy {
   private getDtoFieldType(key: string): string | null {
     if (this.entityType) {
       try {
+        const proto =
+          typeof this.entityType === "function"
+            ? this.entityType.prototype
+            : (this.entityType as { prototype?: unknown })?.prototype;
+
         return Reflect.getMetadata(
           "design:type",
-          this.entityType.prototype,
+          proto,
           key
         )?.name.toLowerCase();
       } catch (e) {
@@ -377,8 +382,9 @@ export class GenericModalDialogComponent implements OnDestroy {
     // Obtener información del tipo de transacción desde las opciones
     const transactionTypeOptions = this.selectOptions["transactionType"] || [];
     const transactionTypeOption = transactionTypeOptions.find(
-      (opt: any) => opt.value === transactionTypeId
-    );
+      (opt) =>
+        (opt as Record<string, unknown>)["value"] === transactionTypeId
+    ) as Record<string, unknown> | undefined;
 
     if (!transactionTypeOption) {
       if (!this.readonlyFields.includes("commission")) {
@@ -388,7 +394,7 @@ export class GenericModalDialogComponent implements OnDestroy {
     }
 
     const transactionTypeName = (
-      transactionTypeOption.label || ""
+      (transactionTypeOption["label"] as string) || ""
     ).toLowerCase();
     const esPurchase =
       transactionTypeName.includes("purchase") ||
@@ -399,11 +405,14 @@ export class GenericModalDialogComponent implements OnDestroy {
       const withdrawalMethodOptions =
         this.selectOptions["withdrawalMethod"] || [];
       const methodOption = withdrawalMethodOptions.find(
-        (opt: any) => opt.value === withdrawalMethodId
-      );
+        (opt) =>
+          (opt as Record<string, unknown>)["value"] === withdrawalMethodId
+      ) as Record<string, unknown> | undefined;
 
       if (methodOption) {
-        const methodName = (methodOption.label || "").toLowerCase();
+        const methodName = (
+          (methodOption["label"] as string) || ""
+        ).toLowerCase();
         const esBitcoin =
           methodName.includes("bitcoin") || methodName.includes("btc");
 
@@ -581,7 +590,8 @@ export class GenericModalDialogComponent implements OnDestroy {
     const amount = Number(this.data["amount"]) || 0;
     const withdrawalMethodId = Number(this.data["withdrawalMethod"]) || 0;
     const transactionTypeId = Number(this.data["transactionType"]) || 0;
-    const libreDeComision = this.data["libreDeComision"] || false;
+    const libreDeComision =
+      (this.data["libreDeComision"] as boolean | undefined) || false;
     const currentCommission = this.data["commission"];
 
     // Usar el servicio de cálculo de comisiones
@@ -592,7 +602,7 @@ export class GenericModalDialogComponent implements OnDestroy {
         transactionTypeId,
         libreDeComision,
         this.selectOptions,
-        currentCommission
+        currentCommission as number | undefined
       );
 
     this.data["commission"] = calculatedCommission;
@@ -636,5 +646,64 @@ export class GenericModalDialogComponent implements OnDestroy {
     ) {
       this.data[key] = value ? `${value}T00:00:00` : null;
     }
+  }
+
+  /**
+   * Obtiene el valor de una propiedad como Date para usar con el pipe date.
+   * @param key La clave de la propiedad.
+   * @returns El valor convertido a Date, string o number, o null si no es convertible.
+   */
+  getDateValue(key: string): string | number | Date | null | undefined {
+    const value = this.data[key];
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (value instanceof Date) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      // Si es una cadena ISO con hora, extraer solo la fecha
+      if (value.includes('T')) {
+        return value.split('T')[0];
+      }
+      return value;
+    }
+    if (typeof value === 'number') {
+      return value;
+    }
+    // Intentar convertir a Date si es posible
+    if (typeof value === 'object' && 'toString' in value) {
+      const dateStr = value.toString();
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Obtiene el valor de una opción de forma segura.
+   * @param option La opción de tipo unknown.
+   * @returns El valor de la opción.
+   */
+  getOptionValue(option: unknown): unknown {
+    if (option && typeof option === 'object' && 'value' in option) {
+      return (option as { value: unknown }).value;
+    }
+    return option;
+  }
+
+  /**
+   * Obtiene la etiqueta de una opción de forma segura.
+   * @param option La opción de tipo unknown.
+   * @returns La etiqueta de la opción o una cadena vacía.
+   */
+  getOptionLabel(option: unknown): string {
+    if (option && typeof option === 'object' && 'label' in option) {
+      const label = (option as { label: unknown }).label;
+      return typeof label === 'string' ? label : String(label ?? '');
+    }
+    return String(option ?? '');
   }
 }

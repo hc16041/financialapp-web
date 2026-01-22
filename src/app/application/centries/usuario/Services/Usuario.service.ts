@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { UsuarioDTO } from "../DTO/UsuarioDTO";
+import { UsuarioOperationResponse } from "../DTO/UsuarioOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -38,13 +39,13 @@ export class UsuarioService {
     }
   }
 
-  async getListadoUsuarioId(idusuario: number, token: string): Promise<any> {
+  async getListadoUsuarioId(idusuario: number, token: string): Promise<UsuarioDTO> {
     try {
       const url = `Usuario/ObtenerUsuarioId`;
       const datos = {
         id: idusuario,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<UsuarioDTO>(
         url,
         "POST",
         datos,
@@ -56,10 +57,10 @@ export class UsuarioService {
     }
   }
 
-  async guardarUsuario(datos: any, token: string): Promise<any> {
+  async guardarUsuario(datos: UsuarioDTO | Record<string, unknown>, token: string): Promise<UsuarioOperationResponse> {
     try {
       const url = `Usuario/Guardar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<UsuarioOperationResponse>(
         url,
         "POST",
         datos,
@@ -71,10 +72,10 @@ export class UsuarioService {
     }
   }
 
-  async editarUsuario(datos: any, token: string): Promise<any> {
+  async editarUsuario(datos: UsuarioDTO | Record<string, unknown>, token: string): Promise<UsuarioOperationResponse> {
     try {
       const url = `Usuario/Editar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<UsuarioOperationResponse>(
         url,
         "POST",
         datos,
@@ -86,13 +87,13 @@ export class UsuarioService {
     }
   }
 
-  async inactivarUsuario(idusuario: number, token: string): Promise<any> {
+  async inactivarUsuario(idusuario: number, token: string): Promise<UsuarioOperationResponse> {
     try {
       const url = `Usuario/Desactivar`;
       const datos = {
         id: idusuario,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<UsuarioOperationResponse>(
         url,
         "POST",
         datos,
@@ -104,13 +105,13 @@ export class UsuarioService {
     }
   }
 
-  async activarUsuario(idusuario: number, token: string): Promise<any> {
+  async activarUsuario(idusuario: number, token: string): Promise<UsuarioOperationResponse> {
     try {
       const url = `Usuario/Activar`;
       const datos = {
         id: idusuario,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<UsuarioOperationResponse>(
         url,
         "POST",
         datos,
@@ -122,13 +123,13 @@ export class UsuarioService {
     }
   }
 
-  async resetearClave(idusuario: number, token: string): Promise<any> {
+  async resetearClave(idusuario: number, token: string): Promise<UsuarioOperationResponse> {
     try {
       const url = `Usuario/ResetearClave`;
       const datos = {
         id: idusuario,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<UsuarioOperationResponse>(
         url,
         "POST",
         datos,

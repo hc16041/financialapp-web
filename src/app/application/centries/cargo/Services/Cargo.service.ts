@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { CargoDTO } from "../DTO/CargoDTO";
 import { ICargo } from "../Interfaces/ICargo.interface";
+import { CargoOperationResponse } from "../DTO/CargoOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -34,13 +35,13 @@ export class CargoService implements ICargo {
    * @param {number} idcargo El id del cargo a obtener.
    * @returns La respuesta del servidor en formato JSON.
    */
-  async getListadoCargoId(idcargo: number, token: string): Promise<any> {
+  async getListadoCargoId(idcargo: number, token: string): Promise<CargoDTO> {
     try {
       const url = `Cargo/ObtenerCargoId`;
       const datos = {
         id: idcargo,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<CargoDTO>(
         url,
         "POST",
         datos,
@@ -57,10 +58,10 @@ export class CargoService implements ICargo {
    * @param {string} cargo El cargo a guardar.
    * @returns La respuesta del servidor en formato JSON.
    */
-  async guardarCargo(datos: any, token: string): Promise<any> {
+  async guardarCargo(datos: CargoDTO | Record<string, unknown>, token: string): Promise<CargoOperationResponse> {
     try {
       const url = `Cargo/Guardar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<CargoOperationResponse>(
         url,
         "POST",
         datos,
@@ -78,10 +79,10 @@ export class CargoService implements ICargo {
    * @param {any} datos Los datos del cargo a editar.
    * @returns La respuesta del servidor en formato JSON.
    */
-  async editarCargo(datos: any, token: string): Promise<any> {
+  async editarCargo(datos: CargoDTO | Record<string, unknown>, token: string): Promise<CargoOperationResponse> {
     try {
       const url = `Cargo/Editar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<CargoOperationResponse>(
         url,
         "POST",
         datos,
@@ -99,10 +100,10 @@ export class CargoService implements ICargo {
    * @param {number} idcargo El id del cargo a eliminar.
    * @returns La respuesta del servidor en formato JSON.
    */
-  async eliminarCargo(datos: any, token: string): Promise<any> {
+  async eliminarCargo(datos: CargoDTO | Record<string, unknown>, token: string): Promise<CargoOperationResponse> {
     try {
       const url = `Cargo/Eliminar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<CargoOperationResponse>(
         url,
         "POST",
         datos,

@@ -1,6 +1,12 @@
 import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { CreditcardDTO } from "../DTO/CreditcardDTO";
+import { CreditCardCodeDTO } from "../DTO/CreditCardCode.dto";
+import {
+  CreditCardOperationResponse,
+  CreditCardCreateRequest,
+  CreditCardStatusRequest,
+} from "../DTO/CreditCardOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -32,14 +38,14 @@ export class CreditcardService {
   }
 
   async guardarCreditcard(
-    datos: any,
+    datos: CreditCardCreateRequest | CreditcardDTO,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<CreditCardOperationResponse> {
     try {
       const url = `CreditCards`;
       //datos.cod_usuario = usuario;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<CreditCardOperationResponse>(
         url,
         "POST",
         datos,
@@ -52,14 +58,14 @@ export class CreditcardService {
   }
 
   async editarCreditcard(
-    datos: any,
+    datos: CreditcardDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<CreditCardOperationResponse> {
     try {
       const url = `CreditCard/Actualizar`;
-      datos.cod_usuario = usuario;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      (datos as Record<string, unknown>)['cod_usuario'] = usuario;
+      return await this.apiConnectionService.sendRequestAsync<CreditCardOperationResponse>(
         url,
         "PUT",
         datos,
@@ -72,14 +78,14 @@ export class CreditcardService {
   }
 
   async eliminarCreditcard(
-    datos: any,
+    datos: Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<CreditCardOperationResponse> {
     try {
       const url = `CreditCard/Eliminar`;
-      datos.cod_usuario = usuario;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      datos['cod_usuario'] = usuario;
+      return await this.apiConnectionService.sendRequestAsync<CreditCardOperationResponse>(
         url,
         "DELETE",
         datos,
@@ -92,14 +98,14 @@ export class CreditcardService {
   }
 
   async desactivarCreditcard(
-    datos: any,
+    datos: number,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<CreditCardOperationResponse> {
     try {
       const url = `CreditCard/Desactivar`;
-      const dato = { id: datos, codusuario: usuario };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      const dato: CreditCardStatusRequest = { id: datos, codusuario: usuario };
+      return await this.apiConnectionService.sendRequestAsync<CreditCardOperationResponse>(
         url,
         "PUT",
         dato,
@@ -112,14 +118,14 @@ export class CreditcardService {
   }
 
   async activarCreditcard(
-    datos: any,
+    datos: number,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<CreditCardOperationResponse> {
     try {
       const url = `CreditCard/Activar`;
-      const dato = { id: datos, codusuario: usuario };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      const dato: CreditCardStatusRequest = { id: datos, codusuario: usuario };
+      return await this.apiConnectionService.sendRequestAsync<CreditCardOperationResponse>(
         url,
         "PUT",
         dato,
@@ -127,48 +133,6 @@ export class CreditcardService {
       );
     } catch (error) {
       console.error("Error en activarCreditcard:", error);
-      throw error;
-    }
-  }
-
-  async getListadoCreditcardXML(token: string, usuario: string): Promise<any> {
-    try {
-      const url = `CreditCard/ExportarXML`;
-      const datos = {
-        fecha_inicio: new Date().toISOString().split("T")[0],
-        fecha_fin: new Date().toISOString().split("T")[0],
-        CODUSUARIO: usuario,
-      };
-      return await this.apiConnectionService.sendRequestXMLAsync<any>(
-        url,
-        "POST",
-        datos
-      );
-    } catch (error) {
-      console.error("Error en getListadoCreditcardXML:", error);
-      throw error;
-    }
-  }
-
-  async getListadoCreditcardExcel(
-    token: string,
-    usuario: string
-  ): Promise<any> {
-    try {
-      const url = `CreditCard/ExportarExcel`;
-      const datos = {
-        fecha_inicio: new Date().toISOString().split("T")[0],
-        fecha_fin: new Date().toISOString().split("T")[0],
-        CODUSUARIO: usuario,
-      };
-      return await this.apiConnectionService.sendRequestExcelAsync<any>(
-        url,
-        "POST",
-        datos,
-        { Authorization: token }
-      );
-    } catch (error) {
-      console.error("Error en getListadoCreditcardExcel:", error);
       throw error;
     }
   }
@@ -251,10 +215,10 @@ export class CreditcardService {
   /**
    * Obtiene la lista de códigos de tarjetas de crédito
    */
-  async getCreditCardCodes(token: string): Promise<any[]> {
+  async getCreditCardCodes(token: string): Promise<CreditCardCodeDTO[]> {
     try {
       const url = "CreditCards/list-codes";
-      return await this.apiConnectionService.sendRequestAsync<any[]>(
+      return await this.apiConnectionService.sendRequestAsync<CreditCardCodeDTO[]>(
         url,
         "GET",
         null,

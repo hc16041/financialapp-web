@@ -10,6 +10,7 @@ import {
   OnChanges,
   output,
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { TableColumn } from "./table-column.interface";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
@@ -99,15 +100,16 @@ import { GenericTablePaginationComponent } from "./generic-table-pagination/gene
   `,
   styleUrls: ["./generictable.component.scss"],
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GenericTableComponent<T> implements OnChanges {
   @Input() title: string = "Tabla"; // Título de la tabla
   @Input() columns: TableColumn[] = []; // Columnas de la tabla
   @Input() data: T[] = []; // Datos de la tabla
   @Input() pageSize: number = 10; // Tamaño de página
-  @Input() entityDTO: any; // 📌 Recibimos el DTO desde el componente padre
+  @Input() entityDTO: unknown; // 📌 Recibimos el DTO desde el componente padre
   @Input() hiddenColumns: string[] = []; // Nueva propiedad para columnas ocultas
-  @Input() selectOptions: { [key: string]: any[] } = {}; // Recibe opciones para los selects
+  @Input() selectOptions: { [key: string]: unknown[] } = {}; // Recibe opciones para los selects
   @Input() excludedFields: string[] = []; // Recibe desde padre los campos a excluir
   @Input() readonlyFields: string[] = []; // Recibe campos readonly desde el padre
   @Input() disabledFields: string[] = []; // Recibe campos disabled desde el padre
@@ -115,7 +117,7 @@ export class GenericTableComponent<T> implements OnChanges {
   @Input() selectFields: string[] = []; // Recibe campos select desde el padre
   @Input() requiredFields: string[] = []; // Recibe campos requeridos desde el padre
   @Input() allowedActions: string[] = []; // Acciones permitidas desde el padre
-  @Input() actionsTemplate?: any; // Plantilla para las acciones
+  @Input() actionsTemplate?: unknown; // Plantilla para las acciones
   @Input() searchDebounceTime: number = 300; // Tiempo de espera para búsqueda
   @Input() maxPages: number = 5; // Número máximo de páginas a mostrar
 
@@ -160,7 +162,7 @@ export class GenericTableComponent<T> implements OnChanges {
   @Output() fileDownload = new EventEmitter<T>(); // Nuevo evento para descargar archivo
   @Output() fieldValueChange = new EventEmitter<{
     field: string;
-    value: any;
+    value: unknown;
   }>(); // Nuevo evento para cambios de campo
 
   // Propiedades
@@ -178,8 +180,10 @@ export class GenericTableComponent<T> implements OnChanges {
     null; // Cache para ordenar
   private visibleColumnsCache: TableColumn[] = []; // Cache de columnas visibles
   // private valueCache = new WeakMap<object, Map<string, any>>(); // Cache de valores
-  private valueCache = new Map<object, Map<string, any>>();
-  private currentPopover: any = null; // Popover actual
+  private valueCache = new Map<object, Map<string, unknown>>();
+  private currentPopover:
+    | { close: () => void; isOpen: () => boolean; open: () => void }
+    | null = null; // Popover actual
   SPECIAL_INVALID_VALUE = -1; // Valor único para estado inválido
 
   statusFilterOptions = [
@@ -342,15 +346,19 @@ export class GenericTableComponent<T> implements OnChanges {
   //   return true; // Mostrar otras acciones siempre
   // }
 
-  shouldShowAction(action: string, item: any): boolean {
+  shouldShowAction(action: string, item: T): boolean {
     // Verificar si el item tiene la propiedad 'activo'
-    const hasActiveProperty = item.hasOwnProperty("activo");
+    const record = item as unknown as Record<string, unknown>;
+    const hasActiveProperty = Object.prototype.hasOwnProperty.call(
+      record,
+      "activo"
+    );
 
     if (action === "activate") {
-      return hasActiveProperty ? item.activo === false : true;
+      return hasActiveProperty ? record["activo"] === false : true;
     }
     if (action === "deactivate") {
-      return hasActiveProperty ? item.activo === true : true;
+      return hasActiveProperty ? record["activo"] === true : true;
     }
     return true;
   }
@@ -372,7 +380,10 @@ export class GenericTableComponent<T> implements OnChanges {
    * @param event Evento que se pasa para evitar propagación.
    * @param popover Popover que se va a togglear.
    */
-  toggleMenu(event: Event, popover: any) {
+  toggleMenu(
+    event: Event,
+    popover: { close: () => void; isOpen: () => boolean; open: () => void }
+  ) {
     event.stopPropagation();
 
     // Cerrar el popover anterior si existe y es diferente
@@ -455,14 +466,14 @@ export class GenericTableComponent<T> implements OnChanges {
    */
   private openModal(config: {
     title: string;
-    data: any;
-    entityType?: any;
+    data: unknown;
+    entityType?: unknown;
     size?: "sm" | "lg";
     isConfirmation?: boolean;
     actionType?: string;
     actionLabel?: string;
     message?: string;
-    onSaveCallback?: (result?: any) => void;
+    onSaveCallback?: (result?: unknown) => void;
   }): void {
     const modalSize = config.size || this.getModalSize(config.data);
 
@@ -472,9 +483,14 @@ export class GenericTableComponent<T> implements OnChanges {
       windowClass: "modal-dialog-centered",
     });
     //limpiar los datos y mapear campos si es necesario
-    const cleanData = Object.keys(config.data).reduce(
-      (acc: Record<string, any>, key) => {
-        acc[key] = config.data[key] === 0 ? 0 : config.data[key];
+    const dataObj =
+      config.data && typeof config.data === "object"
+        ? (config.data as Record<string, unknown>)
+        : {};
+
+    const cleanData = Object.keys(dataObj).reduce(
+      (acc: Record<string, unknown>, key) => {
+        acc[key] = dataObj[key] === 0 ? 0 : dataObj[key];
         return acc;
       },
       {}
@@ -518,7 +534,7 @@ export class GenericTableComponent<T> implements OnChanges {
 
       // Escuchar cambios de campos para lógica personalizada
       modalRef.componentInstance.onFieldValueChange.subscribe(
-        (change: { field: string; value: any }) => {
+        (change: { field: string; value: unknown }) => {
           // Emitir al componente padre para que pueda manejar la lógica
           this.fieldValueChange.emit(change);
 
@@ -545,7 +561,8 @@ export class GenericTableComponent<T> implements OnChanges {
             ];
             // Actualizar solo el campo específico sin regenerar todos los campos
             const field = modalRef.componentInstance.fields.find(
-              (f: any) => f.key === change.field
+              (f: { key: string; disabled?: boolean }) =>
+                f.key === change.field
             );
             if (field) {
               field.disabled = modalRef.componentInstance.isDisabledField(
@@ -554,7 +571,8 @@ export class GenericTableComponent<T> implements OnChanges {
             }
             // Actualizar también el campo creditCardId si es necesario
             const creditCardField = modalRef.componentInstance.fields.find(
-              (f: any) => f.key === "creditCardId"
+              (f: { key: string; disabled?: boolean }) =>
+                f.key === "creditCardId"
             );
             if (creditCardField) {
               creditCardField.disabled =
@@ -568,7 +586,7 @@ export class GenericTableComponent<T> implements OnChanges {
     modalRef.componentInstance.requiredFields = this.requiredFields;
 
     // Manejo común de eventos
-    modalRef.componentInstance.onSave.subscribe((result: any) => {
+    modalRef.componentInstance.onSave.subscribe((result: unknown) => {
       if (config.onSaveCallback) {
         config.onSaveCallback(result);
       }
@@ -592,7 +610,7 @@ export class GenericTableComponent<T> implements OnChanges {
       .replace(/^\w/, (c) => c.toUpperCase());
   }
 
-  private detectFieldType(key: string, context: any): string {
+  private detectFieldType(key: string, context: { selectFields?: string[] }): string {
     if ((context.selectFields || this.selectFields).includes(key))
       return "select";
     if (key.match(/fecha|date/i)) return "date";
@@ -601,7 +619,12 @@ export class GenericTableComponent<T> implements OnChanges {
     return "text";
   }
 
-  private resolveActionConfig(context: any): any {
+  private resolveActionConfig(context: {
+    isConfirmation?: boolean;
+    actionType?: string;
+    actionLabel?: string;
+    message?: string;
+  }): { showConfirmButtons: boolean; actionType?: string; actionLabel?: string; message?: string } {
     if (context.isConfirmation) {
       return {
         showConfirmButtons: true,
@@ -613,8 +636,17 @@ export class GenericTableComponent<T> implements OnChanges {
     return { showConfirmButtons: false };
   }
 
-  private setupModalEvents(modalRef: any, callback?: Function): void {
-    modalRef.componentInstance.onSave.subscribe((result: any) => {
+  private setupModalEvents(
+    modalRef: {
+      componentInstance: {
+        onSave: { subscribe: (fn: (r: unknown) => void) => void };
+        onClose: { subscribe: (fn: () => void) => void };
+      };
+      close: () => void;
+    },
+    callback?: Function
+  ): void {
+    modalRef.componentInstance.onSave.subscribe((result: unknown) => {
       if (callback) callback(result);
       modalRef.close();
     });
@@ -630,7 +662,7 @@ export class GenericTableComponent<T> implements OnChanges {
    * @param {any} data Objeto con los datos a mostrar en el modal.
    * @returns {string} "sm" o "lg" según la cantidad de items.
    */
-  private getModalSize(data: any): "sm" | "lg" {
+  private getModalSize(data: unknown): "sm" | "lg" {
     const itemCount =
       data && typeof data === "object" ? Object.keys(data).length : 0;
     return itemCount > 5 ? "lg" : "sm";
@@ -671,12 +703,21 @@ export class GenericTableComponent<T> implements OnChanges {
    * Emite el nuevo registro a través del evento "new" si se confirma la acción.
    */
   onNew(): void {
+    const entityData =
+      this.entityDTO && typeof this.entityDTO === "object"
+        ? { ...(this.entityDTO as Record<string, unknown>) }
+        : {};
+    const entityType =
+      this.entityDTO && typeof this.entityDTO === "object"
+        ? (this.entityDTO as object).constructor
+        : undefined;
+
     this.openModal({
       title: "Nuevo Registro",
-      data: this.entityDTO,
-      entityType: this.entityDTO.constructor,
+      data: entityData,
+      entityType: entityType,
       onSaveCallback: (newData) => {
-        this.new.emit(newData);
+        this.new.emit(newData as T);
       },
     });
   }
@@ -686,12 +727,25 @@ export class GenericTableComponent<T> implements OnChanges {
    * @param item Item a editar.
    */
   onEdit(item: T): void {
+    const entityType =
+      this.entityDTO && typeof this.entityDTO === "object"
+        ? (this.entityDTO as object).constructor
+        : undefined;
+    const baseData =
+      item && typeof item === "object"
+        ? { ...(item as Record<string, unknown>) }
+        : {};
+
     this.openModal({
       title: "Editar Registro",
-      data: { ...item },
-      entityType: this.entityDTO.constructor,
+      data: baseData,
+      entityType: entityType,
       onSaveCallback: (updatedData) => {
-        this.edit.emit({ ...item, ...updatedData });
+        const updated =
+          updatedData && typeof updatedData === "object"
+            ? { ...baseData, ...(updatedData as Record<string, unknown>) }
+            : { ...baseData };
+        this.edit.emit(updated as T);
       },
     });
   }
@@ -883,7 +937,7 @@ export class GenericTableComponent<T> implements OnChanges {
   //   return value;
   // }
 
-  getValue(item: T, property: string): any {
+  getValue(item: T, property: string): unknown {
     const itemAsObject = item as unknown as object;
     if (!this.valueCache.has(itemAsObject)) {
       this.valueCache.set(itemAsObject, new Map());
@@ -896,7 +950,12 @@ export class GenericTableComponent<T> implements OnChanges {
 
     let value = property
       .split(".")
-      .reduce((obj: any, prop: string) => obj?.[prop], item);
+      .reduce<unknown>((obj, prop: string) => {
+        if (obj && typeof obj === "object") {
+          return (obj as Record<string, unknown>)[prop];
+        }
+        return undefined;
+      }, item as unknown);
 
     // Si el valor es un objeto, extraer el ID antes de procesarlo
     if (
@@ -905,8 +964,9 @@ export class GenericTableComponent<T> implements OnChanges {
       !Array.isArray(value) &&
       value !== null
     ) {
+      const recordValue = value as Record<string, unknown>;
       // Intentar extraer el ID del objeto
-      value = value.id || value.value || value;
+      value = recordValue["id"] ?? recordValue["value"] ?? value;
     }
 
     // Manejo de campos select con carga asincrónica
@@ -917,8 +977,14 @@ export class GenericTableComponent<T> implements OnChanges {
       if (options?.length) {
         // const found = options.find((opt) => opt.id == value); // == para manejar string/number
         // value = found ? found.descripcion : value;
-        const found = options.find((opt) => opt.value == value); // Comparar con 'value'
-        value = found ? found.label : value; // Usar 'label' en lugar de 'descripcion'
+        const found = options.find((opt) => {
+          const optRecord = opt as Record<string, unknown>;
+          return optRecord["value"] == value;
+        }); // Comparar con 'value'
+        if (found) {
+          const foundRecord = found as Record<string, unknown>;
+          value = (foundRecord["label"] ?? foundRecord["descripcion"]) || value; // Usar 'label' o 'descripcion'
+        }
       }
       // Si no hay opciones aún, guardar el valor crudo y actualizar después
       else {
@@ -1012,7 +1078,7 @@ export class GenericTableComponent<T> implements OnChanges {
    * @param item El item en la tabla.
    * @returns Un identificador único para el item.
    */
-  trackByFn(index: number, item: any): number {
+  trackByFn(index: number, item: T): number {
     return index; // Usar un identificador único si está disponible
   }
 
@@ -1107,11 +1173,12 @@ export class GenericTableComponent<T> implements OnChanges {
   private applyFilters(): void {
     const searchRegex = new RegExp(this.searchTerm, "i");
 
-    this.filteredData = this.data.filter((item: any) => {
+    this.filteredData = this.data.filter((item: T) => {
       // Filtro por estado
+      const record = item as unknown as Record<string, unknown>;
       if (
         this.selectedStatus !== null &&
-        (item.activo == true ? 1 : 0) !== this.selectedStatus
+        ((record["activo"] == true ? 1 : 0) as number) !== this.selectedStatus
       ) {
         return false;
       }
@@ -1284,17 +1351,19 @@ export class GenericTableComponent<T> implements OnChanges {
 
     this.sumColumns.forEach((col) => {
       sums[col] = this.filteredData
-        .map((item: any) => {
+        .map((item: T) => {
           // Obtener el valor usando getValue para manejar transformaciones
           // pero para campos numéricos simples, usar acceso directo es más eficiente
-          const rawValue = item[col];
+          const record = item as unknown as Record<string, unknown>;
+          const rawValue = record[col];
           // Si el valor es un objeto, intentar extraer el valor numérico
           if (
             rawValue &&
             typeof rawValue === "object" &&
             !Array.isArray(rawValue)
           ) {
-            return Number(rawValue.value || rawValue.id || rawValue) || 0;
+            const rv = rawValue as Record<string, unknown>;
+            return Number(rv["value"] ?? rv["id"] ?? rv) || 0;
           }
           return Number(rawValue) || 0;
         })

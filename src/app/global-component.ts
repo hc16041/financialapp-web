@@ -1,9 +1,12 @@
+import { environment } from "../environments/environment";
+
+/**
+ * Punto único de configuración de API para toda la app.
+ * Usa environment.apiBase para distinguir dev/prod en build time.
+ */
+const apiBase = environment.apiBase || "https://api.194.163.182.246.nip.io/api/";
+
 export const GlobalComponent = {
-  API_URL: "https://api-node.themesbrand.website/",
- 
-  // Auth Api
-  //AUTH_API: "http://194.163.182.246:8080/api/",
-  //AUTH_API: "http://23.109.152.213:8090/api/",
-  //AUTH_API: "https://localhost:7117/api/",
-  AUTH_API: "https://api.194.163.182.246.nip.io/api/",
+  API_URL: apiBase,
+  AUTH_API: apiBase,
 };

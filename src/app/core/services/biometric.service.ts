@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -25,12 +25,9 @@ export interface BiometricLoginRequest {
   providedIn: 'root'
 })
 export class BiometricService {
+  private http = inject(HttpClient);
+  private authService = inject(AuthNewService);
   private readonly API_URL = `${GlobalComponent.AUTH_API}auth`;
-
-  constructor(
-    private http: HttpClient,
-    private authService: AuthNewService
-  ) {}
 
   /**
    * Obtiene el estado de la autenticación biométrica del usuario actual.

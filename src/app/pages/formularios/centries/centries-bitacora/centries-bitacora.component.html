@@ -1,7 +1,7 @@
 <app-generic-table
   [title]="'Listado de Bitacora De Descargas'"
   [columns]="tableColumns"
-  [data]="(bitacoraList$ | async)!"
+  [data]="bitacoraList"
   [allowedActions]="['file']"
   [showActions]="true"
   [searchEnabled]="true"

@@ -1,6 +1,5 @@
-import { Component, inject, DestroyRef } from "@angular/core";
+import { Component, inject, DestroyRef, ChangeDetectionStrategy, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { BehaviorSubject } from "rxjs";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { TransactionsDTO } from "src/app/application/transactions/DTO/TransactionsDTO";
 import { generateTableColumns } from "src/app/utils/table-utils";
@@ -11,35 +10,16 @@ import { CreditcardService } from "src/app/application/creditcard/Services/Credi
 import { CreditcardDTO } from "src/app/application/creditcard/DTO/CreditcardDTO";
 import { MerchantsService } from "src/app/application/Merchants/Services/Merchants.service";
 import { SelectOptionsMapperService } from "src/app/core/services/select-options-mapper.service";
+import { ITransactionType } from "src/app/application/transactions/Interfaces/ITransactions.interface";
+import { MerchantsDTO } from "src/app/application/Merchants/DTO/MerchantsDTO";
 
 @Component({
   selector: "app-transactions",
   templateUrl: "./transactions.component.html",
   styleUrl: "./transactions.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsComponent {
-  // Table data
-  transactionsList$: BehaviorSubject<TransactionsDTO[]> = new BehaviorSubject<
-    TransactionsDTO[]
-  >([]);
-
-  creditCardCodesList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
-
-  transactionTypesList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>(
-    []
-  );
-
-  merchantList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
-
-  // Table data
-  transactionsDTO = new TransactionsDTO();
-
-  // Table columns - Personalizadas para mejor visualización
-  tableColumns: TableColumn[] = this.generateCustomColumns();
-
-  // Select options
-  selectOptions: { [key: string]: any[] } = {};
-
   private selectOptionsMapper = inject(SelectOptionsMapperService);
   private destroyRef = inject(DestroyRef);
 
@@ -47,6 +27,53 @@ export class TransactionsComponent {
     { value: 1, label: "Tarjeta de Crédito" },
     { value: 2, label: "Efectivo" },
   ];
+
+  // Estado con señales (con getters/setters para compatibilidad con la plantilla)
+  private readonly transactionsListSig = signal<TransactionsDTO[]>([]);
+  get transactionsList(): TransactionsDTO[] {
+    return this.transactionsListSig();
+  }
+  set transactionsList(value: TransactionsDTO[]) {
+    this.transactionsListSig.set(value);
+  }
+
+  private readonly creditCardCodesListSig = signal<CreditcardDTO[]>([]);
+  get creditCardCodesList(): CreditcardDTO[] {
+    return this.creditCardCodesListSig();
+  }
+  set creditCardCodesList(value: CreditcardDTO[]) {
+    this.creditCardCodesListSig.set(value);
+  }
+
+  private readonly transactionTypesListSig = signal<ITransactionType[]>([]);
+  get transactionTypesList(): ITransactionType[] {
+    return this.transactionTypesListSig();
+  }
+  set transactionTypesList(value: ITransactionType[]) {
+    this.transactionTypesListSig.set(value);
+  }
+
+  private readonly merchantListSig = signal<MerchantsDTO[]>([]);
+  get merchantList(): MerchantsDTO[] {
+    return this.merchantListSig();
+  }
+  set merchantList(value: MerchantsDTO[]) {
+    this.merchantListSig.set(value);
+  }
+
+  transactionsDTO = new TransactionsDTO();
+
+  // Table columns - Personalizadas para mejor visualización
+  tableColumns: TableColumn[] = this.generateCustomColumns();
+
+  // Select options
+  private readonly selectOptionsSig = signal<{ [key: string]: unknown[] }>({});
+  get selectOptions(): { [key: string]: unknown[] } {
+    return this.selectOptionsSig();
+  }
+  set selectOptions(value: { [key: string]: unknown[] }) {
+    this.selectOptionsSig.set(value);
+  }
 
   constructor(
     private dataService: DataService,
@@ -72,8 +99,8 @@ export class TransactionsComponent {
    */
   private initializeSelectOptions(): void {
     this.selectOptions = {
-      creditCardId: this.creditCardCodesList$.getValue(),
-      type: this.transactionTypesList$.getValue(),
+      creditCardId: this.creditCardCodesList,
+      type: this.transactionTypesList,
       paymentMethod: this.paymentMethods,
     };
   }
@@ -83,35 +110,7 @@ export class TransactionsComponent {
    */
   private setupSubscriptions(): void {
     // Suscripciones con takeUntilDestroyed para limpieza automática
-    this.creditCardCodesList$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((creditCardCodes) => {
-        this.selectOptions = {
-          ...this.selectOptions,
-          creditCardId:
-            this.selectOptionsMapper.mapCreditCardCodes(creditCardCodes),
-        };
-      });
-
-    this.transactionTypesList$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((transactionTypes) => {
-        this.selectOptions = {
-          ...this.selectOptions,
-          type: this.selectOptionsMapper.mapTransactionTypes(transactionTypes),
-        };
-      });
-
-    // paymentMethod es estático; no requiere suscripción
-
-    this.merchantList$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((merchants) => {
-        this.selectOptions = {
-          ...this.selectOptions,
-          merchantId: this.selectOptionsMapper.mapMerchants(merchants),
-        };
-      });
+    // (Señales) las cargas se hacen en métodos async; no hay streams locales aquí.
   }
 
   /**
@@ -138,36 +137,60 @@ export class TransactionsComponent {
    * Obtiene la lista de comercios y la publica en su BehaviorSubject.
    */
   async obtenerMerchants(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.merchantService,
-      "getMerchants",
-      this.merchantList$,
-      "Error al cargar comercios"
-    );
+    try {
+      const token = sessionStorage.getItem("authToken") || "";
+      const username = sessionStorage.getItem("username") || "";
+      const merchants = await this.merchantService.getMerchants(token, username);
+      this.merchantList = merchants;
+      this.selectOptions = {
+        ...this.selectOptions,
+        merchantId: this.selectOptionsMapper.mapMerchants(merchants),
+      };
+    } catch (error) {
+      // Error al cargar comercios
+    }
   }
 
   /**
    * Obtiene la lista de tipos de transacción y la publica en su BehaviorSubject.
    */
   async obtenerTiposTransacciones(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.transactionsService,
-      "getTransactionTypes",
-      this.transactionTypesList$,
-      "Error al cargar tipos de transacciones"
-    );
+    try {
+      const token = sessionStorage.getItem("authToken") || "";
+      const username = sessionStorage.getItem("username") || "";
+      const transactionTypes = await this.transactionsService.getTransactionTypes(
+        token,
+        username
+      );
+      this.transactionTypesList = transactionTypes;
+      this.selectOptions = {
+        ...this.selectOptions,
+        type: this.selectOptionsMapper.mapTransactionTypes(transactionTypes),
+      };
+    } catch (error) {
+      // Error al cargar tipos de transacciones
+    }
   }
 
   /**
    * Obtiene la lista de códigos de tarjeta de crédito y la publica en su BehaviorSubject.
    */
   async obtenerCreditCardCodes(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.creditcardService,
-      "getCreditCardCodes",
-      this.creditCardCodesList$,
-      "Error al cargar códigos de tarjetas de crédito"
-    );
+    try {
+      const token = sessionStorage.getItem("authToken") || "";
+      const username = sessionStorage.getItem("username") || "";
+      const cards = await this.creditcardService.getListadoCreditcard(
+        token,
+        username
+      );
+      this.creditCardCodesList = cards;
+      this.selectOptions = {
+        ...this.selectOptions,
+        creditCardId: this.selectOptionsMapper.mapCreditCardCodes(cards),
+      };
+    } catch (error) {
+      // Error al cargar códigos de tarjetas
+    }
   }
 
   /**
@@ -218,7 +241,7 @@ export class TransactionsComponent {
         startDate,
         endDate
       );
-      this.transactionsList$.next(data);
+      this.transactionsList = data;
     } catch (error) {
       // Error al cargar transacciones por fecha
     }

@@ -2,7 +2,7 @@
   [title]="'Listado de Perfiles'"
   [columns]="tableColumns"
   [readonlyFields]="['id_perfil']"
-  [data]="(perfilesList$ | async)!"
+  [data]="perfilesList"
   [showActions]="true"
   [allowedActions]="['edit']"
   [searchEnabled]="true"

@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
 import { BitacoraDTO } from "src/app/application/centries/bitacora/DTO/BitacoraDTO";
 import { TableColumn } from "../../genericos/generictable/table-column.interface";
 import { BehaviorSubject } from "rxjs";
@@ -10,22 +10,30 @@ import { BitacoraService } from "src/app/application/centries/bitacora/Services/
   selector: "app-centries-bitacora",
   templateUrl: "./centries-bitacora.component.html",
   styleUrl: "./centries-bitacora.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CentriesBitacoraComponent {
-  // Table data bitacora
-  bitacoraList$: BehaviorSubject<BitacoraDTO[]> = new BehaviorSubject<
-    BitacoraDTO[]
-  >([]);
+export class CentriesBitacoraComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private dataService = inject(DataService);
+  private bitacoraService = inject(BitacoraService);
+
+  // Table data bitacora - Mantener BehaviorSubject para DataService, pero exponer como signal
+  private bitacoraList$ = new BehaviorSubject<BitacoraDTO[]>([]);
+  private readonly bitacoraListSig = signal<BitacoraDTO[]>([]);
+  
+  get bitacoraList(): BitacoraDTO[] {
+    return this.bitacoraListSig();
+  }
+
   // Table data
   bitacoraDTO = new BitacoraDTO();
   tableColumns: TableColumn[] = generateTableColumns(this.bitacoraDTO);
 
-  constructor(
-    private dataService: DataService,
-    private bitacoraService: BitacoraService
-  ) {}
-
   ngOnInit(): void {
+    // Suscribirse al BehaviorSubject para actualizar el signal
+    this.bitacoraList$.subscribe(data => {
+      this.bitacoraListSig.set(data);
+    });
     this.obtenerBitacora();
   }
 
@@ -38,9 +46,12 @@ export class CentriesBitacoraComponent {
     );
   }
 
-  async descargarArchivo(archivo: any): Promise<void> {
-
-    const tipo = archivo.tipo_archivo.split("/")[1]?.toLowerCase();
+  async descargarArchivo(archivo: BitacoraDTO | Record<string, unknown>): Promise<void> {
+    const archivoObj = archivo as BitacoraDTO & Record<string, unknown>;
+    const tipoArchivo = typeof archivoObj.tipo_archivo === 'string' 
+      ? archivoObj.tipo_archivo.split("/")[1]?.toLowerCase() 
+      : '';
+    const tipo = tipoArchivo;
 
     return this.dataService.descargarArchivo(
       this.bitacoraService,

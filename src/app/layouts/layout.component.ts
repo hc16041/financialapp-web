@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { EventService } from '../core/services/event.service';
 
@@ -9,17 +9,17 @@ import { Store } from '@ngrx/store';
 @Component({
   selector: 'app-layout',
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss']
+  styleUrls: ['./layout.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 
 /**
  * Layout Component
  */
 export class LayoutComponent implements OnInit {
-
+  private store = inject(Store<RootReducerState>);
+  
   layoutType!: string;
-
-  constructor(private store: Store<RootReducerState>) { }
 
   ngOnInit(): void {
     this.store.select('layout').subscribe((data) => {

@@ -24,11 +24,14 @@ export class SelectOptionsMapperService {
    * @param platforms Array de plataformas con propiedades id/platformId y name/description
    * @returns Array de opciones de select con value y label
    */
-  mapPlatforms(platforms: any[]): SelectOption[] {
-    return platforms.map((p: any) => ({
-      value: p.id || p.platformId,
-      label: p.name || p.description || `Plataforma ${p.id || p.platformId}`,
-    }));
+  mapPlatforms(platforms: unknown[]): SelectOption[] {
+    return platforms.map((p) => {
+      const platform = p as Record<string, unknown>;
+      return {
+        value: (platform['id'] as number) || (platform['platformId'] as number),
+        label: (platform['name'] as string) || (platform['description'] as string) || `Plataforma ${(platform['id'] as number) || (platform['platformId'] as number)}`,
+      };
+    });
   }
 
   /**
@@ -37,11 +40,14 @@ export class SelectOptionsMapperService {
    * @param transactionTypes Array de tipos de transacción con propiedades id/transactionType y name/description
    * @returns Array de opciones de select con value y label
    */
-  mapTransactionTypes(transactionTypes: any[]): SelectOption[] {
-    return transactionTypes.map((t: any) => ({
-      value: t.id || t.transactionType,
-      label: t.name || t.description || `Tipo ${t.id || t.transactionType}`,
-    }));
+  mapTransactionTypes(transactionTypes: unknown[]): SelectOption[] {
+    return transactionTypes.map((t) => {
+      const type = t as Record<string, unknown>;
+      return {
+        value: (type['id'] as number) || (type['transactionType'] as number),
+        label: (type['name'] as string) || (type['description'] as string) || `Tipo ${(type['id'] as number) || (type['transactionType'] as number)}`,
+      };
+    });
   }
 
   /**
@@ -51,11 +57,14 @@ export class SelectOptionsMapperService {
    * @param creditCards Array de tarjetas de crédito con propiedades codigo y descripcion
    * @returns Array de opciones de select con value y label
    */
-  mapCreditCards(creditCards: any[]): SelectOption[] {
-    return creditCards.map((c: any) => ({
-      value: c.codigo,
-      label: c.descripcion,
-    }));
+  mapCreditCards(creditCards: unknown[]): SelectOption[] {
+    return creditCards.map((c) => {
+      const card = c as Record<string, unknown>;
+      return {
+        value: card['codigo'] as number,
+        label: card['descripcion'] as string,
+      };
+    });
   }
 
   /**
@@ -65,7 +74,7 @@ export class SelectOptionsMapperService {
    * @param creditCardCodes Array de códigos de tarjetas con propiedades codigo y descripcion
    * @returns Array de opciones de select con value y label
    */
-  mapCreditCardCodes(creditCardCodes: any[]): SelectOption[] {
+  mapCreditCardCodes(creditCardCodes: unknown[]): SelectOption[] {
     return this.mapCreditCards(creditCardCodes);
   }
 
@@ -75,11 +84,14 @@ export class SelectOptionsMapperService {
    * @param cargos Array de cargos con propiedades id_cargo y cargo
    * @returns Array de opciones de select con value y label
    */
-  mapCargos(cargos: any[]): SelectOption[] {
-    return cargos.map((c: any) => ({
-      value: c.id_cargo,
-      label: c.cargo,
-    }));
+  mapCargos(cargos: unknown[]): SelectOption[] {
+    return cargos.map((c) => {
+      const cargo = c as Record<string, unknown>;
+      return {
+        value: cargo['id_cargo'] as number,
+        label: cargo['cargo'] as string,
+      };
+    });
   }
 
   /**
@@ -88,11 +100,14 @@ export class SelectOptionsMapperService {
    * @param perfiles Array de perfiles con propiedades id_perfil y perfil
    * @returns Array de opciones de select con value y label
    */
-  mapPerfiles(perfiles: any[]): SelectOption[] {
-    return perfiles.map((p: any) => ({
-      value: p.id_perfil,
-      label: p.perfil,
-    }));
+  mapPerfiles(perfiles: unknown[]): SelectOption[] {
+    return perfiles.map((p) => {
+      const perfil = p as Record<string, unknown>;
+      return {
+        value: perfil['id_perfil'] as number,
+        label: perfil['perfil'] as string,
+      };
+    });
   }
 
   /**
@@ -101,11 +116,14 @@ export class SelectOptionsMapperService {
    * @param withdrawalMethods Array de métodos de retiro con propiedades id/withdrawalMethod y name/description
    * @returns Array de opciones de select con value y label
    */
-  mapWithdrawalMethods(withdrawalMethods: any[]): SelectOption[] {
-    return withdrawalMethods.map((w: any) => ({
-      value: w.id || w.withdrawalMethod,
-      label: w.name || w.description || `Método ${w.id || w.withdrawalMethod}`,
-    }));
+  mapWithdrawalMethods(withdrawalMethods: unknown[]): SelectOption[] {
+    return withdrawalMethods.map((w) => {
+      const method = w as Record<string, unknown>;
+      return {
+        value: (method['id'] as number) || (method['withdrawalMethod'] as number),
+        label: (method['name'] as string) || (method['description'] as string) || `Método ${(method['id'] as number) || (method['withdrawalMethod'] as number)}`,
+      };
+    });
   }
 
   /**
@@ -114,11 +132,14 @@ export class SelectOptionsMapperService {
    * @param merchants Array de merchants con propiedades id y name
    * @returns Array de opciones de select con value y label
    */
-  mapMerchants(merchants: any[]): SelectOption[] {
-    return merchants.map((m: any) => ({
-      value: m.id,
-      label: m.name || m.description || `Merchant ${m.id}`,
-    }));
+  mapMerchants(merchants: unknown[]): SelectOption[] {
+    return merchants.map((m) => {
+      const merchant = m as Record<string, unknown>;
+      return {
+        value: merchant['id'] as number,
+        label: (merchant['name'] as string) || (merchant['description'] as string) || `Merchant ${merchant['id'] as number}`,
+      };
+    });
   }
 
   /**
@@ -131,7 +152,7 @@ export class SelectOptionsMapperService {
    * @param fallbackLabel Función opcional para generar label si no existe
    * @returns Array de opciones de select con value y label
    */
-  mapGeneric<T>(
+  mapGeneric<T extends Record<string, unknown>>(
     items: T[],
     valueKey: string | ((item: T) => number | string),
     labelKey: string | ((item: T) => string),
@@ -141,11 +162,11 @@ export class SelectOptionsMapperService {
       const value =
         typeof valueKey === "function"
           ? valueKey(item)
-          : (item as any)[valueKey];
+          : (item[valueKey] as number | string);
       const label =
         typeof labelKey === "function"
           ? labelKey(item)
-          : (item as any)[labelKey] ||
+          : (item[labelKey] as string) ||
             (fallbackLabel ? fallbackLabel(item, index) : String(value));
 
       return {

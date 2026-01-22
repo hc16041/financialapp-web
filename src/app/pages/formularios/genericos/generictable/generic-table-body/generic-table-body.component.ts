@@ -6,7 +6,7 @@ import {
   ChangeDetectionStrategy,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { NgbHighlight, NgbPopoverModule } from "@ng-bootstrap/ng-bootstrap";
+import { NgbHighlight, NgbPopoverModule, NgbPopover } from "@ng-bootstrap/ng-bootstrap";
 import { TableColumn } from "../table-column.interface";
 
 /**
@@ -90,14 +90,14 @@ import { TableColumn } from "../table-column.interface";
                 <ng-container [ngSwitch]="column.type">
                   <ng-container *ngSwitchCase="'date'">
                     {{
-                      getValue(item, column.property)
+                      getValueAsDate(item, column.property)
                         | date : column.format || "yyyy-MM-dd"
                     }}
                   </ng-container>
                   <ng-container *ngSwitchDefault>
                     <ngb-highlight
                       [result]="
-                        getValue(item, column.property) ||
+                        getValueAsString(item, column.property) ||
                         column.defaultValue ||
                         '-'
                       "
@@ -242,14 +242,14 @@ import { TableColumn } from "../table-column.interface";
                       <ng-container [ngSwitch]="column.type">
                         <ng-container *ngSwitchCase="'date'">
                           {{
-                            getValue(item, column.property)
+                            getValueAsDate(item, column.property)
                               | date : column.format || "yyyy-MM-dd"
                           }}
                         </ng-container>
                         <ng-container *ngSwitchDefault>
                           <ngb-highlight
                             [result]="
-                              getValue(item, column.property) ||
+                              getValueAsString(item, column.property) ||
                               column.defaultValue ||
                               '-'
                             "
@@ -285,7 +285,7 @@ export class GenericTableBodyComponent<T> {
     };
   } = {};
   @Input() searchTerm: string = "";
-  @Input() selectOptions: { [key: string]: any[] } = {};
+  @Input() selectOptions: { [key: string]: unknown[] } = {};
   @Input() selectFields: string[] = [];
   @Input() sumColumns: string[] = [];
   @Input() columnSums: { [key: string]: number } = {};
@@ -293,7 +293,7 @@ export class GenericTableBodyComponent<T> {
   @Input() sortColumn: string | null = null;
   @Input() sortDirection: "asc" | "desc" | null = null;
   @Input() validatePermissions: boolean = true;
-  @Input() getValueFn!: (item: T, property: string) => any;
+  @Input() getValueFn!: (item: T, property: string) => unknown;
   @Input() shouldShowActionFn?: (action: string, item: T) => boolean;
 
   @Output() actionClick = new EventEmitter<{ action: string; item: T }>();
@@ -304,18 +304,72 @@ export class GenericTableBodyComponent<T> {
   }>();
   @Output() clearColumnFilterEvent = new EventEmitter<string>();
 
-  private currentPopover: any = null;
+  private currentPopover: NgbPopover | null = null;
 
-  trackByFn(index: number, item: any): number {
+  trackByFn(index: number, item: T): number {
     return index;
   }
 
-  getValue(item: T, property: string): any {
+  getValue(item: T, property: string): unknown {
     if (this.getValueFn) {
       return this.getValueFn(item, property);
     }
     // Fallback si no se proporciona función
-    return (item as any)[property];
+    const itemRecord = item as Record<string, unknown>;
+    return itemRecord[property];
+  }
+
+  /**
+   * Obtiene el valor de una propiedad y lo convierte a string de forma segura.
+   * @param item El item del cual obtener el valor.
+   * @param property La propiedad a obtener.
+   * @returns El valor convertido a string.
+   */
+  getValueAsString(item: T, property: string): string {
+    const value = this.getValue(item, property);
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    // Para objetos, intentar convertir a JSON o usar toString
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  /**
+   * Obtiene el valor de una propiedad como Date para usar con el pipe date.
+   * @param item El item del cual obtener el valor.
+   * @param property La propiedad a obtener.
+   * @returns El valor convertido a Date, string o number, o null si no es convertible.
+   */
+  getValueAsDate(item: T, property: string): string | number | Date | null | undefined {
+    const value = this.getValue(item, property);
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (value instanceof Date) {
+      return value;
+    }
+    if (typeof value === 'string' || typeof value === 'number') {
+      return value;
+    }
+    // Intentar convertir a Date si es posible
+    if (typeof value === 'object' && 'toString' in value) {
+      const dateStr = value.toString();
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    return null;
   }
 
   shouldShowAction(action: string, item: T): boolean {
@@ -341,7 +395,7 @@ export class GenericTableBodyComponent<T> {
     this.clearColumnFilterEvent.emit(property);
   }
 
-  toggleMenu(event: Event, popover: any): void {
+  toggleMenu(event: Event, popover: NgbPopover): void {
     event.stopPropagation();
     if (this.currentPopover && this.currentPopover !== popover) {
       this.currentPopover.close();

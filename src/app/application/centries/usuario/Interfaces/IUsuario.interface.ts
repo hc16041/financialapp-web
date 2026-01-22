@@ -1,14 +1,15 @@
 import { UsuarioDTO } from "../DTO/UsuarioDTO";
+import { UsuarioOperationResponse } from "../DTO/UsuarioOperation.dto";
 
 export interface IUsuario {
   getListadoUsuarioActivo(token: string): Promise<UsuarioDTO[]>;
   getListadoUsuarioInactivo(token: string): Promise<UsuarioDTO[]>;
-  getListadoUsuarioId(idusuario: number, token: string): Promise<any>;
-  guardarUsuario(datos: any, token: string): Promise<any>;
-  editarUsuario(datos: any, token: string): Promise<any>;
-  inactivarUsuario(idusuario: number, token: string): Promise<any>;
-  activarUsuario(idusuario: number, token: string): Promise<any>;
-  resetearClave(idusuario: number, token: string): Promise<any>;
+  getListadoUsuarioId(idusuario: number, token: string): Promise<UsuarioDTO>;
+  guardarUsuario(datos: UsuarioDTO | Record<string, unknown>, token: string): Promise<UsuarioOperationResponse>;
+  editarUsuario(datos: UsuarioDTO | Record<string, unknown>, token: string): Promise<UsuarioOperationResponse>;
+  inactivarUsuario(idusuario: number, token: string): Promise<UsuarioOperationResponse>;
+  activarUsuario(idusuario: number, token: string): Promise<UsuarioOperationResponse>;
+  resetearClave(idusuario: number, token: string): Promise<UsuarioOperationResponse>;
 }
 
 export interface IUsuarioEdit {

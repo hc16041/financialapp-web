@@ -7,7 +7,6 @@ const USER_KEY = 'currentUser';
   providedIn: 'root'
 })
 export class TokenStorageService {
-  constructor() { }
 
   signOut(): void {
     window.sessionStorage.clear();
@@ -22,15 +21,19 @@ export class TokenStorageService {
     return sessionStorage.getItem('token');
   }
 
-  public saveUser(user: any): void {
+  public saveUser(user: Record<string, unknown>): void {
     window.sessionStorage.removeItem(USER_KEY);
     window.sessionStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
-  public getUser(): any {
+  public getUser(): Record<string, unknown> {
     const user = window.sessionStorage.getItem(USER_KEY);
     if (user) {
-      return JSON.parse(user);
+      try {
+        return JSON.parse(user) as Record<string, unknown>;
+      } catch {
+        return {};
+      }
     }
 
     return {};

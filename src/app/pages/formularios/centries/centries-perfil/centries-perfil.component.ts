@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { PerfilDTO } from "src/app/application/centries/perfil/DTO/PerfilDTO";
 import { TableColumn } from "../../genericos/generictable/table-column.interface";
@@ -10,22 +10,30 @@ import { DataService } from "src/app/core/services/data.service";
   selector: "app-centries-perfil",
   templateUrl: "./centries-perfil.component.html",
   styleUrl: "./centries-perfil.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CentriesPerfilComponent {
-  //Table data perfiles
-  perfilesList$: BehaviorSubject<PerfilDTO[]> = new BehaviorSubject<
-    PerfilDTO[]
-  >([]);
+export class CentriesPerfilComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private dataService = inject(DataService);
+  private perfilService = inject(PerfilService);
+
+  //Table data perfiles - Mantener BehaviorSubject para DataService, pero exponer como signal
+  private perfilesList$ = new BehaviorSubject<PerfilDTO[]>([]);
+  private readonly perfilesListSig = signal<PerfilDTO[]>([]);
+  
+  get perfilesList(): PerfilDTO[] {
+    return this.perfilesListSig();
+  }
+
   // Table data
   perfilDTO = new PerfilDTO();
   tableColumns: TableColumn[] = generateTableColumns(this.perfilDTO);
 
-  constructor(
-    private dataService: DataService,
-    private perfilService: PerfilService
-  ) {}
-
   ngOnInit(): void {
+    // Suscribirse al BehaviorSubject para actualizar el signal
+    this.perfilesList$.subscribe(data => {
+      this.perfilesListSig.set(data);
+    });
     this.obtenerPerfiles();
   }
 
@@ -38,7 +46,7 @@ export class CentriesPerfilComponent {
     );
   }
 
-  async onAddPerfil(newPerfil: any): Promise<void> {
+  async onAddPerfil(newPerfil: PerfilDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.agregarRegistro(
       this.perfilService,
       "guardarPerfil",
@@ -49,7 +57,7 @@ export class CentriesPerfilComponent {
     await this.obtenerPerfiles();
   }
 
-  async onEditPerfil(updatedPerfil: any): Promise<void> {
+  async onEditPerfil(updatedPerfil: PerfilDTO | Record<string, unknown>): Promise<void> {
     const token = localStorage.getItem("authToken")?.toString() || "";
 
     await this.dataService.actualizarRegistro(
@@ -63,7 +71,7 @@ export class CentriesPerfilComponent {
     await this.obtenerPerfiles();
   }
 
-  async onDeletePerfil(perfil: any): Promise<void> {
+  async onDeletePerfil(perfil: PerfilDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.eliminarRegistro(
       this.perfilService,
       "eliminarPerfil",

@@ -2,6 +2,12 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { TransactionsDTO } from "../DTO/TransactionsDTO";
 import { ITransactions } from "../Interfaces/ITransactions.interface";
+import {
+  TransactionOperationResponse,
+  TransactionType,
+  TransactionsSummary,
+  FileExportResponse,
+} from "../DTO/TransactionOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -89,13 +95,13 @@ export class TransactionsService implements ITransactions {
   }
 
   async guardarTransactions(
-    datos: any,
+    datos: TransactionsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<TransactionOperationResponse> {
     try {
       const url = `transactions`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<TransactionOperationResponse>(
         url,
         "POST",
         datos,
@@ -108,13 +114,13 @@ export class TransactionsService implements ITransactions {
   }
 
   async editarTransactions(
-    datos: any,
+    datos: TransactionsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<TransactionOperationResponse> {
     try {
       const url = `Transactions`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<TransactionOperationResponse>(
         url,
         "PUT",
         datos,
@@ -127,13 +133,13 @@ export class TransactionsService implements ITransactions {
   }
 
   async eliminarTransactions(
-    datos: any,
+    datos: Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<TransactionOperationResponse> {
     try {
       const url = `Transactions`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<TransactionOperationResponse>(
         url,
         "DELETE",
         datos,
@@ -141,51 +147,6 @@ export class TransactionsService implements ITransactions {
       );
     } catch (error) {
       console.error("Error en eliminarTransactions:", error);
-      throw error;
-    }
-  }
-
-  async getListadoTransactionsXML(
-    token: string,
-    usuario: string
-  ): Promise<any> {
-    try {
-      const url = `Transactions/ExportarXML`;
-      const datos = {
-        fecha_inicio: new Date().toISOString().split("T")[0],
-        fecha_fin: new Date().toISOString().split("T")[0],
-        CODUSUARIO: usuario,
-      };
-      return await this.apiConnectionService.sendRequestXMLAsync<any>(
-        url,
-        "POST",
-        datos
-      );
-    } catch (error) {
-      console.error("Error en getListadoTransactionsXML:", error);
-      throw error;
-    }
-  }
-
-  async getListadoTransactionsExcel(
-    token: string,
-    usuario: string
-  ): Promise<any> {
-    try {
-      const url = `Transactions/ExportarExcel`;
-      const datos = {
-        fecha_inicio: new Date().toISOString().split("T")[0],
-        fecha_fin: new Date().toISOString().split("T")[0],
-        CODUSUARIO: usuario,
-      };
-      return await this.apiConnectionService.sendRequestExcelAsync<any>(
-        url,
-        "POST",
-        datos,
-        { Authorization: token }
-      );
-    } catch (error) {
-      console.error("Error en getListadoTransactionsExcel:", error);
       throw error;
     }
   }
@@ -300,14 +261,14 @@ export class TransactionsService implements ITransactions {
     id: number,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<TransactionOperationResponse> {
     try {
       const url = `Transactions/Procesar/${id}`;
       const datos = {
         id: id,
         codusuario: usuario,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<TransactionOperationResponse>(
         url,
         "PUT",
         datos,
@@ -322,10 +283,10 @@ export class TransactionsService implements ITransactions {
   /**
    * Obtiene tipos de transacciones disponibles
    */
-  async getTransactionTypes(token: string, usuario: string): Promise<any[]> {
+  async getTransactionTypes(token: string, usuario: string): Promise<TransactionType[]> {
     try {
       const url = `Transactions/Types`;
-      return await this.apiConnectionService.sendRequestAsync<any[]>(
+      return await this.apiConnectionService.sendRequestAsync<TransactionType[]>(
         url,
         "GET",
         null,
@@ -344,10 +305,10 @@ export class TransactionsService implements ITransactions {
     creditCardId: number,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<TransactionsSummary> {
     try {
       const url = `Transactions/Summary/${creditCardId}`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<TransactionsSummary>(
         url,
         "GET",
         null,

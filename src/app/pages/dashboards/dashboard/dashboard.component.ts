@@ -1,34 +1,47 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild, inject, ChangeDetectionStrategy } from "@angular/core";
 import { ToastService } from "./toast-service";
 import { circle, latLng, tileLayer } from "leaflet";
 import { ChartType } from "./dashboard.model";
+
+interface BreadCrumbItem {
+  label: string;
+  active?: boolean;
+}
+
+interface DateRange {
+  from: Date;
+  to: Date;
+}
 
 @Component({
   selector: "app-dashboard",
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 
 /**
  * Ecommerce Component
  */
 export class DashboardComponent implements OnInit {
+  toastService = inject(ToastService);
+  
   // bread crumb items
-  breadCrumbItems!: Array<{}>;
+  breadCrumbItems!: BreadCrumbItem[];
   analyticsChart!: ChartType;
-  BestSelling: any;
-  TopSelling: any;
-  Recentelling: any;
+  BestSelling: unknown;
+  TopSelling: unknown;
+  Recentelling: unknown;
   SalesCategoryChart!: ChartType;
-  statData!: any;
+  statData: unknown;
 
   // Current Date
-  currentDate: any;
+  currentDate: DateRange;
 
-  constructor(public toastService: ToastService) {
-    var date = new Date();
-    var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  constructor() {
+    const date = new Date();
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
     this.currentDate = { from: firstDay, to: lastDay };
   }
 

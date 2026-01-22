@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { PlatformsDTO } from "../DTO/PlatformsDTO";
 import { IPlatforms } from "../Interfaces/IPlatforms.interface";
+import { PlatformOperationResponse } from "../DTO/PlatformOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -53,13 +54,13 @@ export class PlatformsService implements IPlatforms {
    * Crea una nueva plataforma
    */
   async guardarPlatforms(
-    datos: any,
+    datos: PlatformsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<PlatformOperationResponse> {
     try {
       const url = `Platforms`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PlatformOperationResponse>(
         url,
         "POST",
         datos,
@@ -75,13 +76,14 @@ export class PlatformsService implements IPlatforms {
    * Actualiza una plataforma existente
    */
   async editarPlatforms(
-    datos: any,
+    datos: PlatformsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<PlatformOperationResponse> {
     try {
-      const url = `Platforms/${datos.id}`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      const datosObj = datos as Record<string, unknown>;
+      const url = `Platforms/${datosObj['id']}`;
+      return await this.apiConnectionService.sendRequestAsync<PlatformOperationResponse>(
         url,
         "PUT",
         datos,
@@ -100,10 +102,10 @@ export class PlatformsService implements IPlatforms {
     id: number,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<PlatformOperationResponse> {
     try {
       const url = `Platforms/${id}`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PlatformOperationResponse>(
         url,
         "DELETE",
         null,

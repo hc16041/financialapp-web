@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { generateTableColumns } from "src/app/utils/table-utils";
@@ -10,22 +10,30 @@ import { MerchantsService } from "src/app/application/Merchants/Services/Merchan
   selector: "app-merchants",
   templateUrl: "./merchants.component.html",
   styleUrl: "./merchants.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MerchantsComponent {
-  // Table data
-  merchantsList$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+export class MerchantsComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private dataService = inject(DataService);
+  private merchantService = inject(MerchantsService);
+
+  // Table data - Mantener BehaviorSubject para DataService, pero exponer como signal
+  private merchantsList$ = new BehaviorSubject<MerchantsDTO[]>([]);
+  private readonly merchantsListSig = signal<MerchantsDTO[]>([]);
+  
+  get merchantsList(): MerchantsDTO[] {
+    return this.merchantsListSig();
+  }
 
   // Table data
   merchantsDTO = new MerchantsDTO();
-
   tableColumns: TableColumn[] = generateTableColumns(this.merchantsDTO);
 
-  constructor(
-    private dataService: DataService,
-    private merchantService: MerchantsService
-  ) {}
-
   ngOnInit(): void {
+    // Suscribirse al BehaviorSubject para actualizar el signal
+    this.merchantsList$.subscribe(data => {
+      this.merchantsListSig.set(data);
+    });
     this.obtenerMerchants();
   }
 
@@ -38,7 +46,7 @@ export class MerchantsComponent {
     );
   }
 
-  async onAddMerchant(newMerchant: any): Promise<void> {
+  async onAddMerchant(newMerchant: MerchantsDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.agregarRegistro(
       this.merchantService,
       "guardarMerchants",

@@ -48,9 +48,9 @@
           (ngModelChange)="onFieldChange(field.key, $event)"
         >
           <option [ngValue]="" disabled selected>SELECCIONE</option>
-          @for (option of field.options; track option.value || $index) {
-          <option [ngValue]="option.value">
-            {{ option.label }}
+          @for (option of field.options; track getOptionValue(option) || $index) {
+          <option [ngValue]="getOptionValue(option)">
+            {{ getOptionLabel(option) }}
           </option>
           }
         </select>
@@ -62,7 +62,7 @@
           type="date"
           class="form-control"
           [id]="field.key"
-          [ngModel]="data[field.key] | date : 'yyyy-MM-dd'"
+          [ngModel]="getDateValue(field.key) | date : 'yyyy-MM-dd'"
           [name]="field.key"
           (ngModelChange)="onDateChange(field.key, $event)"
           [readonly]="field.readonly"

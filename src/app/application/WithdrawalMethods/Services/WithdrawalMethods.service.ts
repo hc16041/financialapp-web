@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { WithdrawalMethodsDTO } from "../DTO/WithdrawalMethodsDTO";
 import { IWithdrawalMethods } from "../Interfaces/IWithdrawalMethods.interface";
+import { WithdrawalMethodOperationResponse } from "../DTO/WithdrawalMethodOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -53,13 +54,13 @@ export class WithdrawalMethodsService implements IWithdrawalMethods {
    * Crea un nuevo método de retiro
    */
   async guardarWithdrawalMethods(
-    datos: any,
+    datos: WithdrawalMethodsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<WithdrawalMethodOperationResponse> {
     try {
       const url = `WithdrawalMethods`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<WithdrawalMethodOperationResponse>(
         url,
         "POST",
         datos,
@@ -75,13 +76,14 @@ export class WithdrawalMethodsService implements IWithdrawalMethods {
    * Actualiza un método de retiro existente
    */
   async editarWithdrawalMethods(
-    datos: any,
+    datos: WithdrawalMethodsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<WithdrawalMethodOperationResponse> {
     try {
-      const url = `WithdrawalMethods/${datos.id}`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      const datosObj = datos as Record<string, unknown>;
+      const url = `WithdrawalMethods/${datosObj['id']}`;
+      return await this.apiConnectionService.sendRequestAsync<WithdrawalMethodOperationResponse>(
         url,
         "PUT",
         datos,
@@ -100,10 +102,10 @@ export class WithdrawalMethodsService implements IWithdrawalMethods {
     id: number,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<WithdrawalMethodOperationResponse> {
     try {
       const url = `WithdrawalMethods/${id}`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<WithdrawalMethodOperationResponse>(
         url,
         "DELETE",
         null,

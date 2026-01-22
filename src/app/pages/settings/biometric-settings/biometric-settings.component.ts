@@ -1,24 +1,50 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { BiometricService, BiometricStatus } from '../../../core/services/biometric.service';
 import { AuthNewService } from '../../../core/services/auth-new.service';
 
 @Component({
   selector: 'app-biometric-settings',
   templateUrl: './biometric-settings.component.html',
-  styleUrls: ['./biometric-settings.component.scss']
+  styleUrls: ['./biometric-settings.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BiometricSettingsComponent implements OnInit {
-  biometricStatus: BiometricStatus | null = null;
-  isLoading = false;
-  isRegistering = false;
-  isDisabling = false;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
+  // Inyección de dependencias usando inject()
+  private biometricService = inject(BiometricService);
+  private authService = inject(AuthNewService);
 
-  constructor(
-    private biometricService: BiometricService,
-    private authService: AuthNewService
-  ) {}
+  // Estado usando signals
+  readonly biometricStatusSig = signal<BiometricStatus | null>(null);
+  readonly isLoadingSig = signal<boolean>(false);
+  readonly isRegisteringSig = signal<boolean>(false);
+  readonly isDisablingSig = signal<boolean>(false);
+  readonly errorMessageSig = signal<string | null>(null);
+  readonly successMessageSig = signal<string | null>(null);
+
+  // Getters para compatibilidad con template
+  get biometricStatus(): BiometricStatus | null {
+    return this.biometricStatusSig();
+  }
+
+  get isLoading(): boolean {
+    return this.isLoadingSig();
+  }
+
+  get isRegistering(): boolean {
+    return this.isRegisteringSig();
+  }
+
+  get isDisabling(): boolean {
+    return this.isDisablingSig();
+  }
+
+  get errorMessage(): string | null {
+    return this.errorMessageSig();
+  }
+
+  get successMessage(): string | null {
+    return this.successMessageSig();
+  }
 
   ngOnInit(): void {
     this.loadBiometricStatus();
@@ -28,18 +54,19 @@ export class BiometricSettingsComponent implements OnInit {
    * Carga el estado actual de la autenticación biométrica
    */
   loadBiometricStatus(): void {
-    this.isLoading = true;
-    this.errorMessage = null;
+    this.isLoadingSig.set(true);
+    this.errorMessageSig.set(null);
 
     this.biometricService.getBiometricStatus().subscribe({
       next: (status) => {
-        this.biometricStatus = status;
-        this.isLoading = false;
+        this.biometricStatusSig.set(status);
+        this.isLoadingSig.set(false);
       },
-      error: (error) => {
+      error: (error: unknown) => {
         console.error('Error cargando estado biométrico:', error);
-        this.errorMessage = error.error?.message || 'Error al cargar el estado de la autenticación biométrica';
-        this.isLoading = false;
+        const errorMessage = (error as { error?: { message?: string } })?.error?.message || 'Error al cargar el estado de la autenticación biométrica';
+        this.errorMessageSig.set(errorMessage);
+        this.isLoadingSig.set(false);
       }
     });
   }
@@ -56,13 +83,13 @@ export class BiometricSettingsComponent implements OnInit {
    */
   async registerBiometric(): Promise<void> {
     if (!this.isWebAuthnAvailable()) {
-      this.errorMessage = 'La autenticación biométrica no está disponible en este dispositivo o navegador';
+      this.errorMessageSig.set('La autenticación biométrica no está disponible en este dispositivo o navegador');
       return;
     }
 
-    this.isRegistering = true;
-    this.errorMessage = null;
-    this.successMessage = null;
+    this.isRegisteringSig.set(true);
+    this.errorMessageSig.set(null);
+    this.successMessageSig.set(null);
 
     try {
       const currentUser = this.authService.getCurrentUser();
@@ -80,20 +107,22 @@ export class BiometricSettingsComponent implements OnInit {
       // Guardar en el servidor
       this.biometricService.registerBiometric(credential.credentialId, credential.publicKey).subscribe({
         next: (status) => {
-          this.biometricStatus = status;
-          this.isRegistering = false;
-          this.successMessage = 'Huella dactilar registrada exitosamente';
+          this.biometricStatusSig.set(status);
+          this.isRegisteringSig.set(false);
+          this.successMessageSig.set('Huella dactilar registrada exitosamente');
         },
-        error: (error) => {
+        error: (error: unknown) => {
           console.error('Error registrando biometría:', error);
-          this.errorMessage = error.error?.message || 'Error al registrar la huella dactilar';
-          this.isRegistering = false;
+          const errorMessage = (error as { error?: { message?: string } })?.error?.message || 'Error al registrar la huella dactilar';
+          this.errorMessageSig.set(errorMessage);
+          this.isRegisteringSig.set(false);
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error en registro biométrico:', error);
-      this.errorMessage = error.message || 'Error al registrar la huella dactilar';
-      this.isRegistering = false;
+      const errorMessage = (error as { message?: string })?.message || 'Error al registrar la huella dactilar';
+      this.errorMessageSig.set(errorMessage);
+      this.isRegisteringSig.set(false);
     }
   }
 
@@ -105,20 +134,21 @@ export class BiometricSettingsComponent implements OnInit {
       return;
     }
 
-    this.isDisabling = true;
-    this.errorMessage = null;
-    this.successMessage = null;
+    this.isDisablingSig.set(true);
+    this.errorMessageSig.set(null);
+    this.successMessageSig.set(null);
 
     this.biometricService.disableBiometric().subscribe({
       next: (status) => {
-        this.biometricStatus = status;
-        this.isDisabling = false;
-        this.successMessage = 'Autenticación biométrica desactivada';
+        this.biometricStatusSig.set(status);
+        this.isDisablingSig.set(false);
+        this.successMessageSig.set('Autenticación biométrica desactivada');
       },
-      error: (error) => {
+      error: (error: unknown) => {
         console.error('Error desactivando biometría:', error);
-        this.errorMessage = error.error?.message || 'Error al desactivar la autenticación biométrica';
-        this.isDisabling = false;
+        const errorMessage = (error as { error?: { message?: string } })?.error?.message || 'Error al desactivar la autenticación biométrica';
+        this.errorMessageSig.set(errorMessage);
+        this.isDisablingSig.set(false);
       }
     });
   }
@@ -140,6 +170,20 @@ export class BiometricSettingsComponent implements OnInit {
     } catch {
       return 'N/A';
     }
+  }
+
+  /**
+   * Limpia el mensaje de éxito
+   */
+  clearSuccessMessage(): void {
+    this.successMessageSig.set(null);
+  }
+
+  /**
+   * Limpia el mensaje de error
+   */
+  clearErrorMessage(): void {
+    this.errorMessageSig.set(null);
   }
 }
 

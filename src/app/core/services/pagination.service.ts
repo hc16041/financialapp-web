@@ -5,14 +5,14 @@ import { Injectable } from '@angular/core';
     providedIn: 'root',
 })
 export class PaginationService {
-    pageSize: any = 8;
-    page: any = 1;
-    direction: any = 'asc';
+    pageSize: number = 8;
+    page: number = 1;
+    direction: 'asc' | 'desc' = 'asc';
     startIndex: number = 1;
     endIndex: number = 9;
 
     // Pagination
-    changePage(alldata: any[]) {
+    changePage<T>(alldata: T[]): T[] {
         const startItem = (this.page - 1) * this.pageSize + 1;
         const endItem = (this.page - 1) * this.pageSize + this.pageSize;
         this.endIndex = endItem;
@@ -23,22 +23,26 @@ export class PaginationService {
     }
 
     // Sort Data
-    onSort(column: any, dataList: any[]) {
-        if (this.direction == 'asc') {
+    onSort<T extends Record<string, unknown>>(column: string, dataList: T[]): T[] {
+        if (this.direction === 'asc') {
             this.direction = 'desc';
         } else {
             this.direction = 'asc';
         }
         const sortedArray = [...dataList]; // Create a new array
         sortedArray.sort((a, b) => {
-            const res = this.compare(a[column], b[column]);
+            const aValue = a[column];
+            const bValue = b[column];
+            const res = this.compare(
+                typeof aValue === 'string' || typeof aValue === 'number' ? aValue : String(aValue),
+                typeof bValue === 'string' || typeof bValue === 'number' ? bValue : String(bValue)
+            );
             return this.direction === 'asc' ? res : -res;
         });
-        return dataList = sortedArray;
+        return sortedArray;
     }
-    compare(v1: string | number, v2: string | number) {
+    
+    compare(v1: string | number, v2: string | number): number {
         return v1 < v2 ? -1 : v1 > v2 ? 1 : 0;
     }
-
-
 }

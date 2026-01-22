@@ -4,18 +4,16 @@ import { map, filter } from 'rxjs/operators';
 
 interface Event {
     type: string;
-    payload?: any;
+    payload?: unknown;
 }
 
-type EventCallback = (payload: any) => void;
+type EventCallback = (payload: unknown) => void;
 
 @Injectable({
     providedIn: 'root'
 })
 export class EventService {
-
     private handler = new Subject<Event>();
-    constructor() { }
 
     /**
    * Publica un evento en el bus interno.

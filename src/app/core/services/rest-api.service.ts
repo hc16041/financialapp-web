@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { GlobalComponent } from "../../global-component";
@@ -14,18 +14,18 @@ const httpOptions = {
   providedIn: "root",
 })
 export class RestApiService {
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
-  getApikeyData(): Observable<any[]> {
-    return this.http.get<any[]>("/app/apikey");
+  getApikeyData(): Observable<unknown[]> {
+    return this.http.get<unknown[]>("/app/apikey");
   }
 
-  addApikeyData(newData: any): Observable<any[]> {
-    return this.http.post<any[]>("/app/apikey", newData);
+  addApikeyData(newData: Record<string, unknown>): Observable<unknown[]> {
+    return this.http.post<unknown[]>("/app/apikey", newData);
   }
 
-  updateApikeyData(updatedData: any): Observable<any[]> {
-    return this.http.put<any[]>("/app/apikey", updatedData);
+  updateApikeyData(updatedData: Record<string, unknown>): Observable<unknown[]> {
+    return this.http.put<unknown[]>("/app/apikey", updatedData);
   }
 
   deleteApikeyData(): Observable<void> {
@@ -36,8 +36,8 @@ export class RestApiService {
    * Todo Rest Api
    */
   // Get
-  getTodoData(): Observable<any> {
-    var headerToken = {
+  getTodoData(): Observable<string> {
+    const headerToken = {
       Authorization: `Bearer ` + sessionStorage.getItem("token"),
     };
     return this.http.get(GlobalComponent.API_URL + "apps/todo", {
@@ -47,7 +47,7 @@ export class RestApiService {
   }
 
   // POST
-  postTodoData(employee: any): Observable<any> {
+  postTodoData(employee: Record<string, unknown>): Observable<unknown> {
     return this.http.post(
       GlobalComponent.API_URL + "apps/todo",
       JSON.stringify(employee),
@@ -56,8 +56,8 @@ export class RestApiService {
   }
 
   // Single
-  getSingleTodoData(id: any): Observable<any> {
-    var headerToken = {
+  getSingleTodoData(id: string | number): Observable<string> {
+    const headerToken = {
       Authorization: `Bearer ` + sessionStorage.getItem("token"),
     };
     return this.http.get(GlobalComponent.API_URL + "apps/todo/" + id, {
@@ -67,7 +67,7 @@ export class RestApiService {
   }
 
   // Patch
-  patchTodoData(employee: any): Observable<any> {
+  patchTodoData(employee: Record<string, unknown> & { ids?: string | number }): Observable<unknown> {
     return this.http.patch(
       GlobalComponent.API_URL + "apps/todo/" + employee.ids,
       JSON.stringify(employee),
@@ -76,7 +76,7 @@ export class RestApiService {
   }
 
   // Delete
-  deleteTodo(id: any): Observable<any> {
+  deleteTodo(id: string | number): Observable<unknown> {
     var headerToken = {
       Authorization: `Bearer ` + sessionStorage.getItem("token"),
     };

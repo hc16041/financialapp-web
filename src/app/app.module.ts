@@ -29,9 +29,6 @@ import { rootReducer } from "./store";
 import { StoreModule } from "@ngrx/store";
 import { StoreDevtoolsModule } from "@ngrx/store-devtools";
 import { EffectsModule } from "@ngrx/effects";
-import { TodoEffects } from "./store/Todo/todo_effect";
-import { ApikeyEffects } from "./store/APIKey/apikey_effect";
-import { AuthenticationEffects } from "./store/Authentication/authentication.effects";
 
 export function createTranslateLoader(http: HttpClient): any {
   return new TranslateHttpLoader(http, "assets/i18n/", ".json");
@@ -66,7 +63,7 @@ if (environment.defaultauth === "firebase") {
       maxAge: 25, // Retains last 25 states
       logOnly: environment.production, // Restrict extension to log-only mode
     }),
-    EffectsModule.forRoot([AuthenticationEffects, TodoEffects, ApikeyEffects]),
+    EffectsModule.forRoot([]),
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },

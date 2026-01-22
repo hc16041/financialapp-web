@@ -1,11 +1,11 @@
-import { Injectable } from "@angular/core"; // Asumiendo que tienes un servicio de alertas
+import { Injectable, inject } from "@angular/core";
 import { AlertcustomService } from "./alertcustom.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class FileDownloadService {
-  constructor(private alertService: AlertcustomService) {}
+  private alertService = inject(AlertcustomService);
 
   /**
    * Descarga un XML y notifica el resultado.
@@ -14,7 +14,7 @@ export class FileDownloadService {
    * @param fileName Nombre sugerido del archivo.
    * @param validacion Indicador `"S"` si se validó contra XSD (para ajustar mensaje).
    */
-  downloadXmlFile(data: any, fileName: string, validacion: string): void {
+  downloadXmlFile(data: BlobPart, fileName: string, validacion: string): void {
     let url: string | null = null;
     try {
       // Crear un blob con el contenido del archivo XML
@@ -30,7 +30,7 @@ export class FileDownloadService {
       } else {
       this.alertService.showSuccess("XML descargado con éxito");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al descargar el archivo:", error);
       this.alertService.showError("Error al descargar el archivo");
     } finally {
@@ -47,7 +47,7 @@ export class FileDownloadService {
    * @param data Contenido del Excel.
    * @param fileName Nombre sugerido del archivo.
    */
-  downloadExcelFile(data: any, fileName: string): void {
+  downloadExcelFile(data: BlobPart, fileName: string): void {
     let url: string | null = null;
     try {
       // Crear un blob con el contenido del archivo Excel
@@ -58,7 +58,7 @@ export class FileDownloadService {
       a.download = fileName || "download.xlsx";
       a.click();
       this.alertService.showSuccess("Excel descargado con éxito");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al descargar el archivo:", error);
       this.alertService.showError("Error al descargar el archivo");
     } finally {
@@ -75,7 +75,7 @@ export class FileDownloadService {
    * @param data Contenido del PDF.
    * @param fileName Nombre sugerido del archivo.
    */
-  downloadPdfFile(data: any, fileName: string): void {
+  downloadPdfFile(data: BlobPart, fileName: string): void {
     let url: string | null = null;
     try {
       // Crear un blob con el contenido del archivo PDF
@@ -86,7 +86,7 @@ export class FileDownloadService {
       a.download = fileName || "download.pdf";
       a.click();
       this.alertService.showSuccess("PDF descargado con éxito");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al descargar el archivo:", error);
       this.alertService.showError("Error al descargar el archivo");
     } finally {
@@ -103,7 +103,7 @@ export class FileDownloadService {
    * @param data Contenido del TXT.
    * @param fileName Nombre sugerido del archivo.
    */
-  downloadTextFile(data: any, fileName: string): void {
+  downloadTextFile(data: BlobPart, fileName: string): void {
     let url: string | null = null;
     try {
       // Crear un blob con el contenido del archivo de texto
@@ -114,7 +114,7 @@ export class FileDownloadService {
       a.download = fileName || "download.txt";
       a.click();
       this.alertService.showSuccess("Texto descargado con éxito");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al descargar el archivo:", error);
       this.alertService.showError("Error al descargar el archivo");
     } finally {
@@ -131,7 +131,7 @@ export class FileDownloadService {
    * @param data Contenido del TXT de errores.
    * @param fileName Nombre sugerido del archivo.
    */
-  downloadTextFileErrors(data: any, fileName: string): void {
+  downloadTextFileErrors(data: BlobPart, fileName: string): void {
     let url: string | null = null;
     try {
       // Crear un blob con el contenido del archivo de texto
@@ -142,7 +142,7 @@ export class FileDownloadService {
       a.download = fileName || "download.txt";
       a.click();
       this.alertService.showError("Validación fallida, se descargo TXT con los errores generados");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al descargar el archivo:", error);
       this.alertService.showError("Error al descargar el archivo");
     } finally {

@@ -1,5 +1,13 @@
 import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
+import {
+  CardExpensesReportDto,
+  CardPaymentsReportDto,
+  MerchantExpensesReportDto,
+  CashExpensesReportDto,
+  CardConsumptionDto,
+} from "../DTO/reports.dto";
+import { InvestmentMonthlyReportDTO } from "../DTO/InvestmentMonthlyReport.dto";
 
 @Injectable({
   providedIn: "root",
@@ -23,7 +31,7 @@ export class ReportsService {
     usuario: string,
     startDate: string,
     endDate: string
-  ): Promise<any> {
+  ): Promise<CardExpensesReportDto> {
     try {
       // Limpiar y validar fechas (remover comillas y espacios)
       const cleanDate = (date?: string): string | undefined => {
@@ -56,7 +64,8 @@ export class ReportsService {
         endDate: cleanEndDate,
       };
 
-      const response = await this.apiConnectionService.sendRequestAsync<any>(
+      const response =
+        await this.apiConnectionService.sendRequestAsync<CardExpensesReportDto>(
         url,
         "GET",
         null,
@@ -65,17 +74,18 @@ export class ReportsService {
       );
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
       console.error("=== ERROR en getCardExpenses ===");
       console.error("cardId:", cardId);
       console.error("Error completo:", error);
 
-      if (error?.status === 404) {
+      if (err?.status === 404) {
         console.error(
           "⚠️ Error 404: El endpoint no existe o el cardId no es válido"
         );
       }
-      if (error?.status === 400) {
+      if (err?.status === 400) {
         console.error(
           "⚠️ Error 400: Faltan parámetros requeridos o el formato es incorrecto"
         );
@@ -101,7 +111,7 @@ export class ReportsService {
     usuario: string,
     startDate: string,
     endDate: string
-  ): Promise<any> {
+  ): Promise<CardPaymentsReportDto> {
     try {
       // Limpiar y validar fechas
       const cleanDate = (date?: string): string | undefined => {
@@ -134,7 +144,8 @@ export class ReportsService {
         endDate: cleanEndDate,
       };
 
-      const response = await this.apiConnectionService.sendRequestAsync<any>(
+      const response =
+        await this.apiConnectionService.sendRequestAsync<CardPaymentsReportDto>(
         url,
         "GET",
         null,
@@ -143,17 +154,18 @@ export class ReportsService {
       );
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
       console.error("=== ERROR en getCardPayments ===");
       console.error("cardId:", cardId);
       console.error("Error completo:", error);
 
-      if (error?.status === 404) {
+      if (err?.status === 404) {
         console.error(
           "⚠️ Error 404: El endpoint no existe o el cardId no es válido"
         );
       }
-      if (error?.status === 400) {
+      if (err?.status === 400) {
         console.error(
           "⚠️ Error 400: Faltan parámetros requeridos o el formato es incorrecto"
         );
@@ -176,7 +188,7 @@ export class ReportsService {
     usuario: string,
     startDate: string,
     endDate: string
-  ): Promise<any> {
+  ): Promise<MerchantExpensesReportDto> {
     try {
       // Limpiar y validar fechas (remover comillas y espacios)
       const cleanDate = (date?: string): string | undefined => {
@@ -211,7 +223,8 @@ export class ReportsService {
         endDate: cleanEndDate,
       };
 
-      const response = await this.apiConnectionService.sendRequestAsync<any>(
+      const response =
+        await this.apiConnectionService.sendRequestAsync<MerchantExpensesReportDto>(
         url,
         "GET",
         null,
@@ -220,17 +233,18 @@ export class ReportsService {
       );
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { status?: number; message?: string; response?: unknown; error?: unknown; data?: unknown };
       console.error("=== ERROR en getMerchantsExpenses ===");
       console.error("startDate:", startDate);
       console.error("endDate:", endDate);
       console.error("Error completo:", error);
-      console.error("Error message:", error?.message);
-      console.error("Error response:", error?.response);
-      console.error("Error status:", error?.status);
-      console.error("Error data:", error?.error || error?.data);
+      console.error("Error message:", err?.message);
+      console.error("Error response:", err?.response);
+      console.error("Error status:", err?.status);
+      console.error("Error data:", (err as any)?.error || err?.data);
 
-      if (error?.status === 400) {
+      if (err?.status === 400) {
         console.error(
           "⚠️ Error 400: Verifica el formato de las fechas (debe ser YYYY-MM-DD)"
         );
@@ -254,7 +268,7 @@ export class ReportsService {
     usuario: string,
     startDate: string,
     endDate: string
-  ): Promise<any> {
+  ): Promise<CashExpensesReportDto> {
     try {
       const cleanDate = (date?: string): string | undefined => {
         if (!date) return undefined;
@@ -282,7 +296,8 @@ export class ReportsService {
         endDate: cleanEndDate,
       };
 
-      const response = await this.apiConnectionService.sendRequestAsync<any>(
+      const response =
+        await this.apiConnectionService.sendRequestAsync<CashExpensesReportDto>(
         url,
         "GET",
         null,
@@ -291,7 +306,8 @@ export class ReportsService {
       );
 
       return response;
-    } catch (error) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
       console.error("=== ERROR en getCashExpenses ===");
       console.error("startDate:", startDate);
       console.error("endDate:", endDate);
@@ -314,7 +330,7 @@ export class ReportsService {
     usuario: string,
     startDate?: string,
     endDate?: string
-  ): Promise<any> {
+  ): Promise<CardConsumptionDto[]> {
     try {
       const cleanDate = (date?: string): string | undefined => {
         if (!date) return undefined;
@@ -336,7 +352,8 @@ export class ReportsService {
         params["endDate"] = cleanEndDate;
       }
 
-      const response = await this.apiConnectionService.sendRequestAsync<any>(
+      const response =
+        await this.apiConnectionService.sendRequestAsync<CardConsumptionDto[]>(
         url,
         "GET",
         null,
@@ -345,7 +362,7 @@ export class ReportsService {
       );
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error en getCardsConsumption:", error);
       throw error;
     }
@@ -362,14 +379,15 @@ export class ReportsService {
     token: string,
     usuario: string,
     year: number
-  ): Promise<any> {
+  ): Promise<InvestmentMonthlyReportDTO> {
     try {
       const url = `reports/investments/monthly`;
       const params: Record<string, string> = {
         year: year.toString(),
       };
 
-      const response = await this.apiConnectionService.sendRequestAsync<any>(
+      const response =
+        await this.apiConnectionService.sendRequestAsync<InvestmentMonthlyReportDTO>(
         url,
         "GET",
         null,
@@ -378,7 +396,7 @@ export class ReportsService {
       );
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("=== ERROR en getInvestmentsMonthly ===");
       console.error("year:", year);
       console.error("Error completo:", error);

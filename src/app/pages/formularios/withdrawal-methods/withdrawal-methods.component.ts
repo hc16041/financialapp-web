@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { generateTableColumns } from "src/app/utils/table-utils";
@@ -10,24 +10,30 @@ import { WithdrawalMethodsService } from "src/app/application/WithdrawalMethods/
   selector: "app-withdrawal-methods",
   templateUrl: "./withdrawal-methods.component.html",
   styleUrl: "./withdrawal-methods.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WithdrawalMethodsComponent {
-  // Table data
-  withdrawalMethodsList$: BehaviorSubject<WithdrawalMethodsDTO[]> = new BehaviorSubject<
-    WithdrawalMethodsDTO[]
-  >([]);
+export class WithdrawalMethodsComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private dataService = inject(DataService);
+  private withdrawalMethodsService = inject(WithdrawalMethodsService);
+
+  // Table data - Mantener BehaviorSubject para DataService, pero exponer como signal
+  private withdrawalMethodsList$ = new BehaviorSubject<WithdrawalMethodsDTO[]>([]);
+  private readonly withdrawalMethodsListSig = signal<WithdrawalMethodsDTO[]>([]);
+  
+  get withdrawalMethodsList(): WithdrawalMethodsDTO[] {
+    return this.withdrawalMethodsListSig();
+  }
 
   // Table data
   withdrawalMethodsDTO = new WithdrawalMethodsDTO();
-
   tableColumns: TableColumn[] = generateTableColumns(this.withdrawalMethodsDTO);
 
-  constructor(
-    private dataService: DataService,
-    private withdrawalMethodsService: WithdrawalMethodsService
-  ) {}
-
   ngOnInit(): void {
+    // Suscribirse al BehaviorSubject para actualizar el signal
+    this.withdrawalMethodsList$.subscribe(data => {
+      this.withdrawalMethodsListSig.set(data);
+    });
     this.obtenerWithdrawalMethods();
   }
 
@@ -40,7 +46,7 @@ export class WithdrawalMethodsComponent {
     );
   }
 
-  async onAddWithdrawalMethod(newWithdrawalMethod: any): Promise<void> {
+  async onAddWithdrawalMethod(newWithdrawalMethod: WithdrawalMethodsDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.agregarRegistro(
       this.withdrawalMethodsService,
       "guardarWithdrawalMethods",
@@ -51,7 +57,7 @@ export class WithdrawalMethodsComponent {
     await this.obtenerWithdrawalMethods();
   }
 
-  async onEditWithdrawalMethod(updatedWithdrawalMethod: any): Promise<void> {
+  async onEditWithdrawalMethod(updatedWithdrawalMethod: WithdrawalMethodsDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.actualizarRegistro(
       this.withdrawalMethodsService,
       "editarWithdrawalMethods",
@@ -62,11 +68,12 @@ export class WithdrawalMethodsComponent {
     await this.obtenerWithdrawalMethods();
   }
 
-  async onDeleteWithdrawalMethod(withdrawalMethod: any): Promise<void> {
+  async onDeleteWithdrawalMethod(withdrawalMethod: WithdrawalMethodsDTO | Record<string, unknown>): Promise<void> {
+    const withdrawalMethodObj = withdrawalMethod as WithdrawalMethodsDTO & Record<string, unknown>;
     await this.dataService.eliminarRegistro(
       this.withdrawalMethodsService,
       "eliminarWithdrawalMethods",
-      withdrawalMethod.id,
+      withdrawalMethodObj.id,
       "Método de retiro eliminado correctamente",
       "Error al eliminar método de retiro"
     );

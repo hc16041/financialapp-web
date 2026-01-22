@@ -1,4 +1,4 @@
-import { Component, inject } from "@angular/core";
+import { Component, inject, ChangeDetectionStrategy } from "@angular/core";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { generateTableColumns } from "src/app/utils/table-utils";
 import { InvestmentsDTO } from "src/app/application/Investments/DTO/InvestmentsDTO";
@@ -8,11 +8,13 @@ import {
   WithdrawalMethodInfo,
   TransactionTypeInfo,
 } from "src/app/core/services/commission-calculation.service";
+import { SelectOption } from "src/app/core/services/select-options-mapper.service";
 
 @Component({
   selector: "app-investments",
   templateUrl: "./investments.component.html",
   styleUrl: "./investments.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvestmentsComponent {
   // Inyectar Facade y servicio de cálculo de comisiones
@@ -27,7 +29,7 @@ export class InvestmentsComponent {
   creditCardsList$ = this.investmentsFacade.creditCardsList$;
 
   // Exponer selectOptions del Facade
-  get selectOptions(): { [key: string]: any[] } {
+  get selectOptions(): { [key: string]: SelectOption[] } {
     return this.investmentsFacade.selectOptions;
   }
 
@@ -142,10 +144,11 @@ export class InvestmentsComponent {
    * Maneja los cambios de campo en el formulario
    * @param change Evento emitido por el formulario con campo y valor.
    */
-  onFieldChange(change: { field: string; value: any }): void {
+  onFieldChange(change: { field: string; value: unknown }): void {
     // Cuando cambia withdrawalMethod, actualizar disabledFields
     if (change.field === "withdrawalMethod") {
-      const requiereTarjeta = this.requiereTarjeta(change.value);
+      const withdrawalMethodId = typeof change.value === 'number' ? change.value : Number(change.value) || 0;
+      const requiereTarjeta = this.requiereTarjeta(withdrawalMethodId);
       if (requiereTarjeta) {
         // Habilitar creditCardId - crear nuevo array para forzar detección de cambios
         this.disabledFields = this.disabledFields.filter(
@@ -209,87 +212,88 @@ export class InvestmentsComponent {
    * Crea una inversión aplicando las reglas de comisión y delegando en el Facade.
    * @param newInvestment Datos del formulario/modal.
    */
-  async onAddInvestment(newInvestment: any): Promise<void> {
+  async onAddInvestment(newInvestment: InvestmentsDTO | Record<string, unknown>): Promise<void> {
+    const investment = newInvestment as InvestmentsDTO & Record<string, unknown>;
     // Calcular comisión según el tipo de transacción
     if (
-      !newInvestment.libreDeComision &&
-      newInvestment.amount &&
-      newInvestment.withdrawalMethod &&
-      newInvestment.transactionType
+      !investment.libreDeComision &&
+      investment.amount &&
+      investment.withdrawalMethod &&
+      investment.transactionType
     ) {
-      const esPurchase = this.esPurchase(newInvestment.transactionType);
+      const esPurchase = this.esPurchase(investment.transactionType);
 
       if (esPurchase) {
         // Si es Purchase con tarjeta: comisión = 0
-        if (this.requiereTarjeta(newInvestment.withdrawalMethod)) {
-          newInvestment.commission = 0;
-        } else if (this.esBitcoin(newInvestment.withdrawalMethod)) {
+        if (this.requiereTarjeta(investment.withdrawalMethod)) {
+          investment.commission = 0;
+        } else if (this.esBitcoin(investment.withdrawalMethod)) {
           // Si es Purchase con Bitcoin: usar el servicio para determinar si debe calcularse
           const transactionTypeInfo = this.transactionTypesInfo.get(
-            newInvestment.transactionType
+            investment.transactionType
           );
           const methodInfo = this.withdrawalMethodsInfo.get(
-            newInvestment.withdrawalMethod
+            investment.withdrawalMethod
           );
 
           if (transactionTypeInfo && methodInfo) {
             const result =
               this.commissionCalculationService.calculateCommission(
                 {
-                  amount: newInvestment.amount,
-                  withdrawalMethodId: newInvestment.withdrawalMethod,
-                  transactionTypeId: newInvestment.transactionType,
-                  libreDeComision: newInvestment.libreDeComision,
+                  amount: investment.amount,
+                  withdrawalMethodId: investment.withdrawalMethod,
+                  transactionTypeId: investment.transactionType,
+                  libreDeComision: investment.libreDeComision ?? false,
                 },
                 {
-                  id: newInvestment.withdrawalMethod,
+                  id: investment.withdrawalMethod,
                   name: methodInfo.name,
                   requiresCreditCard: methodInfo.requiresCreditCard,
                 },
                 {
-                  id: newInvestment.transactionType,
+                  id: investment.transactionType,
                   name: transactionTypeInfo.name,
                 }
               );
 
             // Si no debe calcularse automáticamente, mantener el valor actual o 0
             if (!result.shouldCalculateAutomatically) {
-              if (!newInvestment.commission && newInvestment.commission !== 0) {
-                newInvestment.commission = 0;
+              if (!investment.commission && investment.commission !== 0) {
+                investment.commission = 0;
               }
             } else {
-              newInvestment.commission = result.commission;
+              investment.commission = result.commission;
             }
           } else {
             // Fallback: mantener valor actual o 0
-            if (!newInvestment.commission && newInvestment.commission !== 0) {
-              newInvestment.commission = 0;
+            if (!investment.commission && investment.commission !== 0) {
+              investment.commission = 0;
             }
           }
         }
       } else {
         // Si es Payment: calcular automáticamente
-        newInvestment.commission = this.calcularComision(
-          newInvestment.amount,
-          newInvestment.withdrawalMethod,
-          newInvestment.transactionType,
-          newInvestment.libreDeComision
+        investment.commission = this.calcularComision(
+          investment.amount,
+          investment.withdrawalMethod,
+          investment.transactionType,
+          investment.libreDeComision
         );
       }
-    } else if (newInvestment.libreDeComision) {
-      newInvestment.commission = 0;
-    } else if (!newInvestment.commission && newInvestment.commission !== 0) {
-      newInvestment.commission = 0;
+    } else if (investment.libreDeComision) {
+      investment.commission = 0;
+    } else if (!investment.commission && investment.commission !== 0) {
+      investment.commission = 0;
     }
 
     // Limpiar creditCardId si no requiere tarjeta
-    if (!this.requiereTarjeta(newInvestment.withdrawalMethod)) {
-      newInvestment.creditCardId = 0;
+    if (!this.requiereTarjeta(investment.withdrawalMethod)) {
+      investment.creditCardId = 0;
     }
 
     try {
       // Usar el Facade para agregar la inversión (el Facade maneja la transformación)
-      await this.investmentsFacade.addInvestment(newInvestment);
+      await this.investmentsFacade.addInvestment(investment);
     } catch (error) {
       throw error;
     }
@@ -299,45 +303,46 @@ export class InvestmentsComponent {
    * Edita una inversión aplicando las reglas de comisión y delegando en el Facade.
    * @param updatedInvestment Datos editados del formulario/modal.
    */
-  async onEditInvestment(updatedInvestment: any): Promise<void> {
+  async onEditInvestment(updatedInvestment: InvestmentsDTO | Record<string, unknown>): Promise<void> {
+    const investment = updatedInvestment as InvestmentsDTO & Record<string, unknown>;
     // Calcular comisión según el tipo de transacción
     if (
-      !updatedInvestment.libreDeComision &&
-      updatedInvestment.amount &&
-      updatedInvestment.withdrawalMethod &&
-      updatedInvestment.transactionType
+      !investment.libreDeComision &&
+      investment.amount &&
+      investment.withdrawalMethod &&
+      investment.transactionType
     ) {
-      const esPurchase = this.esPurchase(updatedInvestment.transactionType);
+      const esPurchase = this.esPurchase(investment.transactionType);
 
       if (esPurchase) {
         // Si es Purchase con tarjeta: comisión = 0
-        if (this.requiereTarjeta(updatedInvestment.withdrawalMethod)) {
-          updatedInvestment.commission = 0;
-        } else if (this.esBitcoin(updatedInvestment.withdrawalMethod)) {
+        if (this.requiereTarjeta(investment.withdrawalMethod)) {
+          investment.commission = 0;
+        } else if (this.esBitcoin(investment.withdrawalMethod)) {
           // Si es Purchase con Bitcoin: usar el servicio para determinar si debe calcularse
           const transactionTypeInfo = this.transactionTypesInfo.get(
-            updatedInvestment.transactionType
+            investment.transactionType
           );
           const methodInfo = this.withdrawalMethodsInfo.get(
-            updatedInvestment.withdrawalMethod
+            investment.withdrawalMethod
           );
 
           if (transactionTypeInfo && methodInfo) {
             const result =
               this.commissionCalculationService.calculateCommission(
                 {
-                  amount: updatedInvestment.amount,
-                  withdrawalMethodId: updatedInvestment.withdrawalMethod,
-                  transactionTypeId: updatedInvestment.transactionType,
-                  libreDeComision: updatedInvestment.libreDeComision,
+                  amount: investment.amount,
+                  withdrawalMethodId: investment.withdrawalMethod,
+                  transactionTypeId: investment.transactionType,
+                  libreDeComision: investment.libreDeComision ?? false,
                 },
                 {
-                  id: updatedInvestment.withdrawalMethod,
+                  id: investment.withdrawalMethod,
                   name: methodInfo.name,
                   requiresCreditCard: methodInfo.requiresCreditCard,
                 },
                 {
-                  id: updatedInvestment.transactionType,
+                  id: investment.transactionType,
                   name: transactionTypeInfo.name,
                 }
               );
@@ -345,58 +350,59 @@ export class InvestmentsComponent {
             // Si no debe calcularse automáticamente, mantener el valor actual o 0
             if (!result.shouldCalculateAutomatically) {
               if (
-                !updatedInvestment.commission &&
-                updatedInvestment.commission !== 0
+                !investment.commission &&
+                investment.commission !== 0
               ) {
-                updatedInvestment.commission = 0;
+                investment.commission = 0;
               }
             } else {
-              updatedInvestment.commission = result.commission;
+              investment.commission = result.commission;
             }
           } else {
             // Fallback: mantener valor actual o 0
             if (
-              !updatedInvestment.commission &&
-              updatedInvestment.commission !== 0
+              !investment.commission &&
+              investment.commission !== 0
             ) {
-              updatedInvestment.commission = 0;
+              investment.commission = 0;
             }
           }
         }
       } else {
         // Si es Payment: calcular automáticamente
-        updatedInvestment.commission = this.calcularComision(
-          updatedInvestment.amount,
-          updatedInvestment.withdrawalMethod,
-          updatedInvestment.transactionType,
-          updatedInvestment.libreDeComision
+        investment.commission = this.calcularComision(
+          investment.amount,
+          investment.withdrawalMethod,
+          investment.transactionType,
+          investment.libreDeComision
         );
       }
-    } else if (updatedInvestment.libreDeComision) {
-      updatedInvestment.commission = 0;
+    } else if (investment.libreDeComision) {
+      investment.commission = 0;
     } else if (
-      !updatedInvestment.commission &&
-      updatedInvestment.commission !== 0
+      !investment.commission &&
+      investment.commission !== 0
     ) {
-      updatedInvestment.commission = 0;
+      investment.commission = 0;
     }
 
     // Limpiar creditCardId si no requiere tarjeta
-    if (!this.requiereTarjeta(updatedInvestment.withdrawalMethod)) {
-      updatedInvestment.creditCardId = 0;
+    if (!this.requiereTarjeta(investment.withdrawalMethod)) {
+      investment.creditCardId = 0;
     }
 
     // Usar el Facade para actualizar la inversión (el Facade maneja la transformación)
-    await this.investmentsFacade.updateInvestment(updatedInvestment);
+    await this.investmentsFacade.updateInvestment(investment);
   }
 
   /**
    * Elimina una inversión por id a través del Facade.
    * @param investment Entidad seleccionada a eliminar.
    */
-  async onDeleteInvestment(investment: any): Promise<void> {
+  async onDeleteInvestment(investment: InvestmentsDTO | Record<string, unknown>): Promise<void> {
+    const investmentObj = investment as InvestmentsDTO & Record<string, unknown>;
     // Usar el Facade para eliminar la inversión
-    await this.investmentsFacade.deleteInvestment(investment.id);
+    await this.investmentsFacade.deleteInvestment(investmentObj.id);
   }
 
   /**

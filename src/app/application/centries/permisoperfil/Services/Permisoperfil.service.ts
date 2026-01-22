@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { IPermisoperfil } from "../Interfaces/IPermisoperfil.interface";
 import { PermisoperfilDTO } from "../DTO/PermisoperfilDTO";
+import { PermisoperfilOperationResponse } from "../DTO/PermisoperfilOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -25,7 +26,7 @@ export class PermisoperfilService implements IPermisoperfil {
   }
 
   async obtenerPermisosPerfilNoAsignados(
-    datos: any,
+    datos: PermisoperfilDTO | Record<string, unknown>,
     token: string
   ): Promise<PermisoperfilDTO[]> {
     try {
@@ -39,10 +40,10 @@ export class PermisoperfilService implements IPermisoperfil {
     }
   }
 
-  async guardarPermisosPerfil(datos: any, token: string): Promise<any> {
+  async guardarPermisosPerfil(datos: PermisoperfilDTO | Record<string, unknown>, token: string): Promise<PermisoperfilOperationResponse> {
     try {
       const url = `PermisoPerfil/Guardar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PermisoperfilOperationResponse>(
         url,
         "POST",
         datos,
@@ -54,10 +55,10 @@ export class PermisoperfilService implements IPermisoperfil {
     }
   }
 
-  async editarPermisosPerfil(datos: any, token: string): Promise<any> {
+  async editarPermisosPerfil(datos: PermisoperfilDTO | Record<string, unknown>, token: string): Promise<PermisoperfilOperationResponse> {
     try {
       const url = `PermisoPerfil/Editar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PermisoperfilOperationResponse>(
         url,
         "POST",
         datos,
@@ -69,10 +70,10 @@ export class PermisoperfilService implements IPermisoperfil {
     }
   }
 
-  async eliminarPermisosPerfil(datos: any, token: string): Promise<any> {
+  async eliminarPermisosPerfil(datos: PermisoperfilDTO | Record<string, unknown>, token: string): Promise<PermisoperfilOperationResponse> {
     try {
       const url = `PermisoPerfil/Eliminar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PermisoperfilOperationResponse>(
         url,
         "POST",
         datos,

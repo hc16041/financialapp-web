@@ -1,8 +1,16 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { FileDownloadService } from "./file-download.service";
 import { AlertcustomService } from "./alertcustom.service";
 import { BehaviorSubject } from "rxjs";
 import { LoginService } from "../../account/login/Services/LoginService";
+import {
+  IDataService,
+  IFileDownloadService,
+  IXsdValidationService,
+  ICrudService,
+  IDeleteService,
+  ErrorResponse,
+} from "./data.service.types";
 
 type FileType = "XML" | "Excel" | "PDF" | "Texto";
 
@@ -10,14 +18,17 @@ type FileType = "XML" | "Excel" | "PDF" | "Texto";
   providedIn: "root",
 })
 export class DataService {
-  constructor(
-    private loginService: LoginService,
-    private alertService: AlertcustomService,
-    private fileDownloadService: FileDownloadService
-  ) {}
+  private loginService = inject(LoginService);
+  private alertService = inject(AlertcustomService);
+  private fileDownloadService = inject(FileDownloadService);
 
-  private token = this.loginService.token || "";
-  private username = this.loginService.username || "";
+  private get token(): string {
+    return this.loginService.token || "";
+  }
+
+  private get username(): string {
+    return this.loginService.username || "";
+  }
 
   /**
    * Obtiene datos de un servicio de infraestructura y los publica en un `BehaviorSubject`.
@@ -29,19 +40,24 @@ export class DataService {
    * @param id Identificador opcional cuando el endpoint lo requiere.
    */
   async obtenerDatos<T>(
-    servicio: any,
+    servicio: IDataService<T>,
     metodo: string,
     behaviorSubject: BehaviorSubject<T[]>,
     mensajeError: string,
-    id?: any // Parámetro opcional para métodos que requieran un ID
+    id?: number | string
   ): Promise<void> {
     try {
+      const serviceObj = servicio as Record<string, unknown>;
+      const method = serviceObj[metodo];
+      if (!method || typeof method !== 'function') {
+        throw new Error(`Método ${metodo} no encontrado en el servicio`);
+      }
       const data =
         id !== undefined
-          ? await servicio[metodo](id, this.token, this.username)
-          : await servicio[metodo](this.token, this.username);
-      behaviorSubject.next(data);
-    } catch (error) {
+          ? await (method as (...args: unknown[]) => Promise<T | T[]>)(id, this.token, this.username)
+          : await (method as (...args: unknown[]) => Promise<T | T[]>)(this.token, this.username);
+      behaviorSubject.next(Array.isArray(data) ? data : [data]);
+    } catch (error: unknown) {
       console.error(`${mensajeError}:`, error);
       this.alertService.showError(mensajeError);
     }
@@ -55,12 +71,17 @@ export class DataService {
    * @param metodoXML Nombre del método que descarga el XML.
    */
   async existenciaxsd(
-    servicio: any,
+    servicio: IXsdValidationService & IFileDownloadService,
     metodoXSD: string,
     metodoXML: string
   ): Promise<void> {
     try {
-      const response = await servicio[metodoXSD]();
+      const serviceObj = servicio as Record<string, unknown>;
+      const xsdMethod = serviceObj[metodoXSD];
+      if (!xsdMethod || typeof xsdMethod !== 'function') {
+        throw new Error(`Método ${metodoXSD} no encontrado en el servicio`);
+      }
+      const response = await (xsdMethod as () => Promise<unknown>)();
       
       let validar = "";
       if(response){
@@ -80,7 +101,7 @@ export class DataService {
         "Error al descargar el archivo XML",
         { validarXSD: validar }
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(`Problema`, error);      
     }
   } 
@@ -95,19 +116,31 @@ export class DataService {
    * @param archivo Payload opcional (por ejemplo filtros o parámetros).
    */
   async descargarArchivo(
-    servicio: any,
+    servicio: IFileDownloadService,
     metodo: string,
-    tipoArchivo: "XML" | "Excel" | "PDF" | "Texto",
+    tipoArchivo: FileType,
     mensajeError: string,
-    archivo?: any // Parámetro opcional para métodos que requieran un ID
+    archivo?: Record<string, unknown>
   ): Promise<void> {
     try {
-      const response = await servicio[metodo](
+      const serviceObj = servicio as Record<string, unknown>;
+      const method = serviceObj[metodo];
+      if (!method || typeof method !== 'function') {
+        throw new Error(`Método ${metodo} no encontrado en el servicio`);
+      }
+      const response = await (method as (
+        token: string,
+        usuario: string,
+        archivo?: Record<string, unknown>
+      ) => Promise<{
+        data: BlobPart;
+        fileName: string;
+      }>)(
         this.token,
         this.username,
         archivo
       );
-      const isPlainText = typeof response.data === 'string' && !response.data.trim().startsWith("<?xml");
+      const isPlainText = typeof response.data === 'string' && !String(response.data).trim().startsWith("<?xml");
       if (tipoArchivo === "XML") {
         if (isPlainText){
         this.fileDownloadService.downloadTextFileErrors(
@@ -115,10 +148,11 @@ export class DataService {
           response.fileName
         );
         } else {
+          const validarXSD = archivo && typeof archivo['validarXSD'] === 'string' ? archivo['validarXSD'] : '';
           this.fileDownloadService.downloadXmlFile(
             response.data,
             response.fileName,
-            archivo.validarXSD
+            validarXSD
           );
         }
       } else if (tipoArchivo === "Excel") {
@@ -137,7 +171,7 @@ export class DataService {
           response.fileName
         );
       }      
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(`${mensajeError}:`, error);
       this.alertService.showError(mensajeError);
     }
@@ -152,29 +186,48 @@ export class DataService {
    * @param mensajeExito Mensaje de éxito al completarse.
    * @param mensajeError Mensaje de error al fallar.
    */
-  async agregarRegistro<T>(
-    servicio: any,
+  async agregarRegistro<TData, TResponse>(
+    servicio: ICrudService<TData, TResponse>,
     metodo: string,
-    datos: any,
+    datos: TData,
     mensajeExito: string,
     mensajeError: string
   ): Promise<void> {
     try {
-      const resultado = await servicio[metodo](datos, this.token, this.username);
+      const serviceObj = servicio as Record<string, unknown>;
+      const method = serviceObj[metodo];
+      if (!method || typeof method !== 'function') {
+        throw new Error(`Método ${metodo} no encontrado en el servicio`);
+      }
+      await (method as (
+        data: TData,
+        token: string,
+        usuario: string
+      ) => Promise<TResponse>)(datos, this.token, this.username);
       this.alertService.showSuccess(mensajeExito);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("=== ERROR en agregarRegistro ===");
       console.error("Mensaje de error:", mensajeError);
       console.error("Error completo:", error);
-      console.error("Error message:", error?.message);
-      console.error("Error response:", error?.response);
-      console.error("Error status:", error?.status);
-      console.error("Error data:", error?.error || error?.data);
-      console.error("Stack trace:", error?.stack);
       
-      // Mostrar el mensaje de error más detallado si está disponible
-      const errorMessage = error?.error?.message || error?.message || error?.response?.data?.message || mensajeError;
-      this.alertService.showError(`${mensajeError}: ${errorMessage}`);
+      const errorObj = error as ErrorResponse;
+      if (errorObj) {
+        console.error("Error message:", errorObj.message);
+        console.error("Error response:", errorObj.response);
+        console.error("Error status:", errorObj.status);
+        console.error("Error data:", errorObj.error);
+        console.error("Stack trace:", errorObj.stack);
+        
+        // Mostrar el mensaje de error más detallado si está disponible
+        const errorMessage = 
+          errorObj.error?.message || 
+          errorObj.message || 
+          errorObj.response?.data?.message || 
+          mensajeError;
+        this.alertService.showError(`${mensajeError}: ${errorMessage}`);
+      } else {
+        this.alertService.showError(mensajeError);
+      }
       throw error;
     }
   }
@@ -189,19 +242,29 @@ export class DataService {
    * @param mensajeError Mensaje de error al fallar.
    * @param headers Encabezados adicionales si el endpoint lo requiere.
    */
-  async actualizarRegistro<T>(
-    servicio: any,
+  async actualizarRegistro<TData, TResponse>(
+    servicio: ICrudService<TData, TResponse>,
     metodo: string,
-    datos: any,
+    datos: TData,
     mensajeExito: string,
     mensajeError: string,
     headers: string = ""
   ): Promise<void> {
     try {
-      await servicio[metodo](datos, this.token, this.username);
+      const serviceObj = servicio as Record<string, unknown>;
+      const method = serviceObj[metodo];
+      if (!method || typeof method !== 'function') {
+        throw new Error(`Método ${metodo} no encontrado en el servicio`);
+      }
+      await (method as (
+        data: TData,
+        token: string,
+        usuario: string
+      ) => Promise<TResponse>)(datos, this.token, this.username);
       this.alertService.showSuccess(mensajeExito);
-    } catch (error) {
-      this.alertService.showError(`${String(error)}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.alertService.showError(`${mensajeError}: ${errorMessage}`);
     }
   }
   /**
@@ -214,16 +277,25 @@ export class DataService {
    * @param mensajeError Mensaje de error al fallar.
    */
   async eliminarRegistro(
-    servicio: any,
+    servicio: IDeleteService,
     metodo: string,
-    id: number | string | Record<string, any>,
+    id: number | string | Record<string, unknown>,
     mensajeExito: string,
     mensajeError: string
   ): Promise<void> {
     try {
-      await servicio[metodo](id, this.token, this.username);
+      const serviceObj = servicio as Record<string, unknown>;
+      const method = serviceObj[metodo];
+      if (!method || typeof method !== 'function') {
+        throw new Error(`Método ${metodo} no encontrado en el servicio`);
+      }
+      await (method as (
+        id: number | string | Record<string, unknown>,
+        token: string,
+        usuario: string
+      ) => Promise<unknown>)(id, this.token, this.username);
       this.alertService.showSuccess(mensajeExito);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(`${mensajeError}:`, error);
       this.alertService.showError(mensajeError);
     }

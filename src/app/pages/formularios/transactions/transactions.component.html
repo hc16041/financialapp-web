@@ -7,7 +7,7 @@
   [requiredFields]="['id']"
   [readonlyFields]="['id']"
   [allowedActions]="['edit', 'process', 'deactivate', 'activate']"
-  [data]="(transactionsList$ | async)!"
+  [data]="transactionsList"
   [showActions]="true"
   [searchEnabled]="true"
   [showNewRegister]="true"

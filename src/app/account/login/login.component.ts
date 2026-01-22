@@ -1,7 +1,7 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, inject, ChangeDetectionStrategy } from "@angular/core";
 import {
-  UntypedFormBuilder,
-  UntypedFormGroup,
+  FormBuilder,
+  FormGroup,
   Validators,
 } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -12,29 +12,31 @@ import { AuthNewService } from "src/app/core/services/auth-new.service";
   selector: "app-login",
   templateUrl: "./login.component.html",
   styleUrls: ["./login.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 
 /**
  * Login Component
  */
 export class LoginComponent implements OnInit {
+  // Inyección de dependencias usando inject()
+  private formBuilder = inject(FormBuilder);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthNewService);
+  private alertService = inject(AlertcustomService);
+
   // Login Form
-  loginForm!: UntypedFormGroup;
+  loginForm!: FormGroup;
   submitted = false;
-  fieldTextType!: boolean;
+  fieldTextType = false;
   error = "";
   returnUrl!: string;
   isLoading = false;
   // set the current year
   year: number = new Date().getFullYear();
 
-  constructor(
-    private formBuilder: UntypedFormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private authService: AuthNewService,
-    private alertService: AlertcustomService
-  ) {
+  constructor() {
     // Si ya está autenticado, redirigir al home
     if (this.authService.isAuthenticated()) {
       this.router.navigate(["/"]);
@@ -85,17 +87,19 @@ export class LoginComponent implements OnInit {
         this.alertService.showSuccess("¡Inicio de sesión exitoso!");
         this.router.navigate([this.returnUrl]);
       },
-      error: (error) => {
+      error: (error: unknown) => {
         this.isLoading = false;
         console.error("Error en login:", error);
         
         let errorMessage = "Error al iniciar sesión";
-        if (error.error?.message) {
-          errorMessage = error.error.message;
-        } else if (error.error?.errors) {
-          errorMessage = Object.values(error.error.errors).flat().join(", ");
-        } else if (error.message) {
-          errorMessage = error.message;
+        const errorObj = error as { error?: { message?: string; errors?: Record<string, string[]> }; message?: string };
+        
+        if (errorObj.error?.message) {
+          errorMessage = errorObj.error.message;
+        } else if (errorObj.error?.errors) {
+          errorMessage = Object.values(errorObj.error.errors).flat().join(", ");
+        } else if (errorObj.message) {
+          errorMessage = errorObj.message;
         }
         
         this.error = errorMessage;

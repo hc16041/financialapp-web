@@ -172,7 +172,7 @@ export class CommissionCalculationService {
     withdrawalMethodId: number,
     transactionTypeId: number,
     libreDeComision: boolean,
-    selectOptions: { [key: string]: any[] },
+    selectOptions: { [key: string]: unknown[] },
     currentCommission?: number
   ): number {
     const params: CommissionCalculationParams = {
@@ -185,13 +185,13 @@ export class CommissionCalculationService {
     // Obtener información desde selectOptions
     const transactionTypeOptions = selectOptions["transactionType"] || [];
     const transactionTypeOption = transactionTypeOptions.find(
-      (opt: any) => opt.value === transactionTypeId
-    );
+      (opt: unknown) => (opt as Record<string, unknown>)['value'] === transactionTypeId
+    ) as Record<string, unknown> | undefined;
 
     const withdrawalMethodOptions = selectOptions["withdrawalMethod"] || [];
     const withdrawalMethodOption = withdrawalMethodOptions.find(
-      (opt: any) => opt.value === withdrawalMethodId
-    );
+      (opt: unknown) => (opt as Record<string, unknown>)['value'] === withdrawalMethodId
+    ) as Record<string, unknown> | undefined;
 
     if (!transactionTypeOption || !withdrawalMethodOption) {
       return 0;
@@ -199,19 +199,19 @@ export class CommissionCalculationService {
 
     const transactionTypeInfo: TransactionTypeInfo = {
       id: transactionTypeId,
-      name: transactionTypeOption.label || "",
+      name: (transactionTypeOption['label'] as string) || "",
     };
 
     // Intentar obtener requiresCreditCard desde la opción o inferirlo
-    const methodName = (withdrawalMethodOption.label || "").toLowerCase();
+    const methodName = ((withdrawalMethodOption['label'] as string) || "").toLowerCase();
     const requiresCreditCard =
-      withdrawalMethodOption.requiresCreditCard !== undefined
-        ? withdrawalMethodOption.requiresCreditCard
+      withdrawalMethodOption['requiresCreditCard'] !== undefined
+        ? (withdrawalMethodOption['requiresCreditCard'] as boolean)
         : this.isCreditCardMethodByName(methodName);
 
     const withdrawalMethodInfo: WithdrawalMethodInfo = {
       id: withdrawalMethodId,
-      name: withdrawalMethodOption.label || "",
+      name: (withdrawalMethodOption['label'] as string) || "",
       requiresCreditCard,
     };
 

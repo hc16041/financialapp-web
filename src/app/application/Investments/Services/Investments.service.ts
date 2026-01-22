@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { InvestmentsDTO } from "../DTO/InvestmentsDTO";
 import { IInvestments } from "../Interfaces/IInvestments.interface";
+import { InvestmentOperationResponse } from "../DTO/InvestmentOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -93,13 +94,13 @@ export class InvestmentsService implements IInvestments {
    * Crea una nueva inversión
    */
   async guardarInvestments(
-    datos: any,
+    datos: InvestmentsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<InvestmentOperationResponse> {
     try {
       const url = `Investments`;
-      const resultado = await this.apiConnectionService.sendRequestAsync<any>(
+      const resultado = await this.apiConnectionService.sendRequestAsync<InvestmentOperationResponse>(
         url,
         "POST",
         datos,
@@ -107,14 +108,13 @@ export class InvestmentsService implements IInvestments {
       );
 
       return resultado;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("=== ERROR en guardarInvestments ===");
       console.error("Error completo:", error);
-      console.error("Error message:", error?.message);
-      console.error("Error response:", error?.response);
-      console.error("Error status:", error?.status);
-      console.error("Error data:", error?.error || error?.data);
-      console.error("Stack trace:", error?.stack);
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Stack trace:", error.stack);
+      }
       throw error;
     }
   }
@@ -123,13 +123,14 @@ export class InvestmentsService implements IInvestments {
    * Actualiza una inversión existente
    */
   async editarInvestments(
-    datos: any,
+    datos: InvestmentsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<InvestmentOperationResponse> {
     try {
-      const url = `Investments/${datos.id}`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      const datosObj = datos as Record<string, unknown>;
+      const url = `Investments/${datosObj['id']}`;
+      return await this.apiConnectionService.sendRequestAsync<InvestmentOperationResponse>(
         url,
         "PUT",
         datos,
@@ -148,10 +149,10 @@ export class InvestmentsService implements IInvestments {
     id: number,
     token: string,
     usuario: string
-  ): Promise<any> {
+  ): Promise<InvestmentOperationResponse> {
     try {
       const url = `Investments/${id}`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<InvestmentOperationResponse>(
         url,
         "DELETE",
         null,

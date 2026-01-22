@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { IBitacora } from "../Interfaces/IBitacora.interface";
 import { BitacoraDTO } from "../DTO/BitacoraDTO";
+import { BitacoraFileRequest } from "../DTO/BitacoraOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -40,17 +41,19 @@ export class BitacoraService implements IBitacora {
   async getListadoBitacoraArchivo(
     token: string,
     codusuario: string,
-    archivo: any
-  ): Promise<any> {
+    archivo: BitacoraFileRequest | Record<string, unknown>
+  ): Promise<unknown> {
     try {
       const url = `BitacoraDescarga/BitacoraDescargaID`;
+      const archivoObj = archivo as BitacoraFileRequest & Record<string, unknown>;
       const datos = {
-        id: archivo.id,
+        id: archivoObj.id,
       };
 
-      if (archivo.tipo_archivo) {
+      if (archivoObj.tipo_archivo) {
         // Extraer el tipo principal del MIME type (ej: 'xml' de 'application/xml')
-        const tipo = archivo.tipo_archivo
+        const tipoArchivo = String(archivoObj.tipo_archivo);
+        const tipo = tipoArchivo
           .split("/")[1]
           ?.toLowerCase() as keyof typeof metodos;
 
@@ -70,7 +73,7 @@ export class BitacoraService implements IBitacora {
 
         if (!metodo) {
           throw new Error(
-            `Tipo de archivo no soportado: ${archivo.tipo_archivo}`
+            `Tipo de archivo no soportado: ${tipoArchivo}`
           );
         }
 
@@ -79,11 +82,12 @@ export class BitacoraService implements IBitacora {
           url,
           "POST",
           {
-            id: archivo.id,
+            id: archivoObj.id,
           },
           { Authorization: token }
         );
       }
+      return null;
     } catch (error) {
       console.error("Error en getListadoBitacora:", error);
       throw error; // Vuelve a lanzar el error para que se maneje en actualizarRegistro

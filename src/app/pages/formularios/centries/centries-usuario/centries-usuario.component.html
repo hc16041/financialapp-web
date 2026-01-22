@@ -13,7 +13,7 @@
   [selectFields]="['id_cargo', 'id_perfil']"
   [requiredFields]="['id_perfil', 'id_cargo', 'usuario', 'nom_colaborador']"
   [allowedActions]="['edit', 'deactivate', 'reset', 'delete']"
-  [data]="(usuariosList$ | async)!"
+  [data]="usuariosList"
   [validatePermissions]="false"
   [showActions]="true"
   [searchEnabled]="true"

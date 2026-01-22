@@ -3,57 +3,180 @@ import {
   inject,
   OnInit,
   ChangeDetectionStrategy,
+  signal,
 } from "@angular/core";
 import { ReportsService } from "src/app/application/Reports/Services/Reports.service";
 import { LoginService } from "src/app/account/login/Services/LoginService";
 import { CreditcardService } from "src/app/application/creditcard/Services/Creditcard.service";
+import { CreditCardCodeDTO } from "src/app/application/creditcard/DTO/CreditCardCode.dto";
 import {
   InvestmentMonthlyReportDTO,
   MonthlySummaryDTO,
 } from "src/app/application/Reports/DTO/InvestmentMonthlyReport.dto";
+import {
+  CardExpensesReportDto,
+  CardPaymentsReportDto,
+  MerchantExpensesReportDto,
+  CashExpensesReportDto,
+  CardConsumptionDto,
+} from "src/app/application/Reports/DTO/reports.dto";
 import { ChartType } from "../../dashboards/dashboard/dashboard.model";
 
 @Component({
   selector: "app-reports",
   templateUrl: "./reports.component.html",
   styleUrl: "./reports.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReportsComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private loginService = inject(LoginService);
   private creditcardService = inject(CreditcardService);
 
-  // Año seleccionado para el reporte de inversiones
-  selectedYear: number = new Date().getFullYear();
-  availableYears: number[] = [];
+  // Estado con señales y adaptadores getter/setter para compatibilidad con plantillas
+  private readonly selectedYearSig = signal<number>(new Date().getFullYear());
+  get selectedYear(): number {
+    return this.selectedYearSig();
+  }
+  set selectedYear(value: number) {
+    this.selectedYearSig.set(value);
+  }
 
-  // Datos del reporte de inversiones mensual
-  investmentsReport: InvestmentMonthlyReportDTO | null = null;
-  isLoadingInvestments: boolean = false;
+  private readonly availableYearsSig = signal<number[]>([]);
+  get availableYears(): number[] {
+    return this.availableYearsSig();
+  }
+  set availableYears(value: number[]) {
+    this.availableYearsSig.set(value);
+  }
 
-  // Tarjetas disponibles
-  creditCards: any[] = [];
-  selectedCardId: number | null = null;
+  private readonly investmentsReportSig = signal<InvestmentMonthlyReportDTO | null>(null);
+  get investmentsReport(): InvestmentMonthlyReportDTO | null {
+    return this.investmentsReportSig();
+  }
+  set investmentsReport(value: InvestmentMonthlyReportDTO | null) {
+    this.investmentsReportSig.set(value);
+  }
 
-  // Fechas para reportes de tarjetas y comercios
-  startDate: string = "";
-  endDate: string = "";
+  private readonly isLoadingInvestmentsSig = signal<boolean>(false);
+  get isLoadingInvestments(): boolean {
+    return this.isLoadingInvestmentsSig();
+  }
+  set isLoadingInvestments(value: boolean) {
+    this.isLoadingInvestmentsSig.set(value);
+  }
 
-  // Datos de reportes
-  cardExpensesData: any = null;
-  cardPaymentsData: any = null;
-  cardsConsumptionData: any[] = [];
-  merchantsExpensesData: any = null;
-  cashExpensesData: any = null;
+  private readonly creditCardsSig = signal<CreditCardCodeDTO[]>([]);
+  get creditCards(): CreditCardCodeDTO[] {
+    return this.creditCardsSig();
+  }
+  set creditCards(value: CreditCardCodeDTO[]) {
+    this.creditCardsSig.set(value);
+  }
 
-  // Gráficos
-  investmentsChart: ChartType | null = null;
-  monthlyBalanceChart: ChartType | null = null;
-  cardConsumptionChart: ChartType | null = null;
-  merchantsChart: ChartType | null = null;
+  private readonly selectedCardIdSig = signal<number | null>(null);
+  get selectedCardId(): number | null {
+    return this.selectedCardIdSig();
+  }
+  set selectedCardId(value: number | null) {
+    this.selectedCardIdSig.set(value);
+  }
 
-  // Tab activo
-  activeTab: string = "investments";
+  private readonly startDateSig = signal<string>("");
+  get startDate(): string {
+    return this.startDateSig();
+  }
+  set startDate(value: string) {
+    this.startDateSig.set(value);
+  }
+
+  private readonly endDateSig = signal<string>("");
+  get endDate(): string {
+    return this.endDateSig();
+  }
+  set endDate(value: string) {
+    this.endDateSig.set(value);
+  }
+
+  private readonly cardExpensesDataSig = signal<CardExpensesReportDto | null>(null);
+  get cardExpensesData(): CardExpensesReportDto | null {
+    return this.cardExpensesDataSig();
+  }
+  set cardExpensesData(value: CardExpensesReportDto | null) {
+    this.cardExpensesDataSig.set(value);
+  }
+
+  private readonly cardPaymentsDataSig = signal<CardPaymentsReportDto | null>(null);
+  get cardPaymentsData(): CardPaymentsReportDto | null {
+    return this.cardPaymentsDataSig();
+  }
+  set cardPaymentsData(value: CardPaymentsReportDto | null) {
+    this.cardPaymentsDataSig.set(value);
+  }
+
+  private readonly cardsConsumptionDataSig = signal<CardConsumptionDto[]>([]);
+  get cardsConsumptionData(): CardConsumptionDto[] {
+    return this.cardsConsumptionDataSig();
+  }
+  set cardsConsumptionData(value: CardConsumptionDto[]) {
+    this.cardsConsumptionDataSig.set(value);
+  }
+
+  private readonly merchantsExpensesDataSig = signal<MerchantExpensesReportDto | null>(null);
+  get merchantsExpensesData(): MerchantExpensesReportDto | null {
+    return this.merchantsExpensesDataSig();
+  }
+  set merchantsExpensesData(value: MerchantExpensesReportDto | null) {
+    this.merchantsExpensesDataSig.set(value);
+  }
+
+  private readonly cashExpensesDataSig = signal<CashExpensesReportDto | null>(null);
+  get cashExpensesData(): CashExpensesReportDto | null {
+    return this.cashExpensesDataSig();
+  }
+  set cashExpensesData(value: CashExpensesReportDto | null) {
+    this.cashExpensesDataSig.set(value);
+  }
+
+  private readonly investmentsChartSig = signal<ChartType | null>(null);
+  get investmentsChart(): ChartType | null {
+    return this.investmentsChartSig();
+  }
+  set investmentsChart(value: ChartType | null) {
+    this.investmentsChartSig.set(value);
+  }
+
+  private readonly monthlyBalanceChartSig = signal<ChartType | null>(null);
+  get monthlyBalanceChart(): ChartType | null {
+    return this.monthlyBalanceChartSig();
+  }
+  set monthlyBalanceChart(value: ChartType | null) {
+    this.monthlyBalanceChartSig.set(value);
+  }
+
+  private readonly cardConsumptionChartSig = signal<ChartType | null>(null);
+  get cardConsumptionChart(): ChartType | null {
+    return this.cardConsumptionChartSig();
+  }
+  set cardConsumptionChart(value: ChartType | null) {
+    this.cardConsumptionChartSig.set(value);
+  }
+
+  private readonly merchantsChartSig = signal<ChartType | null>(null);
+  get merchantsChart(): ChartType | null {
+    return this.merchantsChartSig();
+  }
+  set merchantsChart(value: ChartType | null) {
+    this.merchantsChartSig.set(value);
+  }
+
+  private readonly activeTabSig = signal<string>("investments");
+  get activeTab(): string {
+    return this.activeTabSig();
+  }
+  set activeTab(value: string) {
+    this.activeTabSig.set(value);
+  }
 
   ngOnInit(): void {
     this.initializeDates();
@@ -100,7 +223,9 @@ export class ReportsComponent implements OnInit {
       this.creditCards = await this.creditcardService.getCreditCardCodes(token);
       if (this.creditCards.length > 0) {
         this.selectedCardId =
-          this.creditCards[0].codigo || this.creditCards[0].id;
+          this.creditCards[0].codigo ??
+          this.creditCards[0].id ??
+          null;
       }
     } catch (error) {
       // Error al cargar tarjetas
@@ -346,8 +471,8 @@ export class ReportsComponent implements OnInit {
         type: "pie",
         height: 350,
       },
-      labels: expenses.map((e: any) => e.merchantName || "Sin comercio"),
-      series: expenses.map((e: any) => e.amount),
+      labels: expenses.map((e) => e.merchantName || "Sin comercio"),
+      series: expenses.map((e) => e.amount),
       colors: this.generateColors(expenses.length),
       legend: {
         position: "bottom",
@@ -385,13 +510,13 @@ export class ReportsComponent implements OnInit {
         {
           name: "Utilización (%)",
           data: this.cardsConsumptionData.map(
-            (card: any) => card.utilizationPercentage || 0
+            (card) => card.utilizationPercentage || 0
           ),
         },
       ],
       xaxis: {
         categories: this.cardsConsumptionData.map(
-          (card: any) => card.bankName || `Tarjeta ${card.creditCardId}`
+          (card) => card.bankName || `Tarjeta ${card.creditCardId}`
         ),
       },
       yaxis: {
@@ -424,7 +549,7 @@ export class ReportsComponent implements OnInit {
     const merchants = this.merchantsExpensesData.merchants;
     // Tomar los top 10 comercios
     const topMerchants = merchants
-      .sort((a: any, b: any) => b.totalAmount - a.totalAmount)
+      .sort((a, b) => b.totalAmount - a.totalAmount)
       .slice(0, 10);
 
     this.merchantsChart = {
@@ -449,11 +574,11 @@ export class ReportsComponent implements OnInit {
       series: [
         {
           name: "Total Gastos",
-          data: topMerchants.map((m: any) => m.totalAmount),
+          data: topMerchants.map((m) => m.totalAmount),
         },
       ],
       xaxis: {
-        categories: topMerchants.map((m: any) => m.merchantName),
+        categories: topMerchants.map((m) => m.merchantName),
       },
       yaxis: {
         title: {

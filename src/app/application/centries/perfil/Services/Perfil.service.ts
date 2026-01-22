@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { PerfilDTO } from "../DTO/PerfilDTO";
 import { IPerfil } from "../Interfaces/IPerfil.interface";
+import { PerfilOperationResponse } from "../DTO/PerfilOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -12,7 +13,7 @@ export class PerfilService implements IPerfil {
   async getListadoPerfil(token: string): Promise<PerfilDTO[]> {
     try {
       const url = `Perfil/Lista`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PerfilDTO[]>(
         url,
         "GET",
         null,
@@ -24,13 +25,13 @@ export class PerfilService implements IPerfil {
     }
   }
 
-  async getListadoPerfilId(idperfil: number, token: string): Promise<any> {
+  async getListadoPerfilId(idperfil: number, token: string): Promise<PerfilDTO> {
     try {
       const url = `Perfil/ObtenerPerfilId`;
       const datos = {
         id: idperfil,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PerfilDTO>(
         url,
         "POST",
         datos,
@@ -42,10 +43,10 @@ export class PerfilService implements IPerfil {
     }
   }
 
-  async guardarPerfil(datos: any, token: string): Promise<any> {
+  async guardarPerfil(datos: PerfilDTO | Record<string, unknown>, token: string): Promise<PerfilOperationResponse> {
     try {
       const url = `Perfil/Guardar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PerfilOperationResponse>(
         url,
         "POST",
         datos,
@@ -57,10 +58,10 @@ export class PerfilService implements IPerfil {
     }
   }
 
-  async editarPerfil(datos: any, token: string): Promise<any> {
+  async editarPerfil(datos: PerfilDTO | Record<string, unknown>, token: string): Promise<PerfilOperationResponse> {
     try {
       const url = `Perfil/Editar`;
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PerfilOperationResponse>(
         url,
         "POST",
         datos,
@@ -72,13 +73,13 @@ export class PerfilService implements IPerfil {
     }
   }
 
-  async eliminarPerfil(idperfil: number, token: string): Promise<any> {
+  async eliminarPerfil(idperfil: number, token: string): Promise<PerfilOperationResponse> {
     try {
       const url = `Perfil/Eliminar`;
       const datos = {
         id: idperfil,
       };
-      return await this.apiConnectionService.sendRequestAsync<any>(
+      return await this.apiConnectionService.sendRequestAsync<PerfilOperationResponse>(
         url,
         "POST",
         datos,

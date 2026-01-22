@@ -5,6 +5,9 @@ import {
   Output,
   ViewChild,
   ElementRef,
+  inject,
+  ChangeDetectionStrategy,
+  AfterViewInit,
 } from "@angular/core";
 import { NavigationEnd, Router } from "@angular/router";
 import { TranslateService } from "@ngx-translate/core";
@@ -17,16 +20,20 @@ import { environment } from "src/environments/environment";
   selector: "app-sidebar",
   templateUrl: "./sidebar.component.html",
   styleUrls: ["./sidebar.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarComponent implements OnInit {
-  menu: any;
-  toggle: any = true;
+export class SidebarComponent implements OnInit, AfterViewInit {
+  private router = inject(Router);
+  translate = inject(TranslateService);
+  
+  menu: MenuItem[] | null = null;
+  toggle: boolean = true;
   menuItems: MenuItem[] = [];
   @ViewChild("sideMenu") sideMenu!: ElementRef;
   @Output() mobileMenuButtonClicked = new EventEmitter();
 
-  constructor(private router: Router, public translate: TranslateService) {
-    translate.setDefaultLang("es");
+  constructor() {
+    this.translate.setDefaultLang("es");
   }
 
   ngOnInit(): void {
@@ -50,21 +57,21 @@ export class SidebarComponent implements OnInit {
     }, 0);
   }
 
-  removeActivation(items: any) {
-    items.forEach((item: any) => {
+  removeActivation(items: Element[]): void {
+    items.forEach((item: Element) => {
       item.classList.remove("active");
     });
   }
 
-  toggleItem(item: any) {
-    this.menuItems.forEach((menuItem: any) => {
+  toggleItem(item: MenuItem): void {
+    this.menuItems.forEach((menuItem: MenuItem) => {
       if (menuItem == item) {
         menuItem.isCollapsed = !menuItem.isCollapsed;
       } else {
         menuItem.isCollapsed = true;
       }
       if (menuItem.subItems) {
-        menuItem.subItems.forEach((subItem: any) => {
+        menuItem.subItems.forEach((subItem: MenuItem) => {
           if (subItem == item) {
             menuItem.isCollapsed = !menuItem.isCollapsed;
             subItem.isCollapsed = !subItem.isCollapsed;
@@ -72,7 +79,7 @@ export class SidebarComponent implements OnInit {
             subItem.isCollapsed = true;
           }
           if (subItem.subItems) {
-            subItem.subItems.forEach((childitem: any) => {
+            subItem.subItems.forEach((childitem: MenuItem) => {
               if (childitem == item) {
                 childitem.isCollapsed = !childitem.isCollapsed;
                 subItem.isCollapsed = !subItem.isCollapsed;
@@ -81,7 +88,7 @@ export class SidebarComponent implements OnInit {
                 childitem.isCollapsed = true;
               }
               if (childitem.subItems) {
-                childitem.subItems.forEach((childrenitem: any) => {
+                childitem.subItems.forEach((childrenitem: MenuItem) => {
                   if (childrenitem == item) {
                     childrenitem.isCollapsed = false;
                     childitem.isCollapsed = false;
@@ -100,38 +107,37 @@ export class SidebarComponent implements OnInit {
   }
 
   // remove active items of two-column-menu
-  activateParentDropdown(item: any) {
+  activateParentDropdown(item: Element): boolean {
     item.classList.add("active");
-    let parentCollapseDiv = item.closest(".collapse.menu-dropdown");
+    const parentCollapseDiv = item.closest(".collapse.menu-dropdown");
 
-    if (parentCollapseDiv) {
+    if (parentCollapseDiv && parentCollapseDiv.parentElement) {
+      const parentElement = parentCollapseDiv.parentElement;
       // to set aria expand true remaining
-      parentCollapseDiv.parentElement.children[0].classList.add("active");
+      if (parentElement.children[0]) {
+        (parentElement.children[0] as Element).classList.add("active");
+      }
 
-      if (parentCollapseDiv.parentElement.closest(".collapse.menu-dropdown")) {
-        parentCollapseDiv.parentElement
-          .closest(".collapse")
-          .classList.add("show");
-        if (
-          parentCollapseDiv.parentElement.closest(".collapse")
-            .previousElementSibling
-        )
-          parentCollapseDiv.parentElement
-            .closest(".collapse")
-            .previousElementSibling.classList.add("active");
-        if (
-          parentCollapseDiv.parentElement
-            .closest(".collapse")
-            .previousElementSibling.closest(".collapse")
-        ) {
-          parentCollapseDiv.parentElement
-            .closest(".collapse")
-            .previousElementSibling.closest(".collapse")
-            .classList.add("show");
-          parentCollapseDiv.parentElement
-            .closest(".collapse")
-            .previousElementSibling.closest(".collapse")
-            .previousElementSibling.classList.add("active");
+      const closestCollapse = parentElement.closest(".collapse.menu-dropdown");
+      if (closestCollapse) {
+        const collapseElement = parentElement.closest(".collapse");
+        if (collapseElement) {
+          collapseElement.classList.add("show");
+          
+          const previousSibling = collapseElement.previousElementSibling;
+          if (previousSibling) {
+            previousSibling.classList.add("active");
+            
+            const siblingClosestCollapse = previousSibling.closest(".collapse");
+            if (siblingClosestCollapse) {
+              siblingClosestCollapse.classList.add("show");
+              
+              const siblingPreviousSibling = siblingClosestCollapse.previousElementSibling;
+              if (siblingPreviousSibling) {
+                siblingPreviousSibling.classList.add("active");
+              }
+            }
+          }
         }
       }
       return false;
@@ -139,13 +145,15 @@ export class SidebarComponent implements OnInit {
     return false;
   }
 
-  updateActive(event: any) {
+  updateActive(event: Event): void {
     const ul = document.getElementById("navbar-nav");
     if (ul) {
       const items = Array.from(ul.querySelectorAll("a.nav-link"));
       this.removeActivation(items);
     }
-    this.activateParentDropdown(event.target);
+    if (event.target && event.target instanceof Element) {
+      this.activateParentDropdown(event.target);
+    }
   }
 
   initActiveMenu() {
@@ -157,16 +165,18 @@ export class SidebarComponent implements OnInit {
     }
 
     const active = this.findMenuItem(pathName, this.menuItems);
-    this.toggleItem(active);
+    if (active) {
+      this.toggleItem(active);
+    }
     const ul = document.getElementById("navbar-nav");
     if (ul) {
-      const items = Array.from(ul.querySelectorAll("a.nav-link"));
-      let activeItems = items.filter((x: any) =>
+      const items = Array.from(ul.querySelectorAll("a.nav-link")) as HTMLAnchorElement[];
+      const activeItems = items.filter((x: HTMLAnchorElement) =>
         x.classList.contains("active")
       );
       this.removeActivation(activeItems);
 
-      let matchingMenuItem = items.find((x: any) => {
+      const matchingMenuItem = items.find((x: HTMLAnchorElement) => {
         if (environment.production) {
           let path = x.pathname;
           path = path.replace("/velzon/angular/material", "");
@@ -181,7 +191,7 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  private findMenuItem(pathname: string, menuItems: any[]): any {
+  private findMenuItem(pathname: string, menuItems: MenuItem[]): MenuItem | null {
     for (const menuItem of menuItems) {
       if (menuItem.link && menuItem.link === pathname) {
         return menuItem;
@@ -209,7 +219,7 @@ export class SidebarComponent implements OnInit {
   /**
    * Toggle the menu bar when having mobile screen
    */
-  toggleMobileMenu(event: any) {
+  toggleMobileMenu(event: Event): void {
     var sidebarsize =
       document.documentElement.getAttribute("data-sidebar-size");
     if (sidebarsize == "sm-hover-active") {

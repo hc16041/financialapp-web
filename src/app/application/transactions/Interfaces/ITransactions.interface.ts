@@ -1,19 +1,31 @@
 import { TransactionsDTO } from "../DTO/TransactionsDTO";
+import {
+  TransactionOperationResponse,
+  TransactionsSummary,
+} from "../DTO/TransactionOperation.dto";
 
 export interface ITransactions {
   getListadoTransactions(
     token: string,
-    usuario: string
+    usuario: string,
+    startDate?: string,
+    endDate?: string
   ): Promise<TransactionsDTO[]>;
-  guardarTransactions(datos: any, token: string, usuario: string): Promise<any>;
-  editarTransactions(datos: any, token: string, usuario: string): Promise<any>;
-  eliminarTransactions(
-    datos: any,
+  guardarTransactions(
+    datos: TransactionsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any>;
-  getListadoTransactionsXML(token: string, usuario: string): Promise<any>;
-  getListadoTransactionsExcel(token: string, usuario: string): Promise<any>;
+  ): Promise<TransactionOperationResponse>;
+  editarTransactions(
+    datos: TransactionsDTO | Record<string, unknown>,
+    token: string,
+    usuario: string
+  ): Promise<TransactionOperationResponse>;
+  eliminarTransactions(
+    datos: Record<string, unknown>,
+    token: string,
+    usuario: string
+  ): Promise<TransactionOperationResponse>;
   getTransactionsById(
     id: number,
     token: string,
@@ -44,7 +56,11 @@ export interface ITransactions {
     token: string,
     usuario: string
   ): Promise<TransactionsDTO[]>;
-  procesarTransaction(id: number, token: string, usuario: string): Promise<any>;
+  procesarTransaction(
+    id: number,
+    token: string,
+    usuario: string
+  ): Promise<TransactionOperationResponse>;
 }
 
 export interface ITransactionsEdit {
@@ -71,5 +87,5 @@ export interface ITransactionsCreate {
 export interface ITransactionType {
   id: number;
   name: string;
-  description: string;
+  description?: string;
 }
