@@ -78,6 +78,7 @@ export class AuthNewService {
    * @returns Observable con el token y datos del usuario.
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
+
     return this.http
       .post<AuthResponse>(
         `${GlobalComponent.AUTH_API}auth/login`,

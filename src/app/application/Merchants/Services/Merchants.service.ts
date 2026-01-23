@@ -1,5 +1,7 @@
 import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
+import { MerchantsDTO } from "../DTO/MerchantsDTO";
+import { MerchantOperationResponse } from "../DTO/MerchantOperation.dto";
 
 @Injectable({
   providedIn: "root",
@@ -7,8 +9,8 @@ import { ApiConnectionService } from "src/app/core/services/api-connection.servi
 export class MerchantsService {
   constructor(private apiConnectionService: ApiConnectionService) {}
 
-  async getMerchants(token: string, usuario: string): Promise<any[]> {
-    return await this.apiConnectionService.sendRequestAsync<any[]>(
+  async getMerchants(token: string, usuario: string): Promise<MerchantsDTO[]> {
+    return await this.apiConnectionService.sendRequestAsync<MerchantsDTO[]>(
       "Merchants",
       "GET",
       null,
@@ -17,11 +19,11 @@ export class MerchantsService {
   }
 
   async guardarMerchants(
-    datos: any,
+    datos: MerchantsDTO | Record<string, unknown>,
     token: string,
     usuario: string
-  ): Promise<any> {
-    return await this.apiConnectionService.sendRequestAsync<any>(
+  ): Promise<MerchantOperationResponse> {
+    return await this.apiConnectionService.sendRequestAsync<MerchantOperationResponse>(
       "Merchants",
       "POST",
       datos,

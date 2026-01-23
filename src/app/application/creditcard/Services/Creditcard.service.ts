@@ -29,7 +29,7 @@ export class CreditcardService {
         url,
         "GET",
         null,
-        { Authorization: token }
+        { Authorization: token },
       );
     } catch (error) {
       console.error("Error en getListadoCreditcard:", error);

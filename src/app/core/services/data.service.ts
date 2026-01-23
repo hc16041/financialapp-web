@@ -49,13 +49,16 @@ export class DataService {
     try {
       const serviceObj = servicio as Record<string, unknown>;
       const method = serviceObj[metodo];
+
       if (!method || typeof method !== 'function') {
         throw new Error(`Método ${metodo} no encontrado en el servicio`);
       }
+      // Bind el método al servicio para mantener el contexto 'this'
+      const boundMethod = (method as (...args: unknown[]) => Promise<T | T[]>).bind(servicio);
       const data =
         id !== undefined
-          ? await (method as (...args: unknown[]) => Promise<T | T[]>)(id, this.token, this.username)
-          : await (method as (...args: unknown[]) => Promise<T | T[]>)(this.token, this.username);
+          ? await boundMethod(id, this.token, this.username)
+          : await boundMethod(this.token, this.username);
       behaviorSubject.next(Array.isArray(data) ? data : [data]);
     } catch (error: unknown) {
       console.error(`${mensajeError}:`, error);
@@ -81,7 +84,9 @@ export class DataService {
       if (!xsdMethod || typeof xsdMethod !== 'function') {
         throw new Error(`Método ${metodoXSD} no encontrado en el servicio`);
       }
-      const response = await (xsdMethod as () => Promise<unknown>)();
+      // Bind el método al servicio para mantener el contexto 'this'
+      const boundXsdMethod = (xsdMethod as () => Promise<unknown>).bind(servicio);
+      const response = await boundXsdMethod();
       
       let validar = "";
       if(response){
@@ -128,14 +133,16 @@ export class DataService {
       if (!method || typeof method !== 'function') {
         throw new Error(`Método ${metodo} no encontrado en el servicio`);
       }
-      const response = await (method as (
+      // Bind el método al servicio para mantener el contexto 'this'
+      const boundMethod = (method as (
         token: string,
         usuario: string,
         archivo?: Record<string, unknown>
       ) => Promise<{
         data: BlobPart;
         fileName: string;
-      }>)(
+      }>).bind(servicio);
+      const response = await boundMethod(
         this.token,
         this.username,
         archivo
@@ -199,11 +206,13 @@ export class DataService {
       if (!method || typeof method !== 'function') {
         throw new Error(`Método ${metodo} no encontrado en el servicio`);
       }
-      await (method as (
+      // Bind el método al servicio para mantener el contexto 'this'
+      const boundMethod = (method as (
         data: TData,
         token: string,
         usuario: string
-      ) => Promise<TResponse>)(datos, this.token, this.username);
+      ) => Promise<TResponse>).bind(servicio);
+      await boundMethod(datos, this.token, this.username);
       this.alertService.showSuccess(mensajeExito);
     } catch (error: unknown) {
       console.error("=== ERROR en agregarRegistro ===");
@@ -256,11 +265,13 @@ export class DataService {
       if (!method || typeof method !== 'function') {
         throw new Error(`Método ${metodo} no encontrado en el servicio`);
       }
-      await (method as (
+      // Bind el método al servicio para mantener el contexto 'this'
+      const boundMethod = (method as (
         data: TData,
         token: string,
         usuario: string
-      ) => Promise<TResponse>)(datos, this.token, this.username);
+      ) => Promise<TResponse>).bind(servicio);
+      await boundMethod(datos, this.token, this.username);
       this.alertService.showSuccess(mensajeExito);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -289,11 +300,13 @@ export class DataService {
       if (!method || typeof method !== 'function') {
         throw new Error(`Método ${metodo} no encontrado en el servicio`);
       }
-      await (method as (
+      // Bind el método al servicio para mantener el contexto 'this'
+      const boundMethod = (method as (
         id: number | string | Record<string, unknown>,
         token: string,
         usuario: string
-      ) => Promise<unknown>)(id, this.token, this.username);
+      ) => Promise<unknown>).bind(servicio);
+      await boundMethod(id, this.token, this.username);
       this.alertService.showSuccess(mensajeExito);
     } catch (error: unknown) {
       console.error(`${mensajeError}:`, error);
