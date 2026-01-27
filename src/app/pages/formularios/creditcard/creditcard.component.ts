@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal, ChangeDetectorRef } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { CreditcardDTO } from "src/app/application/creditcard/DTO/CreditcardDTO";
@@ -18,6 +18,7 @@ export class CreditcardComponent implements OnInit {
   // Inyección de dependencias usando inject()
   private dataService = inject(DataService);
   private creditcardService = inject(CreditcardService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Table data - Mantener BehaviorSubject para DataService, pero exponer como signal
   private creditcardList$ = new BehaviorSubject<CreditcardDTO[]>([]);
@@ -39,6 +40,7 @@ export class CreditcardComponent implements OnInit {
     // Suscribirse al BehaviorSubject para actualizar el signal
     this.creditcardList$.subscribe(data => {
       this.creditcardListSig.set(data);
+      this.cdr.markForCheck(); // Forzar detección de cambios con OnPush
     });
     this.obtenerCreditcard();
   }

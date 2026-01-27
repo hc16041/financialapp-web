@@ -70,12 +70,33 @@ export class SelectOptionsMapperService {
   /**
    * Mapea códigos de tarjetas de crédito a formato de select
    * Alias de mapCreditCards para mantener compatibilidad con nombres diferentes
+   * Soporta tanto el formato antiguo (codigo/descripcion) como el nuevo (id/bankName)
    *
-   * @param creditCardCodes Array de códigos de tarjetas con propiedades codigo y descripcion
+   * @param creditCardCodes Array de códigos de tarjetas con propiedades codigo/descripcion o id/bankName
    * @returns Array de opciones de select con value y label
    */
   mapCreditCardCodes(creditCardCodes: unknown[]): SelectOption[] {
-    return this.mapCreditCards(creditCardCodes);
+    return creditCardCodes.map((c) => {
+      const card = c as Record<string, unknown>;
+      // Si tiene codigo y descripcion (formato antiguo)
+      if (card['codigo'] !== undefined && card['descripcion'] !== undefined) {
+        return {
+          value: card['codigo'] as number,
+          label: card['descripcion'] as string,
+        };
+      }
+      // Si tiene id y bankName (formato nuevo CreditcardDTO)
+      if (card['id'] !== undefined && card['bankName'] !== undefined) {
+        return {
+          value: card['id'] as number,
+          label: card['bankName'] as string,
+        };
+      }
+      // Fallback: intentar usar cualquier propiedad numérica como value y string como label
+      const id = (card['id'] as number) || (card['codigo'] as number) || 0;
+      const label = (card['bankName'] as string) || (card['descripcion'] as string) || `Tarjeta ${id}`;
+      return { value: id, label };
+    });
   }
 
   /**

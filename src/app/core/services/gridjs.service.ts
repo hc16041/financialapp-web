@@ -6,7 +6,7 @@ import { BehaviorSubject, Observable, of, Subject } from "rxjs";
 import { GridJsModel } from "../models/gridjs.model";
 import { DecimalPipe } from "@angular/common";
 import { debounceTime, delay, switchMap, tap } from "rxjs/operators";
-import { GridJs } from "src/app/core/data";
+import { GridJs } from "../data/data";
 
 interface SearchResult {
   countries: GridJsModel[];
@@ -128,7 +128,7 @@ export class GridJsService {
     let countries = GridJs;
 
     // 2. filter
-    countries = countries.filter((country) =>
+    countries = countries.filter((country: GridJsModel) =>
       matches(country, searchTerm, this.pipe)
     );
     const total = countries.length;

@@ -17,7 +17,7 @@ export class CreditcardService {
   /**
    * Devuelve el listado de tarjetas de crédito.
    *
-   * @returns La respuesta del servidor en formato JSON.
+   * @returns La respuesta del servidor transformada a CreditcardDTO[].
    */
   async getListadoCreditcard(
     token: string,
@@ -30,6 +30,8 @@ export class CreditcardService {
         "GET",
         null,
         { Authorization: token },
+        {},
+        CreditcardDTO
       );
     } catch (error) {
       console.error("Error en getListadoCreditcard:", error);
