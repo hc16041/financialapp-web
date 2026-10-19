@@ -39,9 +39,9 @@ export class AlertcustomService {
    * Muestra una alerta de éxito.
    *
    * @param message Mensaje a mostrar.
-   * @param title Título de la alerta; por defecto `"Success"`.
+   * @param title Título de la alerta; por defecto `"Éxito"`.
    */
-  showSuccess(message: string, title: string = "Success") {
+  showSuccess(message: string, title: string = "Éxito") {
     this.showAlert(title, message, "success", "center");
   }
 
@@ -53,9 +53,9 @@ export class AlertcustomService {
    * Muestra una alerta de advertencia.
    *
    * @param message Mensaje a mostrar.
-   * @param title Título; por defecto `"Warning"`.
+   * @param title Título; por defecto `"Advertencia"`.
    */
-  showWarning(message: string, title: string = "Warning") {
+  showWarning(message: string, title: string = "Advertencia") {
     this.showAlert(title, message, "warning");
   }
 
@@ -63,9 +63,9 @@ export class AlertcustomService {
    * Muestra una alerta informativa.
    *
    * @param message Mensaje a mostrar.
-   * @param title Título; por defecto `"Information"`.
+   * @param title Título; por defecto `"Información"`.
    */
-  showInfo(message: string, title: string = "Information") {
+  showInfo(message: string, title: string = "Información") {
     this.showAlert(title, message, "info");
   }
 

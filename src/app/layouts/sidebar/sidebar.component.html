@@ -26,7 +26,7 @@
       id="vertical-hover"
       (click)="toggleMobileMenu($event)"
     >
-      <i class="ri-record-circle-line"></i>
+      <i class="mdi mdi-record-circle-outline"></i>
     </button>
   </div>
 
@@ -38,13 +38,13 @@
         style="max-height: calc(100vh - 70px)"
       >
         <ul class="metismenu list-unstyled navbar-nav" id="navbar-nav">
-          @for(item of menuItems; track $index){ @if(item.isTitle){
+          @for (item of menuItems; track $index) { @if (item.isTitle) {
           <li class="menu-title">
             <span data-key="t-menu">{{ item.label | translate }}</span>
           </li>
-          } @else{
+          } @else {
           <li class="nav-item">
-            @if(hasItems(item)){
+            @if (hasItems(item)) {
             <a
               href="javascript:void(0);"
               class="is-parent nav-link menu-link"
@@ -56,143 +56,66 @@
               [attr.aria-expanded]="!item.isCollapsed"
               (click)="toggleItem(item)"
             >
-              <i class="{{ item.icon }} icon nav-icon" class=""></i>
-              <span class=""> {{ item.label | translate }}</span>
-              @if(item.badge){<span
-                class="badge badge-pill {{ item.badge.variant }}"
-                >{{ item.badge.text | translate }}</span
-              >}
+              @if (item.icon) {
+              <i class="{{ item.icon }} icon nav-icon"></i>
+              }
+              <span>{{ item.label | translate }}</span>
+              @if (item.badge) {
+              <span class="badge badge-pill {{ item.badge.variant }}">{{
+                item.badge.text | translate
+              }}</span>
+              }
             </a>
 
             <div
               class="collapse menu-dropdown"
-              #collapse="ngbCollapse"
-              [(ngbCollapse)]="item.isCollapsed"
+              [ngbCollapse]="item.isCollapsed ?? true"
+              (ngbCollapseChange)="item.isCollapsed = $event"
             >
               <ul class="nav nav-sm flex-column" aria-expanded="false">
-                @for(subitem of item.subItems; track $index){
+                @for (subitem of item.subItems; track $index) {
                 <li class="nav-item">
-                  @if(hasItems(subitem)){
-                  <a
-                    class="nav-link"
-                    href="javascript:void(0);"
-                    [attr.data-parent]="subitem.parentId"
-                    data-bs-toggle="collapse"
-                    [attr.aria-expanded]="!subitem.isCollapsed"
-                    (click)="toggleItem(subitem)"
-                  >
-                    {{ subitem.label | translate }}
-                    @if(subitem.badge){<span
-                      class="badge badge-pill {{ subitem.badge.variant }}"
-                      >{{ subitem.badge.text | translate }}</span
-                    >}
-                  </a>
-
-                  <div
-                    class="collapse menu-dropdown sub-menu"
-                    #collapse="ngbCollapse"
-                    [(ngbCollapse)]="subitem.isCollapsed"
-                  >
-                    <ul class="nav nav-sm flex-column" aria-expanded="false">
-                      @for(subSubitem of subitem.subItems; track $index){
-                      <li class="nav-item">
-                        @if(hasItems(subSubitem)){
-                        <a
-                          class="nav-link"
-                          href="javascript:void(0);"
-                          [attr.data-parent]="subSubitem.parentId"
-                          data-bs-toggle="collapse"
-                          aria-expanded="false"
-                          [attr.aria-expanded]="!subSubitem.isCollapsed"
-                          (click)="toggleItem(subSubitem)"
-                        >
-                          {{ subSubitem.label | translate }}
-                          @if(subSubitem.badge){<span
-                            class="badge badge-pill {{
-                              subSubitem.badge.variant
-                            }}"
-                            >{{ subSubitem.badge.text | translate }}</span
-                          >}
-                        </a>
-
-                        <div
-                          class="collapse menu-dropdown extra-sub-menu"
-                          #collapse="ngbCollapse"
-                          [(ngbCollapse)]="subSubitem.isCollapsed"
-                        >
-                          <ul
-                            class="nav nav-sm flex-column"
-                            aria-expanded="false"
-                          >
-                            @for(subSubitem1 of subSubitem.subItems; track
-                            $index){
-                            <li class="nav-item">
-                              <a
-                                [attr.data-parent]="subSubitem1.parentId"
-                                [routerLink]="subSubitem1.link"
-                                class="nav-link"
-                                (click)="updateActive($event)"
-                              >
-                                {{ subSubitem1.label | translate }}
-                              </a>
-                            </li>
-                            }
-                          </ul>
-                        </div>
-                        }@else{
-                        <a
-                          [attr.data-parent]="subSubitem.parentId"
-                          [routerLink]="subSubitem.link"
-                          class="nav-link"
-                          (click)="updateActive($event)"
-                        >
-                          {{ subSubitem.label | translate }}
-                          @if(subSubitem.badge){<span
-                            class="badge badge-pill {{
-                              subSubitem.badge.variant
-                            }}"
-                            >{{ subSubitem.badge.text | translate }}</span
-                          >}
-                        </a>
-                        }
-                      </li>
-                      }
-                    </ul>
-                  </div>
-                  }@else{
                   <a
                     [routerLink]="subitem.link"
+                    routerLinkActive="active"
+                    #rla="routerLinkActive"
+                    [attr.aria-current]="rla.isActive ? 'page' : null"
                     class="nav-link"
                     [attr.data-parent]="subitem.parentId"
-                    (click)="updateActive($event)"
                   >
+                    @if (subitem.icon) {
+                    <i class="{{ subitem.icon }}"></i>
+                    }
                     {{ subitem.label | translate }}
-                    @if(subitem.badge){<span
+                    @if (subitem.badge) {
+                    <span
                       class="badge badge-pill {{ subitem.badge.variant }}"
                       >{{ subitem.badge.text | translate }}</span
-                    >}
+                    >
+                    }
                   </a>
-                  }
                 </li>
                 }
               </ul>
             </div>
-            } @else{
+            } @else {
             <a
               [routerLink]="item.link"
-              class="side-nav-link-ref nav-link menu-link"
               routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: item.link === '/' }"
+              #rla="routerLinkActive"
+              [attr.aria-current]="rla.isActive ? 'page' : null"
+              class="side-nav-link-ref nav-link menu-link"
             >
-              @if(item.icon){<i
-                class="bx {{ item.icon }} icon nav-icon"
-                class=""
-              ></i
-              >}
-              <span class=""> {{ item.label | translate }}</span>
-              @if(item.badge){<span
-                class="badge {{ item.badge.variant }} float-end"
-                >{{ item.badge.text | translate }}</span
-              >}
+              @if (item.icon) {
+              <i class="{{ item.icon }} icon nav-icon"></i>
+              }
+              <span>{{ item.label | translate }}</span>
+              @if (item.badge) {
+              <span class="badge {{ item.badge.variant }} float-end">{{
+                item.badge.text | translate
+              }}</span>
+              }
             </a>
             }
           </li>

@@ -5,10 +5,8 @@ import {
   Output,
   EventEmitter,
   ViewEncapsulation,
-  HostListener,
   SimpleChanges,
   OnChanges,
-  output,
   ChangeDetectorRef,
   ChangeDetectionStrategy,
 } from "@angular/core";
@@ -59,28 +57,40 @@ import { GenericTablePaginationComponent } from "./generic-table-pagination/gene
           </app-generic-table-header>
 
           <!-- Body Component -->
-          <app-generic-table-body
-            [visibleColumns]="visibleColumns"
-            [paginatedData]="paginatedData"
-            [showActions]="showActions"
-            [allowedActions]="allowedActions"
-            [actionConfig]="actionConfig"
-            [searchTerm]="searchTerm"
-            [selectOptions]="selectOptions"
-            [selectFields]="selectFields"
-            [sumColumns]="sumColumns"
-            [columnSums]="columnSums"
-            [columnFilters]="columnFilters"
-            [sortColumn]="sortColumn"
-            [sortDirection]="sortDirection"
-            [validatePermissions]="validatePermissions"
-            [getValueFn]="getValue.bind(this)"
-            [shouldShowActionFn]="shouldShowAction.bind(this)"
-            (actionClick)="onActionClick($event.action, $event.item)"
-            (sort)="onSort($event)"
-            (columnFilter)="onColumnFilter($event.property, $event.value)"
-            (clearColumnFilterEvent)="clearColumnFilter($event)"
-          ></app-generic-table-body>
+          @if (errorMessage) {
+            <app-error-alert
+              class="d-block my-3"
+              [message]="errorMessage"
+              (retry)="retry.emit()"
+            ></app-error-alert>
+          } @else {
+            <app-generic-table-body
+              [visibleColumns]="visibleColumns"
+              [paginatedData]="paginatedData"
+              [showActions]="showActions"
+              [allowedActions]="allowedActions"
+              [actionConfig]="actionConfig"
+              [searchTerm]="searchTerm"
+              [selectOptions]="selectOptions"
+              [selectFields]="selectFields"
+              [sumColumns]="sumColumns"
+              [columnSums]="columnSums"
+              [columnFilters]="columnFilters"
+              [sortColumn]="sortColumn"
+              [sortDirection]="sortDirection"
+              [validatePermissions]="validatePermissions"
+              [getValueFn]="getValue.bind(this)"
+              [shouldShowActionFn]="shouldShowAction.bind(this)"
+              [loading]="loading"
+              [emptyMessage]="emptyMessage"
+              [showNewRegister]="showNewRegister"
+              (actionClick)="onActionClick($event.action, $event.item)"
+              (sort)="onSort($event)"
+              (columnFilter)="onColumnFilter($event.property, $event.value)"
+              (clearColumnFilterEvent)="clearColumnFilter($event)"
+              (newClick)="onNew()"
+            ></app-generic-table-body>
+          }
 
           <!-- Pagination Component -->
           <app-generic-table-pagination
@@ -135,6 +145,9 @@ export class GenericTableComponent<T> implements OnChanges {
   @Input() sumColumns: string[] = []; // Nuevo input para sumar columnas
   @Input() showDateRangeFilter: boolean = false; // Nuevo input para mostrar filtro de fechas
   @Input() dateRangeLabel: string = "Rango de fechas"; // Etiqueta para el filtro de fechas
+  @Input() loading: boolean = false; // Nuevo input para estado de carga (skeleton/spinner)
+  @Input() emptyMessage: string = ""; // Nuevo input para mensaje de empty state
+  @Input() errorMessage: string = ""; // Mensaje de error de carga (muestra alerta con "Reintentar")
 
   // Eventos
   @Output() actionClick = new EventEmitter<{ action: string; item: T }>(); // Nuevo evento para acciones
@@ -144,6 +157,7 @@ export class GenericTableComponent<T> implements OnChanges {
   }>(); // Nuevo evento para búsqueda por fecha
   @Output() edit = new EventEmitter<T>(); // Nuevo evento para edición
   @Output() new = new EventEmitter<T>(); // Nuevo evento para nuevo registro
+  @Output() retry = new EventEmitter<void>(); // Reintentar carga tras error
   @Output() delete = new EventEmitter<T>(); // Nuevo evento para eliminación
   @Output() activate = new EventEmitter<T>(); // Nuevo evento para activación
   @Output() deactivate = new EventEmitter<T>(); // Nuevo evento para desactivación
@@ -181,9 +195,6 @@ export class GenericTableComponent<T> implements OnChanges {
   private visibleColumnsCache: TableColumn[] = []; // Cache de columnas visibles
   // private valueCache = new WeakMap<object, Map<string, any>>(); // Cache de valores
   private valueCache = new Map<object, Map<string, unknown>>();
-  private currentPopover:
-    | { close: () => void; isOpen: () => boolean; open: () => void }
-    | null = null; // Popover actual
   SPECIAL_INVALID_VALUE = -1; // Valor único para estado inválido
 
   statusFilterOptions = [
@@ -374,46 +385,6 @@ export class GenericTableComponent<T> implements OnChanges {
   }
 
   /**
-   * Cierra el popover actual si ya está abierto, y abre el popover actual
-   * si no lo está.
-   * Se utiliza para controlar el toggle de los popover de las acciones.
-   * @param event Evento que se pasa para evitar propagación.
-   * @param popover Popover que se va a togglear.
-   */
-  toggleMenu(
-    event: Event,
-    popover: { close: () => void; isOpen: () => boolean; open: () => void }
-  ) {
-    event.stopPropagation();
-
-    // Cerrar el popover anterior si existe y es diferente
-    if (this.currentPopover && this.currentPopover !== popover) {
-      this.currentPopover.close();
-    }
-
-    // Toggle el popover actual
-    if (popover.isOpen()) {
-      popover.close();
-    } else {
-      popover.open();
-      this.currentPopover = popover;
-    }
-  }
-
-  @HostListener("document:click", ["$event"])
-  /**
-   * Cierra el popover actual si se hace clic en cualquier lugar del documento.
-   * Se utiliza para controlar el cierre automático de los popover de las acciones.
-   * @param event Evento que se pasa para evitar propagación.
-   */
-  onDocumentClick(event: Event) {
-    if (this.currentPopover) {
-      this.currentPopover.close();
-      this.currentPopover = null;
-    }
-  }
-
-  /**
    * Maneja el clic en una acción.
    * Se utiliza para delegar el clic en una acción a los métodos correspondientes.
    * Emite el evento `actionClick` con la acción y el item correspondiente.
@@ -508,6 +479,7 @@ export class GenericTableComponent<T> implements OnChanges {
       modalRef.componentInstance.actionLabel = config.actionLabel;
     } else {
       // Configuración para formularios
+      modalRef.componentInstance.saveAsync = true; // El modal NO cierra: espera al padre
       modalRef.componentInstance.excludedFields = this.excludedFields;
       modalRef.componentInstance.selectOptions = this.selectOptions;
       modalRef.componentInstance.readonlyFields = this.readonlyFields;
@@ -586,14 +558,17 @@ export class GenericTableComponent<T> implements OnChanges {
     modalRef.componentInstance.requiredFields = this.requiredFields;
 
     // Manejo común de eventos
-    modalRef.componentInstance.onSave.subscribe((result: unknown) => {
-      if (config.onSaveCallback) {
-        config.onSaveCallback(result);
+    modalRef.componentInstance.onSave.subscribe(async (result: unknown) => {
+      try {
+        if (config.onSaveCallback) {
+          await config.onSaveCallback(result);
+        }
+      } finally {
+        // Resetear formulario y datos y cerrar al terminar el guardado
+        modalRef.componentInstance.data = { ...cleanData }; // Restaurar DTO inicial
+        modalRef.componentInstance.form?.resetForm(); // Limpiar campos
+        modalRef.close();
       }
-      // Resetear formulario y datos
-      modalRef.componentInstance.data = { ...cleanData }; // Restaurar DTO inicial
-      modalRef.componentInstance.form?.resetForm(); // Limpiar campos
-      modalRef.close();
     });
 
     modalRef.componentInstance.onClose.subscribe(() => {

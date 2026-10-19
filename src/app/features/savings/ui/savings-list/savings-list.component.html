@@ -7,7 +7,7 @@
         <div class="card-body">
           <h5 class="card-title text-muted mb-2">Saldo Actual</h5>
           <h2 class="mb-0" [class.text-success]="balance() >= 0" [class.text-danger]="balance() < 0">
-            {{ balance() | currency: 'USD':'symbol':'1.2-2' }}
+            {{ balance() | fpCurrency }}
           </h2>
         </div>
       </div>
@@ -19,7 +19,7 @@
         <div class="card-body">
           <h5 class="card-title text-muted mb-2">Total Depósitos</h5>
           <h2 class="mb-0 text-success">
-            {{ totalDeposits() | currency: 'USD':'symbol':'1.2-2' }}
+            {{ totalDeposits() | fpCurrency }}
           </h2>
         </div>
       </div>
@@ -31,7 +31,7 @@
         <div class="card-body">
           <h5 class="card-title text-muted mb-2">Total Retiros</h5>
           <h2 class="mb-0 text-danger">
-            {{ totalWithdrawals() | currency: 'USD':'symbol':'1.2-2' }}
+            {{ totalWithdrawals() | fpCurrency }}
           </h2>
         </div>
       </div>
@@ -77,9 +77,9 @@
               <td>{{ transaction.description }}</td>
               <td class="text-end" [class.text-success]="transaction.transactionType === transactionTypeEnum.Deposit" [class.text-danger]="transaction.transactionType === transactionTypeEnum.Withdrawal">
                 @if (transaction.transactionType === transactionTypeEnum.Deposit) {
-                +{{ transaction.amount | currency: 'USD':'symbol':'1.2-2' }}
+                +{{ transaction.amount | fpCurrency }}
                 } @else {
-                -{{ transaction.amount | currency: 'USD':'symbol':'1.2-2' }}
+                -{{ transaction.amount | fpCurrency }}
                 }
               </td>
             </tr>

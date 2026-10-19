@@ -9,6 +9,14 @@ import { PlatformsComponent } from "./platforms/platforms.component";
 import { WithdrawalMethodsComponent } from "./withdrawal-methods/withdrawal-methods.component";
 import { ReportsComponent } from "./reports/reports.component";
 import { SavingsPageComponent } from "src/app/features/savings/ui/savings-page/savings-page.component";
+import { CategoriesPageComponent } from "src/app/features/categories/ui/categories-page/categories-page.component";
+// Centries (SPEC-06 §4.6) — componentes reales navegables
+import { CentriesUsuarioComponent } from "./centries/centries-usuario/centries-usuario.component";
+import { CentriesPerfilComponent } from "./centries/centries-perfil/centries-perfil.component";
+import { CentriesCargoComponent } from "./centries/centries-cargo/centries-cargo.component";
+import { CentriesBitacoraComponent } from "./centries/centries-bitacora/centries-bitacora.component";
+import { CentriesPermisoperfilComponent } from "./centries/centries-permisoperfil/centries-permisoperfil.component";
+import { CentriesUsuariosInactivosComponent } from "./centries/centries-usuarios-inactivos/centries-usuarios-inactivos.component";
 
 const routes: Routes = [
   {
@@ -49,6 +57,43 @@ const routes: Routes = [
   {
     path: "savings",
     component: SavingsPageComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "categories",
+    component: CategoriesPageComponent,
+    canActivate: [AuthGuard],
+  },
+  // Centries (SPEC-06 §4.6) — coordinado con SPEC-02 §4.6
+  // NOTA: `centries-permisos` y `centries-roloficial` NO se rutearn (placeholders).
+  {
+    path: "centries/usuario",
+    component: CentriesUsuarioComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "centries/perfil",
+    component: CentriesPerfilComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "centries/cargo",
+    component: CentriesCargoComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "centries/bitacora",
+    component: CentriesBitacoraComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "centries/permisos-perfil",
+    component: CentriesPermisoperfilComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "centries/usuarios-inactivos",
+    component: CentriesUsuariosInactivosComponent,
     canActivate: [AuthGuard],
   },
 ];

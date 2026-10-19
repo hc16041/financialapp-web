@@ -44,7 +44,7 @@ export class DataService {
     metodo: string,
     behaviorSubject: BehaviorSubject<T[]>,
     mensajeError: string,
-    id?: number | string
+    id?: unknown
   ): Promise<void> {
     try {
       const serviceObj = servicio as Record<string, unknown>;

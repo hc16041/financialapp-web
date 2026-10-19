@@ -1,0 +1,90 @@
+// Dashboard financiero (SPEC-01) — estilos con tokens `--fp-*` (sin colores hex).
+
+.fp-kpi-card {
+  border: 1px solid var(--fp-border);
+  box-shadow: var(--fp-shadow);
+}
+
+.fp-kpi-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  border-radius: var(--fp-radius);
+  background-color: var(--fp-surface-muted);
+  color: var(--fp-primary);
+
+  &--success {
+    color: var(--fp-success);
+  }
+
+  &--danger {
+    color: var(--fp-danger);
+  }
+
+  &--info {
+    color: var(--fp-info);
+  }
+
+  &--warning {
+    color: var(--fp-warning);
+  }
+
+  &--primary {
+    color: var(--fp-primary);
+  }
+}
+
+.fp-kpi-value {
+  &--success {
+    color: var(--fp-success);
+  }
+
+  &--danger {
+    color: var(--fp-danger);
+  }
+
+  &--info {
+    color: var(--fp-info);
+  }
+
+  &--warning {
+    color: var(--fp-warning);
+  }
+
+  &--primary {
+    color: var(--fp-primary);
+  }
+}
+
+.fp-kpi-skeleton-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+}
+
+.fp-chart-skeleton {
+  height: 350px;
+  background-color: var(--fp-surface-muted);
+}
+
+.fp-empty-state {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fp-text-muted);
+  text-align: center;
+  padding: var(--fp-space-3);
+}
+
+.fp-tx-row {
+  border-bottom: 1px solid var(--fp-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}

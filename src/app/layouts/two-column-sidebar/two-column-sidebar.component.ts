@@ -9,8 +9,8 @@ import {
 import { Router, NavigationEnd } from "@angular/router";
 import { TranslateService } from "@ngx-translate/core";
 
-import { MENU } from "./menu1";
-import { MenuItem } from "./menu.model";
+import { MENU } from "../sidebar/menu";
+import { MenuItem } from "../sidebar/menu.model";
 
 @Component({
   selector: "app-two-column-sidebar",

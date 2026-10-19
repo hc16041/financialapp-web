@@ -1,0 +1,38 @@
+// ============================================================
+// Header de la Tabla Genérica — estilos específicos
+// ============================================================
+// Sin estilos inline ni hex: clases SCSS con tokens --vz-*.
+
+// Ancho mínimo del filtro de estado (antes inline)
+.w-filter-status {
+  min-width: 150px;
+  flex-shrink: 0;
+}
+
+// Ancho mínimo del buscador (antes inline)
+.w-filter-search {
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+// Texto sin wrap (antes inline white-space: nowrap)
+.text-nowrap {
+  white-space: nowrap;
+}
+
+// Botón toggle de la barra de filtros
+.filter-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  color: var(--vz-secondary-color);
+  border-color: var(--vz-border-color);
+  background-color: transparent;
+
+  &:hover {
+    background-color: var(--vz-light);
+  }
+
+  .mdi {
+    font-size: 1rem;
+  }
+}

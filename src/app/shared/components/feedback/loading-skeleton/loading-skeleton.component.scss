@@ -1,0 +1,19 @@
+// Loading Skeleton — estilos tokenizados (--vz-* / --fp-*), sin colores hex.
+// La animación `glow` y el fondo del `placeholder` provienen de las
+// utilidades nativas de Bootstrap 5.3 (resueltas vía tokens del tema).
+
+.loading-skeleton {
+  display: block;
+  width: 100%;
+
+  .placeholder {
+    display: block;
+    min-height: var(--fp-space-4, 1rem);
+    margin-bottom: var(--fp-space-3, 0.75rem);
+    border-radius: var(--vz-border-radius);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

@@ -34,16 +34,16 @@
 [data-bs-theme="dark"] {
     .fc {
         .fc-multimonth-daygrid {
-            background: #212529 !important;
+            background: var(--vz-secondary-bg) !important;
 
         }
 
         .fc-day-disabled {
-            background: #282b2e !important;
+            background: var(--vz-tertiary-bg) !important;
         }
 
         .fc-multimonth {
-            border-color: #32383e !important;
+            border-color: var(--vz-border-color) !important;
         }
     }
 }
@@ -56,7 +56,7 @@
 
         .slick-active {
             button {
-                background-color: #3577f1 !important;
+                background-color: var(--fp-accent) !important;
             }
         }
     }
@@ -69,7 +69,7 @@
         width: 22px !important;
         height: 5px !important;
         border: none;
-        background-color: rgba(109, 98, 253, .2) !important;
+        background-color: rgba(var(--fp-primary-rgb), .2) !important;
         padding: 0px;
         margin: 0px;
         transition: all .3s;

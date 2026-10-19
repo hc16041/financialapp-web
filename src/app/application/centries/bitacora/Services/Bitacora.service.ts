@@ -42,7 +42,7 @@ export class BitacoraService implements IBitacora {
     token: string,
     codusuario: string,
     archivo: BitacoraFileRequest | Record<string, unknown>
-  ): Promise<unknown> {
+  ): Promise<{ data: BlobPart; fileName: string }> {
     try {
       const url = `BitacoraDescarga/BitacoraDescargaID`;
       const archivoObj = archivo as BitacoraFileRequest & Record<string, unknown>;
@@ -50,44 +50,41 @@ export class BitacoraService implements IBitacora {
         id: archivoObj.id,
       };
 
-      if (archivoObj.tipo_archivo) {
-        // Extraer el tipo principal del MIME type (ej: 'xml' de 'application/xml')
-        const tipoArchivo = String(archivoObj.tipo_archivo);
-        const tipo = tipoArchivo
-          .split("/")[1]
-          ?.toLowerCase() as keyof typeof metodos;
+      if (!archivoObj.tipo_archivo) {
+        return { data: "", fileName: "sin-datos.txt" };
+      }
 
-        // Mapeo de tipos MIME a métodos
-        const metodos = {
-          xml: this.apiConnectionService.sendRequestXMLAsync,
-          excel: this.apiConnectionService.sendRequestExcelAsync,
-          "vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-            this.apiConnectionService.sendRequestExcelAsync, // Para MIME types antiguos de Excel
-          plain: this.apiConnectionService.sendRequestTextAsync, // text/plain
-          csv: this.apiConnectionService.sendRequestTextAsync,
-          texto: this.apiConnectionService.sendRequestTextAsync, // Si tienes un tipo personalizado
-        };
+      // Extraer el tipo principal del MIME type (ej: 'xml' de 'application/xml')
+      const tipoArchivo = String(archivoObj.tipo_archivo);
+      const tipo = tipoArchivo.split("/")[1]?.toLowerCase() ?? "";
 
-        // Buscar el método (con validación de alias)
-        const metodo = metodos[tipo];
-
-        if (!metodo) {
-          throw new Error(
-            `Tipo de archivo no soportado: ${tipoArchivo}`
-          );
-        }
-
-        return await metodo.call(
-          this.apiConnectionService,
+      if (tipo.includes("xml")) {
+        return await this.apiConnectionService.sendFileRequestAsync<BlobPart>(
           url,
           "POST",
-          {
-            id: archivoObj.id,
-          },
+          { defaultFileName: "bitacora.xml", responseType: "blob" },
+          datos,
           { Authorization: token }
         );
       }
-      return null;
+
+      if (tipo.includes("excel") || tipo.includes("spreadsheet")) {
+        return await this.apiConnectionService.sendFileRequestAsync<BlobPart>(
+          url,
+          "POST",
+          { defaultFileName: "bitacora.xlsx", responseType: "blob" },
+          datos,
+          { Authorization: token }
+        );
+      }
+
+      return await this.apiConnectionService.sendFileRequestAsync<BlobPart>(
+        url,
+        "POST",
+        { defaultFileName: "bitacora.txt", responseType: "blob" },
+        datos,
+        { Authorization: token }
+      );
     } catch (error) {
       console.error("Error en getListadoBitacora:", error);
       throw error; // Vuelve a lanzar el error para que se maneje en actualizarRegistro

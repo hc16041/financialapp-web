@@ -1,0 +1,59 @@
+// KPI Card — estilos tokenizados (--fp-* / --vz-*), sin colores hex.
+// Las variantes semánticas reutilizan las utilidades de Bootstrap 5.3
+// (`bg-*-subtle` / `text-*`) que ya resuelven a variables CSS del tema.
+
+.kpi-card {
+  background-color: var(--fp-surface);
+  border: 1px solid var(--fp-border);
+  border-radius: var(--fp-radius);
+  box-shadow: var(--fp-shadow);
+  transition: box-shadow 0.15s ease-in-out;
+
+  &:hover {
+    box-shadow: var(--vz-box-shadow-lg);
+  }
+
+  &--loading {
+    opacity: 0.85;
+  }
+
+  &__label {
+    font-size: var(--vz-font-size-sm, 0.8125rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: var(--fp-space-2);
+  }
+
+  &__value {
+    font-family: var(--fp-font-family);
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  &__empty {
+    color: var(--fp-text-muted);
+    font-weight: 500;
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.125rem;
+  }
+
+  &__trend {
+    font-weight: 500;
+
+    &--up {
+      color: var(--fp-success);
+    }
+
+    &--down {
+      color: var(--fp-danger);
+    }
+  }
+}

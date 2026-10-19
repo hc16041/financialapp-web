@@ -1,6 +1,9 @@
-import { Component, inject, DestroyRef, ChangeDetectionStrategy, signal } from "@angular/core";
+import { Component, inject, DestroyRef, ChangeDetectionStrategy, signal, computed } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { TableColumn } from "../genericos/generictable/table-column.interface";
+import {
+  BadgeVariant,
+  TableColumn,
+} from "../genericos/generictable/table-column.interface";
 import { TransactionsDTO } from "src/app/application/transactions/DTO/TransactionsDTO";
 import { generateTableColumns } from "src/app/utils/table-utils";
 import { DataService } from "src/app/core/services/data.service";
@@ -9,9 +12,13 @@ import { ITransactionsCreate } from "src/app/application/transactions/Interfaces
 import { CreditcardService } from "src/app/application/creditcard/Services/Creditcard.service";
 import { CreditcardDTO } from "src/app/application/creditcard/DTO/CreditcardDTO";
 import { MerchantsService } from "src/app/application/Merchants/Services/Merchants.service";
-import { SelectOptionsMapperService } from "src/app/core/services/select-options-mapper.service";
+import {
+  SelectOption,
+  SelectOptionsMapperService,
+} from "src/app/core/services/select-options-mapper.service";
 import { ITransactionType } from "src/app/application/transactions/Interfaces/ITransactions.interface";
 import { MerchantsDTO } from "src/app/application/Merchants/DTO/MerchantsDTO";
+import { AlertcustomService } from "src/app/core/services/alertcustom.service";
 
 @Component({
   selector: "app-transactions",
@@ -22,6 +29,7 @@ import { MerchantsDTO } from "src/app/application/Merchants/DTO/MerchantsDTO";
 export class TransactionsComponent {
   private selectOptionsMapper = inject(SelectOptionsMapperService);
   private destroyRef = inject(DestroyRef);
+  private alertService = inject(AlertcustomService);
 
   paymentMethods = [
     { value: 1, label: "Tarjeta de Crédito" },
@@ -36,6 +44,34 @@ export class TransactionsComponent {
   set transactionsList(value: TransactionsDTO[]) {
     this.transactionsListSig.set(value);
   }
+
+  // Estado de carga para skeletons de KPI
+  private readonly loadingSig = signal<boolean>(false);
+  readonly loading = this.loadingSig.asReadonly();
+
+  // KPIs (SPEC-06 §4.3): computados sobre la lista ya filtrada por rango de
+  // fechas, por lo que se recalculan automáticamente al aplicar el filtro.
+  readonly totalSpent = computed(() => {
+    const list = this.transactionsListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return list.reduce((sum, t) => sum + (t.amount || 0), 0);
+  });
+
+  readonly transactionsCount = computed(() => {
+    const list = this.transactionsListSig();
+    return list.length === 0 ? null : list.length;
+  });
+
+  readonly averageAmount = computed(() => {
+    const list = this.transactionsListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    const total = list.reduce((sum, t) => sum + (t.amount || 0), 0);
+    return total / list.length;
+  });
 
   private readonly creditCardCodesListSig = signal<CreditcardDTO[]>([]);
   get creditCardCodesList(): CreditcardDTO[] {
@@ -147,7 +183,8 @@ export class TransactionsComponent {
         merchantId: this.selectOptionsMapper.mapMerchants(merchants),
       };
     } catch (error) {
-      // Error al cargar comercios
+      console.error("Error al cargar comercios:", error);
+      this.alertService.showError("Ocurrió un error. Inténtalo de nuevo.");
     }
   }
 
@@ -167,9 +204,56 @@ export class TransactionsComponent {
         ...this.selectOptions,
         type: this.selectOptionsMapper.mapTransactionTypes(transactionTypes),
       };
+      // Badges semánticos por tipo de transacción
+      this.enrichTypeColumnBadges();
     } catch (error) {
-      // Error al cargar tipos de transacciones
+      console.error("Error al cargar tipos de transacciones:", error);
+      this.alertService.showError("Ocurrió un error. Inténtalo de nuevo.");
     }
+  }
+
+  /**
+   * Enriquece la columna `type` con badges semánticos según el tipo de
+   * transacción cargado desde el backend (Pago/Retiro → danger, Depósito →
+   * success, Compra → warning, otros → info).
+   */
+  private enrichTypeColumnBadges(): void {
+    const typeOptions = this.selectOptions["type"] as SelectOption[] | undefined;
+    if (!typeOptions?.length) {
+      return;
+    }
+
+    const badgeConfig: NonNullable<TableColumn["badgeConfig"]> = {};
+    for (const opt of typeOptions) {
+      const lower = String(opt.label).toLowerCase();
+      let variant: BadgeVariant = "info";
+      if (
+        lower.includes("pago") ||
+        lower.includes("payment") ||
+        lower.includes("retiro") ||
+        lower.includes("withdraw")
+      ) {
+        variant = "danger";
+      } else if (
+        lower.includes("deposito") ||
+        lower.includes("deposit") ||
+        lower.includes("abono")
+      ) {
+        variant = "success";
+      } else if (
+        lower.includes("compra") ||
+        lower.includes("purchase")
+      ) {
+        variant = "warning";
+      }
+      badgeConfig[String(opt.value)] = { label: String(opt.label), variant };
+    }
+
+    this.tableColumns = this.tableColumns.map((col) =>
+      col.property === "type"
+        ? { ...col, type: "badge" as const, badgeConfig }
+        : col
+    );
   }
 
   /**
@@ -189,7 +273,8 @@ export class TransactionsComponent {
         creditCardId: this.selectOptionsMapper.mapCreditCardCodes(cards),
       };
     } catch (error) {
-      // Error al cargar códigos de tarjetas
+      console.error("Error al cargar códigos de tarjetas:", error);
+      this.alertService.showError("Ocurrió un error. Inténtalo de nuevo.");
     }
   }
 
@@ -230,6 +315,7 @@ export class TransactionsComponent {
     startDate: string,
     endDate: string
   ): Promise<void> {
+    this.loadingSig.set(true);
     try {
       // Obtener token y username del sessionStorage usando las claves correctas
       const token = sessionStorage.getItem("authToken") || "";
@@ -243,7 +329,10 @@ export class TransactionsComponent {
       );
       this.transactionsList = data;
     } catch (error) {
-      // Error al cargar transacciones por fecha
+      console.error("Error al cargar transacciones por fecha:", error);
+      this.alertService.showError("Ocurrió un error. Inténtalo de nuevo.");
+    } finally {
+      this.loadingSig.set(false);
     }
   }
 
@@ -306,13 +395,13 @@ export class TransactionsComponent {
 
     // Personalizar encabezados y ocultar columnas innecesarias
     return baseColumns
-      .map((column) => {
+      .map((column): TableColumn => {
         // Personalizar encabezados
         switch (column.property) {
           case "amount":
-            return { ...column, header: "Monto" };
+            return { ...column, header: "Monto", type: "currency", align: "right" };
           case "type":
-            return { ...column, header: "Tipo" };
+            return { ...column, header: "Tipo", type: "badge" };
           case "description":
             return { ...column, header: "Descripción" };
           case "transactionDate":

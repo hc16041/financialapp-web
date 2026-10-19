@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BehaviorSubject } from "rxjs";
 import { PermisoperfilService } from "src/app/application/centries/permisoperfil/Services/Permisoperfil.service";
 import { PermisosDTO } from "src/app/application/centries/permisos/DTO/PermisosDTO";
@@ -9,6 +10,7 @@ import { PermisoperfilDTO } from "../../../../application/centries/permisoperfil
 import { PerfilDTO } from "src/app/application/centries/perfil/DTO/PerfilDTO";
 import { PerfilService } from "src/app/application/centries/perfil/Services/Perfil.service";
 import { SelectOption } from "src/app/core/services/select-options-mapper.service";
+import { AlertcustomService } from "src/app/core/services/alertcustom.service";
 
 @Component({
   selector: "app-centries-permisoperfil",
@@ -18,13 +20,41 @@ import { SelectOption } from "src/app/core/services/select-options-mapper.servic
 })
 export class CentriesPermisoperfilComponent implements OnInit {
   // Inyección de dependencias usando inject()
-  private dataService = inject(DataService);
-  private permisoperfilService = inject(PermisoperfilService);
-  private perfilesService = inject(PerfilService);
+private dataService = inject(DataService);
+private permisoperfilService = inject(PermisoperfilService);
+private perfilesService = inject(PerfilService);
+private destroyRef = inject(DestroyRef);
+private alertService = inject(AlertcustomService);
 
   // Table data usuario - Mantener BehaviorSubject para DataService, pero exponer como signal
   private permisosPerfilList$ = new BehaviorSubject<PermisoperfilDTO[]>([]);
   private readonly permisosPerfilListSig = signal<PermisoperfilDTO[]>([]);
+
+  // Estado de carga para skeletons de KPI
+  private readonly loadingSig = signal<boolean>(false);
+  readonly loading = this.loadingSig.asReadonly();
+
+  // KPIs de conteo (SPEC-06 §4.6)
+  readonly totalAsignaciones = computed(() => {
+    const list = this.permisosPerfilListSig();
+    return list.length === 0 ? null : list.length;
+  });
+
+  readonly perfilesAsignados = computed(() => {
+    const list = this.permisosPerfilListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return new Set(list.map((p) => p.id_perfil)).size;
+  });
+
+  readonly permisosAsignados = computed(() => {
+    const list = this.permisosPerfilListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return new Set(list.map((p) => p.id_permiso)).size;
+  });
   
   get permisosPerfilList(): PermisoperfilDTO[] {
     return this.permisosPerfilListSig();
@@ -53,15 +83,21 @@ export class CentriesPermisoperfilComponent implements OnInit {
 
   ngOnInit(): void {
     // Suscribirse a los BehaviorSubjects para actualizar los signals
-    this.permisosPerfilList$.subscribe(data => {
-      this.permisosPerfilListSig.set(data);
-    });
-    this.permisosPerfilNoAsignadosList$.subscribe(data => {
-      this.permisosPerfilNoAsignadosListSig.set(data);
-    });
-    this.perfilesList$.subscribe(data => {
-      this.perfilesListSig.set(data);
-    });
+    this.permisosPerfilList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.permisosPerfilListSig.set(data);
+      });
+    this.permisosPerfilNoAsignadosList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.permisosPerfilNoAsignadosListSig.set(data);
+      });
+    this.perfilesList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.perfilesListSig.set(data);
+      });
 
     this.obtenerPermisos();
     this.obtenerPerfiles();
@@ -78,12 +114,14 @@ export class CentriesPermisoperfilComponent implements OnInit {
 
   private setupSubscriptions(): void {
     // Suscripción para perfiles
-    this.perfilesList$.subscribe((perfiles) => {
-      this.selectOptions = {
-        ...this.selectOptions,
-        perfil: this.mapPerfiles(perfiles),
-      };
-    });
+    this.perfilesList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((perfiles) => {
+        this.selectOptions = {
+          ...this.selectOptions,
+          perfil: this.mapPerfiles(perfiles),
+        };
+      });
   }
 
   private mapPerfiles(perfiles: PerfilDTO[]): SelectOption[] {
@@ -114,7 +152,7 @@ export class CentriesPermisoperfilComponent implements OnInit {
         permisos: this.mapPermisos(permisosNoAsignados),
       };
     } catch (error) {
-      // Error al cambiar el perfil
+      console.error("Error al cambiar el perfil:", error);
     }
   }
 
@@ -128,12 +166,17 @@ export class CentriesPermisoperfilComponent implements OnInit {
   }
 
   async obtenerPermisos(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.permisoperfilService,
-      "obtenerPermisosPerfil",
-      this.permisosPerfilList$,
-      "Error al cargar permisos"
-    );
+    this.loadingSig.set(true);
+    try {
+      await this.dataService.obtenerDatos(
+        this.permisoperfilService,
+        "obtenerPermisosPerfil",
+        this.permisosPerfilList$,
+        "Error al cargar permisos"
+      );
+    } finally {
+      this.loadingSig.set(false);
+    }
   }
   async obtenerPermisosNoAsignados(id_perfil?: number): Promise<void> {
     try {
@@ -154,7 +197,8 @@ export class CentriesPermisoperfilComponent implements OnInit {
         permisos: this.mapPermisos(permisosNoAsignados),
       };
     } catch (error) {
-      // Error al obtener permisos no asignados
+      console.error("Error al obtener permisos no asignados:", error);
+      this.alertService.showError("Ocurrió un error. Inténtalo de nuevo.");
     }
   }
 

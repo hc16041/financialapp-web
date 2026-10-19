@@ -4,12 +4,12 @@
 }
 
 .input-group-text {
-  background-color: #f8f9fa;
-  border-color: #ced4da;
+  background-color: var(--vz-body-bg);
+  border-color: var(--vz-border-color);
 }
 
 .is-invalid {
-  border-color: #dc3545;
+  border-color: var(--vz-danger);
 }
 
 .invalid-feedback {
@@ -17,5 +17,5 @@
   width: 100%;
   margin-top: 0.25rem;
   font-size: 0.875rem;
-  color: #dc3545;
+  color: var(--vz-danger);
 }

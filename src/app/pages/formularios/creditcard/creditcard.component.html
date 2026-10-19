@@ -1,3 +1,40 @@
+<!-- KPIs de Tarjetas de Crédito (SPEC-06 §4.2): consumen GET api/CreditCards/summary -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Límite total"
+      [value]="totalLimit()"
+      icon="mdi mdi-credit-card-outline"
+      variant="primary"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin tarjetas'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Saldo usado"
+      [value]="usedBalance()"
+      icon="mdi mdi-cash-remove"
+      variant="danger"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin tarjetas'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Crédito disponible"
+      [value]="availableCredit()"
+      icon="mdi mdi-cash-check"
+      variant="success"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin tarjetas'"
+    ></app-kpi-card>
+  </div>
+</div>
+
 <app-generic-table
   [title]="'Listado de Tarjetas de Crédito'"
   [columns]="tableColumns"

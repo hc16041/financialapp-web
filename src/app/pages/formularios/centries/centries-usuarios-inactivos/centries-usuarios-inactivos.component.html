@@ -1,3 +1,37 @@
+<!-- KPIs de Usuarios Inactivos (SPEC-06 §4.6) -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Total usuarios inactivos"
+      [value]="totalUsuariosInactivos()"
+      icon="mdi mdi-account-off-outline"
+      variant="danger"
+      [loading]="loading()"
+      [emptyLabel]="'Sin usuarios inactivos'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Inactivos"
+      [value]="inactiveUsers()"
+      icon="mdi mdi-close-circle-outline"
+      variant="warning"
+      [loading]="loading()"
+      [emptyLabel]="'Sin usuarios inactivos'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Activos"
+      [value]="activeUsers()"
+      icon="mdi mdi-check-circle-outline"
+      variant="success"
+      [loading]="loading()"
+      [emptyLabel]="'Sin usuarios inactivos'"
+    ></app-kpi-card>
+  </div>
+</div>
+
 <app-generic-table
   [title]="'Listado de Usuarios Inactivos'"
   [columns]="tableColumns"

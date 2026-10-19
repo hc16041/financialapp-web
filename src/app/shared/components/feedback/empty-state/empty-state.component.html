@@ -1,0 +1,14 @@
+<div class="empty-state d-flex flex-column align-items-center justify-content-center text-center py-5">
+  <div class="empty-state__icon mb-3" aria-hidden="true">
+    <i [class]="icon()"></i>
+  </div>
+  <h5 class="empty-state__title mb-1">{{ title() }}</h5>
+  @if (message()) {
+    <p class="text-muted empty-state__message mb-0">{{ message() }}</p>
+  }
+  @if (actionLabel()) {
+    <button type="button" class="btn btn-primary mt-3" (click)="action.emit()">
+      {{ actionLabel() }}
+    </button>
+  }
+</div>

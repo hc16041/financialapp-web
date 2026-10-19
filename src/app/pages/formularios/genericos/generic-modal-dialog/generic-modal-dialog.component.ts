@@ -37,6 +37,9 @@ export class GenericModalDialogComponent implements OnDestroy {
     readonly: boolean;
     disabled?: boolean; // Nueva propiedad para campos deshabilitados
     options?: unknown[]; // Nueva propiedad para opciones
+    placeholder?: string; // Nuevo: ayuda al usuario
+    helpText?: string; // Nuevo: texto de ayuda bajo el campo
+    isCurrency?: boolean; // Nuevo: true para montos (amount, commission, ...)
   }[] = []; // Campos generados dinámicamente
 
   @Input() selectOptions: { [key: string]: unknown[] } = {};
@@ -45,11 +48,12 @@ export class GenericModalDialogComponent implements OnDestroy {
   @Input() disabledFields: string[] = []; // Campos deshabilitados dinámicamente
   @Input() selectFields: string[] = []; // Campos select
   @Input() showConfirmButtons: boolean = false; // Nueva propiedad para mostrar botones de confirmación
-  @Input() actionType: "delete" | "activate" | "deactivate" = "delete"; // Acción por defecto
+  @Input() actionType: string = "delete"; // Acción por defecto
   @Input() actionLabel: string = ""; // Etiqueta personalizada opcional
   @Input() requiredFields: string[] = []; // Campos requeridos
   @Input() entityType: unknown; // Recibir la clase del DTO
   @Input() fieldsOrder: string[] = []; // Orden personalizado de campos
+  @Input() saveAsync: boolean = false; // Si true, save() NO cierra el modal (el padre cierra)
 
   @Output() onSave = new EventEmitter<unknown>(); // Evento para guardar datos
   @Output() onClose = new EventEmitter<void>(); // Evento para cerrar modal
@@ -88,35 +92,52 @@ export class GenericModalDialogComponent implements OnDestroy {
 
   /**
    * Hook lifecycle: sincroniza cambios de validación del formulario después de render.
-   * Suscribe a `statusChanges` y fuerza `detectChanges` para reflejar estado de validación.
+   * Suscribe a `statusChanges` y marca para detección de cambios (sin forzar detectChanges).
    */
   ngAfterViewInit() {
     if (this.form) {
       this.form.statusChanges?.subscribe(() => {
-        this.cdRef.detectChanges(); // Forzar actualización de la vista
+        this.cdRef.markForCheck(); // Marcar para actualización de la vista
       });
     }
   }
 
-  actionConfig = {
+  actionConfig: Record<
+    string,
+    {
+      btnText: string;
+      btnClass: string;
+      icon: string;
+      variant: string;
+      message: string;
+    }
+  > = {
     delete: {
       btnText: "Eliminar",
       btnClass: "btn-danger",
+      icon: "mdi mdi-trash-can-outline",
+      variant: "danger",
       message: "¿Estás seguro de que deseas eliminar este registro?",
     },
     activate: {
       btnText: "Activar",
       btnClass: "btn-success",
+      icon: "mdi mdi-check-circle-outline",
+      variant: "success",
       message: "¿Estás seguro de que deseas activar este registro?",
     },
     deactivate: {
       btnText: "Desactivar",
       btnClass: "btn-warning",
+      icon: "mdi mdi-minus-circle-outline",
+      variant: "warning",
       message: "¿Estás seguro de que deseas desactivar este registro?",
     },
     resetPassword: {
       btnText: "Resetear Contraseña",
       btnClass: "btn-primary",
+      icon: "mdi mdi-key-outline",
+      variant: "primary",
       message:
         "¿Estás seguro de que deseas resetear la contraseña de este registro?",
     },
@@ -153,15 +174,38 @@ export class GenericModalDialogComponent implements OnDestroy {
       fieldKeys = [...orderedFields, ...unorderedFields];
     }
 
-    this.fields = fieldKeys.map((key) => ({
-      key,
-      label: this.formatLabel(key),
-      type: this.getInputType(key),
-      readonly: this.isReadonlyField(key),
-      disabled: this.isDisabledField(key),
-      options: this.getOptions(key),
-    }));
+    this.fields = fieldKeys.map((key) => {
+      const type = this.getInputType(key);
+      const isCurrency = this.isCurrencyField(key, type);
+      return {
+        key,
+        label: this.formatLabel(key),
+        type,
+        readonly: this.isReadonlyField(key),
+        disabled: this.isDisabledField(key),
+        options: this.getOptions(key),
+        placeholder: isCurrency
+          ? "0.00"
+          : type === "select"
+            ? "Seleccione una opción"
+            : undefined,
+        isCurrency,
+      };
+    });
     this.multiColumnLayout = this.fields.length > 5;
+  }
+
+  /** Patrón de claves de campos monetarios (decimal(18,2)). */
+  private readonly CURRENCY_KEYS_PATTERN =
+    /(amount|monto|commission|comision|balance|saldo|limit|total|precio|price|fee|tarifa)/i;
+
+  /**
+   * Determina si un campo es monetario por heurística de clave + tipo number.
+   * @param key Clave del campo.
+   * @param type Tipo de input ya inferido.
+   */
+  private isCurrencyField(key: string, type: string): boolean {
+    return type === "number" && this.CURRENCY_KEYS_PATTERN.test(key);
   }
 
   /** Comprueba si un campo está deshabilitado. */
@@ -176,7 +220,7 @@ export class GenericModalDialogComponent implements OnDestroy {
     const field = this.fields.find((f) => f.key === key);
     if (field) {
       field.disabled = disabled;
-      this.cdRef.detectChanges();
+      this.cdRef.markForCheck();
     }
   }
   /**
@@ -276,7 +320,7 @@ export class GenericModalDialogComponent implements OnDestroy {
           key
         )?.name.toLowerCase();
       } catch (e) {
-        // Error obteniendo metadata
+        console.error("Error obteniendo metadata del campo:", key, e);
       }
     }
     return null;
@@ -468,23 +512,59 @@ export class GenericModalDialogComponent implements OnDestroy {
 
   /**
    * Valida campos requeridos, emite onSave y cierra el modal si es válido.
+   * Si `saveAsync` es true, NO cierra el modal: el padre decide cuándo cerrar
+   * (el spinner "Guardando…" permanece visible mientras tanto).
    */
   save() {
     if (
       this.requiredFields.some((field) =>
         this.isInvalidValue(this.data[field], field)
       ) ||
-      this.form.invalid
+      this.form.invalid ||
+      this.hasInvalidCurrency()
     ) {
       this.form.control.markAllAsTouched();
       this.form.control.updateValueAndValidity();
-      this.cdRef.detectChanges();
+      this.cdRef.markForCheck();
       return;
     }
     this.isSaving = true;
     this.onSave.emit(this.data);
-    this.activeModal.close();
-    this.isSaving = false;
+    if (!this.saveAsync) {
+      this.activeModal.close();
+      this.isSaving = false;
+    }
+  }
+
+  /**
+   * Verifica si algún campo monetario tiene un valor inválido
+   * (número no finito o negativo).
+   */
+  private hasInvalidCurrency(): boolean {
+    return this.fields.some((field) => {
+      if (!field.isCurrency) {
+        return false;
+      }
+      const value = this.data[field.key];
+      if (value === null || value === undefined || value === "") {
+        return false; // el requerimiento se valida por separado
+      }
+      const num = Number(value);
+      return isNaN(num) || !isFinite(num) || num < 0;
+    });
+  }
+
+  /**
+   * Indica si un campo monetario tiene un valor numérico no válido
+   * (no finito o negativo). Se usa para el mensaje descriptivo del feedback.
+   */
+  isInvalidCurrencyValue(key: string): boolean {
+    const value = this.data[key];
+    if (value === null || value === undefined || value === "") {
+      return false;
+    }
+    const num = Number(value);
+    return isNaN(num) || !isFinite(num) || num < 0;
   }
   /** Cierra el modal sin guardar y emite onClose. */
   close() {
@@ -522,7 +602,6 @@ export class GenericModalDialogComponent implements OnDestroy {
       // Regenerar campos con nuevas opciones
       this.generateFields();
       this.cdRef.markForCheck();
-      this.cdRef.detectChanges();
       return;
     }
 
@@ -539,7 +618,7 @@ export class GenericModalDialogComponent implements OnDestroy {
 
       // Regenerar campos para actualizar el estado disabled de creditCardId
       this.generateFields();
-      this.cdRef.detectChanges();
+      this.cdRef.markForCheck();
       return;
     }
 
@@ -554,7 +633,7 @@ export class GenericModalDialogComponent implements OnDestroy {
       // Regenerar campos para actualizar el estado readonly de commission
       await new Promise((resolve) => setTimeout(resolve, 50));
       this.generateFields();
-      this.cdRef.detectChanges();
+      this.cdRef.markForCheck();
       return;
     }
 
@@ -633,6 +712,16 @@ export class GenericModalDialogComponent implements OnDestroy {
 
     if (field.type === "checkbox" && this.isRequiredField(field.key)) {
       return this.form.submitted && !this.data[field.key];
+    }
+
+    // Validación de montos: número finito >= 0
+    if (field.isCurrency && this.form.submitted) {
+      const value = this.data[field.key];
+      if (value === null || value === undefined || value === "") {
+        return isRequired;
+      }
+      const num = Number(value);
+      return isNaN(num) || !isFinite(num) || num < 0;
     }
 
     return this.form.submitted && control?.invalid;

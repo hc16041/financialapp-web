@@ -15,7 +15,12 @@ import { NgbPaginationModule } from "@ng-bootstrap/ng-bootstrap";
       *ngIf="!showAll"
     >
       <div class="col-sm-12 col-md-5">
-        <div class="dataTables_info">
+        <div
+          class="dataTables_info"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           Mostrando {{ startIndex + 1 }} a {{ endIndex }} de
           {{ totalItems }} registros
         </div>

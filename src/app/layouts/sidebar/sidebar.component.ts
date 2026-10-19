@@ -10,9 +10,8 @@ import {
   AfterViewInit,
 } from "@angular/core";
 import { NavigationEnd, Router } from "@angular/router";
-import { TranslateService } from "@ngx-translate/core";
 
-import { MENU } from "./menu1";
+import { MENU } from "./menu";
 import { MenuItem } from "./menu.model";
 import { environment } from "src/environments/environment";
 
@@ -24,17 +23,12 @@ import { environment } from "src/environments/environment";
 })
 export class SidebarComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
-  translate = inject(TranslateService);
-  
+
   menu: MenuItem[] | null = null;
   toggle: boolean = true;
   menuItems: MenuItem[] = [];
   @ViewChild("sideMenu") sideMenu!: ElementRef;
   @Output() mobileMenuButtonClicked = new EventEmitter();
-
-  constructor() {
-    this.translate.setDefaultLang("es");
-  }
 
   ngOnInit(): void {
     // Menu Items
@@ -143,17 +137,6 @@ export class SidebarComponent implements OnInit, AfterViewInit {
       return false;
     }
     return false;
-  }
-
-  updateActive(event: Event): void {
-    const ul = document.getElementById("navbar-nav");
-    if (ul) {
-      const items = Array.from(ul.querySelectorAll("a.nav-link"));
-      this.removeActivation(items);
-    }
-    if (event.target && event.target instanceof Element) {
-      this.activateParentDropdown(event.target);
-    }
   }
 
   initActiveMenu() {

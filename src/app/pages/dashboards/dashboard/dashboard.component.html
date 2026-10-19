@@ -1,27 +1,258 @@
-<div class="row">
-    <div class="col">
-
-        <div class="h-100">
-            <div class="row mb-3 pb-1">
-                <div class="col-12">
-                    <div class="d-flex align-items-lg-center flex-lg-row flex-column">
-                        <div class="flex-grow-1">
-                            <h4 class="fs-16 mb-1">Good Morning!</h4>
-                            <p class="text-muted mb-0">Here's what's happening with your store today.</p>
-                        </div>
-                       
-                    </div><!-- end card header -->
-                </div>
-                <!--end col-->
-            </div>
-            <!--end row-->
-
-
-        </div> <!-- end .h-100-->
-
-    </div> <!-- end col -->
-
-   
+<!-- Saludo localizado con nombre de usuario -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex align-items-lg-center flex-lg-row flex-column gap-2">
+      <div class="flex-grow-1">
+        <h4 class="fs-16 mb-1">
+          {{ "DASHBOARD.GREETING" | translate: { name: username() } }}
+        </h4>
+        <p class="text-muted mb-0">{{ "DASHBOARD.SUBTITLE" | translate }}</p>
+      </div>
+    </div>
+  </div>
 </div>
 
-<app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
+<!-- Aviso de error (solo si el facade reporta un fallo global) -->
+@if (error()) {
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="alert alert-danger mb-0" role="alert">{{ error() }}</div>
+  </div>
+</div>
+}
+
+<!-- Fila de 6 KPIs -->
+<div class="row g-3 mb-4">
+  @if (loading()) {
+  @for (i of [0, 1, 2, 3, 4, 5]; track i) {
+  <div class="col-sm-6 col-xl-4 col-xxl-2">
+    <div class="card h-100">
+      <div class="card-body placeholder-glow d-flex align-items-center gap-3">
+        <span class="placeholder rounded fp-kpi-skeleton-icon"></span>
+        <div class="flex-grow-1">
+          <span class="placeholder col-8 mb-1"></span>
+          <span class="placeholder col-5"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  } @else {
+  @for (kpi of kpis(); track kpi.id) {
+  <div class="col-sm-6 col-xl-4 col-xxl-2">
+    <div class="card h-100 fp-kpi-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div
+          class="fp-kpi-icon"
+          [class]="'fp-kpi-icon fp-kpi-icon--' + kpi.variant"
+        >
+          <i [class]="kpi.icon"></i>
+        </div>
+        <div class="flex-grow-1 overflow-hidden">
+          <p class="text-muted text-truncate mb-1">
+            {{ kpi.labelKey | translate }}
+          </p>
+          <h4
+            class="mb-0 fp-kpi-value"
+            [class]="'fp-kpi-value--' + kpi.variant"
+          >
+            {{ kpi.value | fpCurrency }}
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  }
+</div>
+
+<!-- Gráficos: transacciones por mes + gastos por categoría -->
+<div class="row g-3 mb-4">
+  <div class="col-xl-8">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          {{ "DASHBOARD.CHART.MONTHLY_TRANSACTIONS" | translate }}
+        </h5>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+        <div class="fp-chart-skeleton placeholder-glow rounded"></div>
+        } @else if (hasMonthlyData()) {
+        <apx-chart
+          [chart]="monthlyTransactionsChart().chart!"
+          [series]="monthlyTransactionsChart().series!"
+          [colors]="monthlyTransactionsChart().colors!"
+          [xaxis]="monthlyTransactionsChart().xaxis!"
+          [plotOptions]="monthlyTransactionsChart().plotOptions!"
+          [dataLabels]="monthlyTransactionsChart().dataLabels!"
+          [legend]="monthlyTransactionsChart().legend!"
+          [tooltip]="monthlyTransactionsChart().tooltip!"
+        ></apx-chart>
+        } @else {
+        <div class="fp-empty-state">{{ "DASHBOARD.EMPTY" | translate }}</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          {{ "DASHBOARD.CHART.EXPENSES_BY_CATEGORY" | translate }}
+        </h5>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+        <div class="fp-chart-skeleton placeholder-glow rounded"></div>
+        } @else if (categoryExpenses().length > 0) {
+        <apx-chart
+          [chart]="categoryExpensesChart().chart!"
+          [labels]="categoryExpensesChart().labels!"
+          [series]="categoryExpensesChart().series!"
+          [colors]="categoryExpensesChart().colors!"
+          [legend]="categoryExpensesChart().legend!"
+          [dataLabels]="categoryExpensesChart().dataLabels!"
+          [tooltip]="categoryExpensesChart().tooltip!"
+        ></apx-chart>
+        } @else {
+        <div class="fp-empty-state">{{ "DASHBOARD.EMPTY" | translate }}</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Gráfico: evolución de inversiones -->
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          {{ "DASHBOARD.CHART.INVESTMENTS_EVOLUTION" | translate }}
+        </h5>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+        <div class="fp-chart-skeleton placeholder-glow rounded"></div>
+        } @else if (investmentEvolution().length > 0) {
+        <apx-chart
+          [chart]="investmentEvolutionChart().chart!"
+          [series]="investmentEvolutionChart().series!"
+          [colors]="investmentEvolutionChart().colors!"
+          [xaxis]="investmentEvolutionChart().xaxis!"
+          [stroke]="investmentEvolutionChart().stroke!"
+          [markers]="investmentEvolutionChart().markers!"
+          [dataLabels]="investmentEvolutionChart().dataLabels!"
+          [tooltip]="investmentEvolutionChart().tooltip!"
+        ></apx-chart>
+        } @else {
+        <div class="fp-empty-state">{{ "DASHBOARD.EMPTY" | translate }}</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Widgets: últimas transacciones + gastos por tarjeta -->
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center">
+        <h5 class="card-title mb-0">
+          {{ "DASHBOARD.WIDGET.RECENT_TRANSACTIONS" | translate }}
+        </h5>
+        <a
+          routerLink="/formularios/transactions"
+          class="ms-auto text-decoration-none"
+        >
+          {{ "DASHBOARD.WIDGET.VIEW_ALL" | translate }}
+        </a>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+        <div class="placeholder-glow">
+          @for (i of [0, 1, 2, 3]; track i) {
+          <div class="d-flex align-items-center gap-2 py-2">
+            <div class="flex-grow-1">
+              <span class="placeholder col-7 mb-1"></span>
+              <span class="placeholder col-4"></span>
+            </div>
+            <span class="placeholder col-2"></span>
+          </div>
+          }
+        </div>
+        } @else if (recentTransactions().length > 0) {
+        @for (t of recentTransactions(); track t.id) {
+        <div class="d-flex align-items-center gap-2 py-2 fp-tx-row">
+          <div class="flex-grow-1 overflow-hidden">
+            <p class="mb-0 text-truncate fw-medium">{{ t.description }}</p>
+            <small class="text-muted">{{ t.date | date: "dd/MM/yyyy" }}</small>
+          </div>
+          <span [class]="transactionTypeBadgeClass(t.type)">{{ t.type }}</span>
+          <span
+            class="text-end fw-semibold"
+            [class]="transactionAmountClass(t.type)"
+          >
+            {{ t.amount | fpCurrency }}
+          </span>
+        </div>
+        }
+        } @else {
+        <div class="fp-empty-state">{{ "DASHBOARD.EMPTY" | translate }}</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center">
+        <h5 class="card-title mb-0">
+          {{ "DASHBOARD.WIDGET.SPENDING_BY_CARD" | translate }}
+        </h5>
+        <a
+          routerLink="/formularios/creditcard"
+          class="ms-auto text-decoration-none"
+        >
+          {{ "DASHBOARD.WIDGET.VIEW_ALL" | translate }}
+        </a>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+        <div class="placeholder-glow">
+          @for (i of [0, 1, 2, 3]; track i) {
+          <div class="mb-3">
+            <span class="placeholder col-6 mb-1"></span>
+            <span class="placeholder col-12"></span>
+          </div>
+          }
+        </div>
+        } @else if (spendingByCard().length > 0) {
+        @for (card of spendingByCard(); track card.creditCardId) {
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-medium">{{ card.bankName }}</span>
+            <span class="text-muted">{{ card.totalExpenses | fpCurrency }}</span>
+          </div>
+          <div class="progress" style="height: 6px">
+            <div
+              class="progress-bar"
+              [class]="'progress-bar ' + utilizationClass(card.utilizationPercentage)"
+              role="progressbar"
+              [style.width.%]="card.utilizationPercentage"
+              [attr.aria-valuenow]="card.utilizationPercentage"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+        </div>
+        }
+        } @else {
+        <div class="fp-empty-state">{{ "DASHBOARD.EMPTY" | translate }}</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -6,268 +6,28 @@ import {
   ChangeDetectionStrategy,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { NgbHighlight, NgbPopoverModule, NgbPopover } from "@ng-bootstrap/ng-bootstrap";
-import { TableColumn } from "../table-column.interface";
+import {
+  NgbHighlight,
+  NgbDropdownModule,
+} from "@ng-bootstrap/ng-bootstrap";
+import {
+  BadgeStyle,
+  TableColumn,
+} from "../table-column.interface";
+import { CurrencyUsdPipe } from "src/app/core/pipes/currency-usd.pipe";
 
 /**
  * Componente standalone para el body de la tabla genérica
- * Incluye: renderizado de filas, celdas, acciones y vista móvil
+ * Incluye: renderizado de filas, celdas (badges/currency/date/text),
+ * menú de acciones accesible (NgbDropdown), estados de carga y empty state.
  */
 @Component({
   selector: "app-generic-table-body",
   standalone: true,
-  imports: [CommonModule, NgbHighlight, NgbPopoverModule],
+  imports: [CommonModule, NgbHighlight, NgbDropdownModule, CurrencyUsdPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="card-body">
-      <!-- Vista de tabla para desktop -->
-      <div class="table-responsive d-none d-md-block">
-        <table class="table table-gridjs">
-          <thead>
-            <tr>
-              <th
-                *ngFor="let column of visibleColumns"
-                [ngClass]="{
-                  sort: column.sortable,
-                  sorted: column.property === sortColumn
-                }"
-                (click)="column.sortable && onSortClick(column.property)"
-              >
-                <div class="d-flex justify-content-between align-items-center">
-                  <span
-                    (click)="column.sortable && onSortClick(column.property)"
-                  >
-                    {{ column.header }}
-                  </span>
-                  <i
-                    *ngIf="column.sortable"
-                    class="bi"
-                    [ngClass]="{
-                      'bi-arrow-down':
-                        sortColumn === column.property &&
-                        sortDirection === 'desc',
-                      'bi-arrow-up':
-                        sortColumn === column.property &&
-                        sortDirection === 'asc',
-                      'bi-arrow-down text-secondary':
-                        sortColumn !== column.property
-                    }"
-                  ></i>
-                </div>
-
-                <!-- Input de filtro para la columna -->
-                <div class="position-relative mt-1">
-                  <input
-                    type="text"
-                    class="form-control form-control-sm"
-                    placeholder="Filtrar..."
-                    [value]="columnFilters[column.property] || ''"
-                    (input)="
-                      onColumnFilter(column.property, getInputValue($event))
-                    "
-                  />
-
-                  <!-- Botón para limpiar filtro -->
-                  <span
-                    *ngIf="columnFilters[column.property]"
-                    class="position-absolute end-0 top-50 translate-middle-y me-1"
-                    style="cursor: pointer; z-index: 10;"
-                    (click)="
-                      clearColumnFilter(column.property);
-                      $event.stopPropagation()
-                    "
-                  >
-                    <i class="bi bi-x-circle-fill text-muted"></i>
-                  </span>
-                </div>
-              </th>
-              <th *ngIf="showActions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of paginatedData; trackBy: trackByFn">
-              <td *ngFor="let column of visibleColumns">
-                <ng-container [ngSwitch]="column.type">
-                  <ng-container *ngSwitchCase="'date'">
-                    {{
-                      getValueAsDate(item, column.property)
-                        | date : column.format || "yyyy-MM-dd"
-                    }}
-                  </ng-container>
-                  <ng-container *ngSwitchDefault>
-                    <ngb-highlight
-                      [result]="
-                        getValueAsString(item, column.property) ||
-                        column.defaultValue ||
-                        '-'
-                      "
-                      [term]="searchTerm"
-                    ></ngb-highlight>
-                  </ng-container>
-                </ng-container>
-              </td>
-              <td *ngIf="showActions" class="text-center">
-                <div class="action-menu-container">
-                  <button
-                    class="btn btn-icon btn-sm btn-light"
-                    [ngbPopover]="popContent"
-                    [placement]="'bottom-end'"
-                    [container]="'body'"
-                    triggers="manual"
-                    #p="ngbPopover"
-                    (click)="toggleMenu($event, p)"
-                  >
-                    <i class="mdi mdi-dots-horizontal"></i>
-                  </button>
-
-                  <ng-template #popContent>
-                    <div class="action-menu-items">
-                      <ng-container *ngFor="let action of allowedActions">
-                        <button
-                          class="menu-item"
-                          *ngIf="
-                            actionConfig[action] &&
-                            (actionConfig[action].bypassPermission ||
-                              hasPermission(
-                                actionConfig[action].permission!
-                              )) &&
-                            shouldShowAction(action, item)
-                          "
-                          (click)="
-                            onActionClick(actionConfig[action].action, item);
-                            p.close()
-                          "
-                        >
-                          <i
-                            class="mdi {{ actionConfig[action].icon }} {{
-                              actionConfig[action].color
-                            }}"
-                          ></i>
-                          <span>{{ actionConfig[action].text }}</span>
-                        </button>
-                      </ng-container>
-                    </div>
-                  </ng-template>
-                </div>
-              </td>
-            </tr>
-            <!-- Fila de sumatoria -->
-            <tr *ngIf="sumColumns.length > 0">
-              <td *ngFor="let column of visibleColumns">
-                <ng-container
-                  *ngIf="sumColumns.includes(column.property); else emptyCell"
-                >
-                  <b>{{ columnSums[column.property] | number : "1.2-2" }}</b>
-                </ng-container>
-                <ng-template #emptyCell>
-                  <span *ngIf="column === visibleColumns[0]"><b>Total</b></span>
-                </ng-template>
-              </td>
-              <td *ngIf="showActions"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Vista de cards para móviles -->
-      <div class="d-md-none">
-        <div class="row g-3">
-          <div
-            class="col-12"
-            *ngFor="let item of paginatedData; trackBy: trackByFn"
-          >
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <div
-                  class="d-flex justify-content-between align-items-start mb-2"
-                >
-                  <h6 class="card-title mb-0">
-                    {{
-                      visibleColumns[0]
-                        ? getValue(item, visibleColumns[0].property)
-                        : "-"
-                    }}
-                  </h6>
-                  <div class="action-menu-container" *ngIf="showActions">
-                    <button
-                      class="btn btn-icon btn-sm btn-light"
-                      [ngbPopover]="popContentMobile"
-                      [placement]="'bottom-end'"
-                      [container]="'body'"
-                      triggers="manual"
-                      #pMobile="ngbPopover"
-                      (click)="toggleMenu($event, pMobile)"
-                    >
-                      <i class="mdi mdi-dots-horizontal"></i>
-                    </button>
-                    <ng-template #popContentMobile>
-                      <div class="action-menu-items">
-                        <ng-container *ngFor="let action of allowedActions">
-                          <button
-                            class="menu-item"
-                            *ngIf="
-                              actionConfig[action] &&
-                              (actionConfig[action].bypassPermission ||
-                                hasPermission(
-                                  actionConfig[action].permission!
-                                )) &&
-                              shouldShowAction(action, item)
-                            "
-                            (click)="
-                              onActionClick(actionConfig[action].action, item);
-                              pMobile.close()
-                            "
-                          >
-                            <i
-                              class="mdi {{ actionConfig[action].icon }} {{
-                                actionConfig[action].color
-                              }}"
-                            ></i>
-                            <span>{{ actionConfig[action].text }}</span>
-                          </button>
-                        </ng-container>
-                      </div>
-                    </ng-template>
-                  </div>
-                </div>
-                <div class="row g-2">
-                  <div
-                    class="col-6"
-                    *ngFor="let column of visibleColumns.slice(1)"
-                  >
-                    <small class="text-muted d-block"
-                      >{{ column.header }}:</small
-                    >
-                    <div class="fw-medium">
-                      <ng-container [ngSwitch]="column.type">
-                        <ng-container *ngSwitchCase="'date'">
-                          {{
-                            getValueAsDate(item, column.property)
-                              | date : column.format || "yyyy-MM-dd"
-                          }}
-                        </ng-container>
-                        <ng-container *ngSwitchDefault>
-                          <ngb-highlight
-                            [result]="
-                              getValueAsString(item, column.property) ||
-                              column.defaultValue ||
-                              '-'
-                            "
-                            [term]="searchTerm"
-                          ></ngb-highlight>
-                        </ng-container>
-                      </ng-container>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [],
+  templateUrl: "./generic-table-body.component.html",
+  styleUrls: ["./generic-table-body.component.scss"],
 })
 export class GenericTableBodyComponent<T> {
   @Input() visibleColumns: TableColumn[] = [];
@@ -295,6 +55,9 @@ export class GenericTableBodyComponent<T> {
   @Input() validatePermissions: boolean = true;
   @Input() getValueFn!: (item: T, property: string) => unknown;
   @Input() shouldShowActionFn?: (action: string, item: T) => boolean;
+  @Input() loading: boolean = false;
+  @Input() emptyMessage: string = "";
+  @Input() showNewRegister: boolean = false;
 
   @Output() actionClick = new EventEmitter<{ action: string; item: T }>();
   @Output() sort = new EventEmitter<string>();
@@ -303,8 +66,7 @@ export class GenericTableBodyComponent<T> {
     value: string;
   }>();
   @Output() clearColumnFilterEvent = new EventEmitter<string>();
-
-  private currentPopover: NgbPopover | null = null;
+  @Output() newClick = new EventEmitter<void>();
 
   trackByFn(index: number, item: T): number {
     return index;
@@ -320,6 +82,21 @@ export class GenericTableBodyComponent<T> {
   }
 
   /**
+   * Obtiene el valor crudo (sin transformaciones de getValue) de una propiedad.
+   * Soporta propiedades anidadas separadas por punto (ej. "user.name").
+   * @param item El item del cual obtener el valor.
+   * @param property La propiedad a obtener.
+   */
+  getRawValue(item: T, property: string): unknown {
+    return property.split(".").reduce<unknown>((obj, prop: string) => {
+      if (obj && typeof obj === "object") {
+        return (obj as Record<string, unknown>)[prop];
+      }
+      return undefined;
+    }, item as unknown);
+  }
+
+  /**
    * Obtiene el valor de una propiedad y lo convierte a string de forma segura.
    * @param item El item del cual obtener el valor.
    * @param property La propiedad a obtener.
@@ -328,12 +105,12 @@ export class GenericTableBodyComponent<T> {
   getValueAsString(item: T, property: string): string {
     const value = this.getValue(item, property);
     if (value === null || value === undefined) {
-      return '';
+      return "";
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return value;
     }
-    if (typeof value === 'number' || typeof value === 'boolean') {
+    if (typeof value === "number" || typeof value === "boolean") {
       return String(value);
     }
     // Para objetos, intentar convertir a JSON o usar toString
@@ -350,7 +127,10 @@ export class GenericTableBodyComponent<T> {
    * @param property La propiedad a obtener.
    * @returns El valor convertido a Date, string o number, o null si no es convertible.
    */
-  getValueAsDate(item: T, property: string): string | number | Date | null | undefined {
+  getValueAsDate(
+    item: T,
+    property: string
+  ): string | number | Date | null | undefined {
     const value = this.getValue(item, property);
     if (value === null || value === undefined) {
       return null;
@@ -358,11 +138,11 @@ export class GenericTableBodyComponent<T> {
     if (value instanceof Date) {
       return value;
     }
-    if (typeof value === 'string' || typeof value === 'number') {
+    if (typeof value === "string" || typeof value === "number") {
       return value;
     }
     // Intentar convertir a Date si es posible
-    if (typeof value === 'object' && 'toString' in value) {
+    if (typeof value === "object" && "toString" in value) {
       const dateStr = value.toString();
       const date = new Date(dateStr);
       if (!isNaN(date.getTime())) {
@@ -370,6 +150,145 @@ export class GenericTableBodyComponent<T> {
       }
     }
     return null;
+  }
+
+  /**
+   * Convierte un valor a número de forma segura (solo finitos).
+   * @param value Valor a convertir.
+   * @returns Número finito o null si no es convertible.
+   */
+  toNumber(value: unknown): number | null {
+    if (typeof value === "number" && isFinite(value)) {
+      return value;
+    }
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+    const num = Number(value);
+    return isFinite(num) ? num : null;
+  }
+
+  /**
+   * Interpreta un valor como booleano (true/1/"1"/"true"/"Activo"/"Sí").
+   * @param value Valor a interpretar.
+   */
+  toBoolean(value: unknown): boolean {
+    return (
+      value === true ||
+      value === 1 ||
+      value === "1" ||
+      value === "true" ||
+      value === "True" ||
+      value === "Sí" ||
+      value === "sí" ||
+      value === "SI" ||
+      value === "Activo" ||
+      value === "activo"
+    );
+  }
+
+  /**
+   * Determina si una columna es numérica/monetaria para alinearla a la derecha.
+   * @param column Columna evaluada.
+   */
+  isNumericColumn(column: TableColumn): boolean {
+    return (
+      column.align === "right" ||
+      column.type === "number" ||
+      column.type === "currency"
+    );
+  }
+
+  /**
+   * Clases CSS para las celdas según el tipo de columna.
+   * @param column Columna evaluada.
+   */
+  getCellClasses(column: TableColumn): Record<string, boolean> {
+    return {
+      "text-end": this.isNumericColumn(column),
+    };
+  }
+
+  /**
+   * Calcula el badge semántico de una celda según el tipo de columna.
+   * Prioridad: `badgeConfig` (por valor o booleano) → `activo` → `boolean`.
+   * @param item Item de la fila.
+   * @param column Columna evaluada.
+   */
+  getBadgeForColumn(item: T, column: TableColumn): BadgeStyle | null {
+    const raw = this.getRawValue(item, column.property);
+
+    // 1. badgeConfig explícito (claves por valor o booleanas true/false)
+    if (column.badgeConfig) {
+      const config = column.badgeConfig;
+      const displayValue = this.getValueAsString(item, column.property);
+      const rawValue = config[String(raw)];
+      if (rawValue) {
+        return rawValue;
+      }
+      const displayMatch = config[displayValue];
+      if (displayMatch) {
+        return displayMatch;
+      }
+      const bool = this.toBoolean(raw);
+      if (bool && config["true"]) {
+        return config["true"];
+      }
+      if (!bool && config["false"]) {
+        return config["false"];
+      }
+    }
+
+    // 2. Columna "activo" por convención
+    if (column.property.toLowerCase() === "activo") {
+      return this.toBoolean(raw)
+        ? { label: "Activo", variant: "success" }
+        : { label: "Inactivo", variant: "danger" };
+    }
+
+    // 3. Booleano genérico
+    if (column.type === "boolean") {
+      return this.toBoolean(raw)
+        ? { label: "Sí", variant: "success" }
+        : { label: "No", variant: "danger" };
+    }
+
+    return null;
+  }
+
+  /**
+   * Clases Bootstrap del badge según la variante semántica (sin hex).
+   * @param variant Variante del badge.
+   */
+  badgeVariantClass(variant: string): string {
+    switch (variant) {
+      case "success":
+        return "bg-success-subtle text-success";
+      case "danger":
+        return "bg-danger-subtle text-danger";
+      case "warning":
+        return "bg-warning-subtle text-warning";
+      case "info":
+        return "bg-info-subtle text-info";
+      default:
+        return "bg-secondary-subtle text-secondary";
+    }
+  }
+
+  /**
+   * Decide si una acción debe renderizarse en el menú de la fila.
+   * Combina `actionConfig`, permisos y `shouldShowAction`.
+   * @param action Acción evaluada.
+   * @param item Item de la fila.
+   */
+  shouldRenderAction(action: string, item: T): boolean {
+    const config = this.actionConfig[action];
+    if (!config) {
+      return false;
+    }
+    const hasPermission =
+      config.bypassPermission || this.hasPermission(config.permission!);
+    return hasPermission && this.shouldShowAction(action, item);
   }
 
   shouldShowAction(action: string, item: T): boolean {
@@ -395,18 +314,8 @@ export class GenericTableBodyComponent<T> {
     this.clearColumnFilterEvent.emit(property);
   }
 
-  toggleMenu(event: Event, popover: NgbPopover): void {
-    event.stopPropagation();
-    if (this.currentPopover && this.currentPopover !== popover) {
-      this.currentPopover.close();
-    }
-    if (popover.isOpen()) {
-      popover.close();
-      this.currentPopover = null;
-    } else {
-      popover.open();
-      this.currentPopover = popover;
-    }
+  onNewClick(): void {
+    this.newClick.emit();
   }
 
   getInputValue(event: Event): string {

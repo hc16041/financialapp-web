@@ -2,13 +2,12 @@ import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { FlatpickrModule } from "angularx-flatpickr";
-import { CountUpModule } from "ngx-countup";
 import { NgApexchartsModule } from "ng-apexcharts";
-import { LeafletModule } from "@asymmetrik/ngx-leaflet";
 import { NgbDropdownModule } from "@ng-bootstrap/ng-bootstrap";
 import { SimplebarAngularModule } from "simplebar-angular";
-import { ToastsContainer } from "./dashboards/dashboard/toasts-container.component";
 import { NgbPaginationModule } from "@ng-bootstrap/ng-bootstrap"; // Importa el módulo de paginación
+import { TranslateModule } from "@ngx-translate/core";
+import { CurrencyUsdPipe } from "src/app/core/pipes/currency-usd.pipe";
 
 // Swiper Slider
 import { SlickCarouselModule } from "ngx-slick-carousel";
@@ -28,14 +27,12 @@ import { DashboardsModule } from "./dashboards/dashboards.module";
 import { FormulariosModule } from "./formularios/formularios.module";
 
 @NgModule({
-  declarations: [DashboardComponent, ToastsContainer],
+  declarations: [DashboardComponent],
   imports: [
     CommonModule,
     FormsModule,
     FlatpickrModule.forRoot(),
-    CountUpModule,
     NgApexchartsModule,
-    LeafletModule,
     NgbDropdownModule,
     SimplebarAngularModule,
     PagesRoutingModule,
@@ -46,6 +43,8 @@ import { FormulariosModule } from "./formularios/formularios.module";
     DashboardsModule,
     FormulariosModule,
     NgbPaginationModule,
+    TranslateModule,
+    CurrencyUsdPipe,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

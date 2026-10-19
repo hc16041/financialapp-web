@@ -1,4 +1,5 @@
-import { Component, inject, ChangeDetectionStrategy } from "@angular/core";
+import { Component, inject, ChangeDetectionStrategy, signal, computed } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
 import { TableColumn } from "../genericos/generictable/table-column.interface";
 import { generateTableColumns } from "src/app/utils/table-utils";
 import { InvestmentsDTO } from "src/app/application/Investments/DTO/InvestmentsDTO";
@@ -28,6 +29,49 @@ export class InvestmentsComponent {
   withdrawalMethodsList$ = this.investmentsFacade.withdrawalMethodsList$;
   creditCardsList$ = this.investmentsFacade.creditCardsList$;
 
+  // Señal derivada de la lista (para KPIs con `computed`)
+  private readonly investmentsListSig = toSignal(
+    this.investmentsFacade.investmentsList$,
+    { initialValue: [] as InvestmentsDTO[] }
+  );
+
+  // Estado de carga para skeletons de KPI
+  private readonly loadingSig = signal<boolean>(false);
+  readonly loading = this.loadingSig.asReadonly();
+
+  // KPIs (SPEC-06 §4.4): suman valores YA persistidos por el backend
+  // (amount/commission/total). No se recalcula comisión aquí.
+  readonly totalInvested = computed(() => {
+    const list = this.investmentsListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return list.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+  });
+
+  readonly totalCommissions = computed(() => {
+    const list = this.investmentsListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return list.reduce((sum, i) => sum + (Number(i.commission) || 0), 0);
+  });
+
+  readonly netBalance = computed(() => {
+    const list = this.investmentsListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return list.reduce((sum, i) => {
+      const record = i as InvestmentsDTO & { total?: number };
+      const total =
+        record.total !== undefined && record.total !== null
+          ? Number(record.total)
+          : Number(i.amount || 0) - Number(i.commission || 0);
+      return sum + (Number.isFinite(total) ? total : 0);
+    }, 0);
+  });
+
   // Exponer selectOptions del Facade
   get selectOptions(): { [key: string]: SelectOption[] } {
     return this.investmentsFacade.selectOptions;
@@ -55,9 +99,14 @@ export class InvestmentsComponent {
   /**
    * Inicializa la vista solicitando todos los catálogos y datos de inversiones.
    */
-  ngOnInit(): void {
-    // Inicializar el Facade que carga todos los datos necesarios
-    this.investmentsFacade.initialize();
+  async ngOnInit(): Promise<void> {
+    this.loadingSig.set(true);
+    try {
+      // Inicializar el Facade que carga todos los datos necesarios
+      await this.investmentsFacade.initialize();
+    } finally {
+      this.loadingSig.set(false);
+    }
   }
 
   /**
@@ -295,6 +344,7 @@ export class InvestmentsComponent {
       // Usar el Facade para agregar la inversión (el Facade maneja la transformación)
       await this.investmentsFacade.addInvestment(investment);
     } catch (error) {
+      console.error("Error al agregar inversión:", error);
       throw error;
     }
   }
@@ -434,6 +484,11 @@ export class InvestmentsComponent {
       endDate = formatDateForInput(lastDayOfMonth);
     }
 
-    await this.investmentsFacade.loadInvestmentsByDateRange(startDate, endDate);
+    this.loadingSig.set(true);
+    try {
+      await this.investmentsFacade.loadInvestmentsByDateRange(startDate, endDate);
+    } finally {
+      this.loadingSig.set(false);
+    }
   }
 }

@@ -1,8 +1,13 @@
+// ============================================================
+// Modal Genérico — estilos con tokens --vz-* / --fp-*
+// ============================================================
+// Sin colores hex hardcodeados: todo vía variables CSS del tema.
+
 .readonly-field {
-  background-color: #e9ecef !important; // Fondo gris claro
-  color: #6c757d !important; // Texto gris oscuro
+  background-color: var(--vz-tertiary-bg) !important; // Fondo gris claro
+  color: var(--vz-secondary-color) !important; // Texto gris oscuro
   cursor: not-allowed; // Cursor de no permitido
-  border: 1px solid #ced4da;
+  border: 1px solid var(--vz-border-color);
 }
 
 .form-select {
@@ -15,22 +20,44 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.5);
 }
 
-.readonly-field {
-  background-color: #f8f9fa;
-  cursor: not-allowed;
-}
-
 .invalid-feedback {
   display: none;
-  color: #dc3545;
+  color: var(--vz-danger);
   font-size: 0.875em;
+
+  .mdi {
+    vertical-align: -0.125em;
+  }
 }
 
 .ng-invalid.ng-touched {
-  border-color: #dc3545;
+  border-color: var(--vz-danger);
   ~ .invalid-feedback {
     display: block;
   }
+}
+
+// Footer fijo del formulario: visible sin necesidad de scroll
+.modal-footer-fixed {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background-color: var(--vz-secondary-bg);
+  border-top: 1px solid var(--vz-border-color);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+// Icono de confirmación con color semántico
+.confirm-icon {
+  font-size: 3rem;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
 }
 
 // Estilos responsive para modales
@@ -46,7 +73,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   :host ::ng-deep .modal-header {
     padding: 1rem 0.75rem;
-    
+
     .modal-title {
       font-size: 1.1rem;
     }

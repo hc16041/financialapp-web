@@ -4,7 +4,8 @@ import {
   input,
   computed,
 } from "@angular/core";
-import { CommonModule, DatePipe, CurrencyPipe } from "@angular/common";
+import { CommonModule, DatePipe } from "@angular/common";
+import { CurrencyUsdPipe } from "src/app/core/pipes/currency-usd.pipe";
 import { SavingTransactionDTO, SavingTransactionType } from "src/app/application/savings/DTO/SavingTransactionDTO";
 
 /**
@@ -14,7 +15,7 @@ import { SavingTransactionDTO, SavingTransactionType } from "src/app/application
 @Component({
   selector: "app-savings-list",
   standalone: true,
-  imports: [CommonModule, DatePipe, CurrencyPipe],
+  imports: [CommonModule, DatePipe, CurrencyUsdPipe],
   templateUrl: "./savings-list.component.html",
   styleUrl: "./savings-list.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,

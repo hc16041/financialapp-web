@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BehaviorSubject } from "rxjs";
 import { PerfilDTO } from "src/app/application/centries/perfil/DTO/PerfilDTO";
 import { TableColumn } from "../../genericos/generictable/table-column.interface";
@@ -16,11 +17,22 @@ export class CentriesPerfilComponent implements OnInit {
   // Inyección de dependencias usando inject()
   private dataService = inject(DataService);
   private perfilService = inject(PerfilService);
+  private destroyRef = inject(DestroyRef);
 
   //Table data perfiles - Mantener BehaviorSubject para DataService, pero exponer como signal
   private perfilesList$ = new BehaviorSubject<PerfilDTO[]>([]);
   private readonly perfilesListSig = signal<PerfilDTO[]>([]);
-  
+
+  // Estado de carga para skeletons de KPI
+  private readonly loadingSig = signal<boolean>(false);
+  readonly loading = this.loadingSig.asReadonly();
+
+  // KPIs de conteo (SPEC-06 §4.6)
+  readonly totalPerfiles = computed(() => {
+    const list = this.perfilesListSig();
+    return list.length === 0 ? null : list.length;
+  });
+
   get perfilesList(): PerfilDTO[] {
     return this.perfilesListSig();
   }
@@ -30,20 +42,27 @@ export class CentriesPerfilComponent implements OnInit {
   tableColumns: TableColumn[] = generateTableColumns(this.perfilDTO);
 
   ngOnInit(): void {
-    // Suscribirse al BehaviorSubject para actualizar el signal
-    this.perfilesList$.subscribe(data => {
-      this.perfilesListSig.set(data);
-    });
+    // Sincronizar el BehaviorSubject con la señal (patrón Signals + takeUntilDestroyed)
+    this.perfilesList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.perfilesListSig.set(data);
+      });
     this.obtenerPerfiles();
   }
 
   async obtenerPerfiles(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.perfilService,
-      "getListadoPerfil",
-      this.perfilesList$,
-      "Error al cargar perfiles"
-    );
+    this.loadingSig.set(true);
+    try {
+      await this.dataService.obtenerDatos(
+        this.perfilService,
+        "getListadoPerfil",
+        this.perfilesList$,
+        "Error al cargar perfiles"
+      );
+    } finally {
+      this.loadingSig.set(false);
+    }
   }
 
   async onAddPerfil(newPerfil: PerfilDTO | Record<string, unknown>): Promise<void> {
@@ -75,7 +94,7 @@ export class CentriesPerfilComponent implements OnInit {
     await this.dataService.eliminarRegistro(
       this.perfilService,
       "eliminarPerfil",
-      perfil,
+      perfil as Record<string, unknown>,
       "Perfil eliminado con éxito",
       "Error al eliminar el perfil"
     );

@@ -1,3 +1,40 @@
+<!-- KPIs de Inversiones (SPEC-06 §4.4): se recalculan con el rango de fechas activo -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Total invertido"
+      [value]="totalInvested()"
+      icon="mdi mdi-trending-up"
+      variant="primary"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin inversiones'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Comisiones"
+      [value]="totalCommissions()"
+      icon="mdi mdi-percent-outline"
+      variant="warning"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin inversiones'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Balance neto"
+      [value]="netBalance()"
+      icon="mdi mdi-scale-balance"
+      variant="success"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin inversiones'"
+    ></app-kpi-card>
+  </div>
+</div>
+
 <app-generic-table
   [title]="'Listado de Inversiones'"
   [columns]="tableColumns"

@@ -1,0 +1,77 @@
+// ============================================================
+// Finance App — Design Tokens (`--fp-*`)
+// ============================================================
+// Identidad visual del sistema de finanzas personales.
+//
+// IMPORTANTE:
+// - Este parcial SOLO emite variables CSS (tokens), nunca sobrescribe
+//   las variables SASS de `_variables.scss` ($primary, $success, ...).
+//   La marca se controla a través de tokens CSS para no romper el layout
+//   Velzon ni `_variables-dark.scss`.
+// - Todos los tokens referencian `--vz-*` (emitidos por Velzon/Bootstrap),
+//   por lo que cambian automáticamente con el tema claro/oscuro
+//   (`[data-bs-theme]`).
+// - Convención: prefijo `--fp-*` (Finance/Personal). Para lo estructural
+//   de Velzon, reutilizar `--vz-*` directamente.
+
+:root {
+  // --- Marca / primarios ---
+  --fp-primary: var(--vz-indigo); // #4b38b3 — color de marca
+  --fp-primary-rgb: var(--vz-indigo-rgb);
+  --fp-primary-dark: #{shade-color($indigo, 20%)}; // hover de marca
+  --fp-accent: var(--vz-blue); // #3577f1 — acento secundario
+  --fp-accent-rgb: var(--vz-blue-rgb);
+
+  // --- Semánticos (mapeo fijo: no alterar) ---
+  --fp-success: var(--vz-success); // verde  #45CB85
+  --fp-danger: var(--vz-danger); // rojo   #f06548
+  --fp-info: var(--vz-info); // azul   #299cdb
+  --fp-warning: var(--vz-warning); // ámbar  #ffbe0b
+  --fp-warning-dark: #{shade-color($yellow, 15%)}; // hover de advertencia
+
+  // --- Superficies / bordes ---
+  --fp-surface: var(--vz-secondary-bg);
+  --fp-surface-muted: var(--vz-tertiary-bg);
+  --fp-border: var(--vz-border-color);
+
+  // --- Texto ---
+  --fp-text-muted: var(--vz-secondary-color);
+
+  // --- Radios ---
+  --fp-radius: var(--vz-border-radius);
+  --fp-radius-lg: var(--vz-border-radius-lg);
+
+  // --- Sombras ---
+  --fp-shadow: var(--vz-box-shadow);
+
+  // --- Tipografía ---
+  --fp-font-family: var(--vz-font-sans-serif); // Inter
+
+  // --- Espaciado ---
+  --fp-space-1: 0.25rem;
+  --fp-space-2: 0.5rem;
+  --fp-space-3: 1rem;
+  --fp-space-4: 1.5rem;
+}
+
+[data-bs-theme="dark"] {
+  // En modo oscuro los `--vz-*` ya apuntan a los valores oscuros
+  // (`_variables-dark.scss`). Se re-declaran aquí por claridad y para
+  // permitir ajustes de marca específicos del tema oscuro sin tocar
+  // la paleta base. Por defecto mantienen las mismas referencias.
+  --fp-primary: var(--vz-indigo);
+  --fp-primary-rgb: var(--vz-indigo-rgb);
+  --fp-accent: var(--vz-blue);
+  --fp-accent-rgb: var(--vz-blue-rgb);
+
+  --fp-success: var(--vz-success);
+  --fp-danger: var(--vz-danger);
+  --fp-info: var(--vz-info);
+  --fp-warning: var(--vz-warning);
+
+  --fp-surface: var(--vz-secondary-bg);
+  --fp-surface-muted: var(--vz-tertiary-bg);
+  --fp-border: var(--vz-border-color);
+
+  --fp-text-muted: var(--vz-secondary-color);
+}

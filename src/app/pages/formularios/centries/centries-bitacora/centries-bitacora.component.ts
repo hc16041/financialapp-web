@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BitacoraDTO } from "src/app/application/centries/bitacora/DTO/BitacoraDTO";
 import { TableColumn } from "../../genericos/generictable/table-column.interface";
 import { BehaviorSubject } from "rxjs";
@@ -16,11 +17,41 @@ export class CentriesBitacoraComponent implements OnInit {
   // Inyección de dependencias usando inject()
   private dataService = inject(DataService);
   private bitacoraService = inject(BitacoraService);
+  private destroyRef = inject(DestroyRef);
 
   // Table data bitacora - Mantener BehaviorSubject para DataService, pero exponer como signal
   private bitacoraList$ = new BehaviorSubject<BitacoraDTO[]>([]);
   private readonly bitacoraListSig = signal<BitacoraDTO[]>([]);
-  
+
+  // Estado de carga para skeletons de KPI
+  private readonly loadingSig = signal<boolean>(false);
+  readonly loading = this.loadingSig.asReadonly();
+
+  // KPIs de conteo (SPEC-06 §4.6)
+  readonly totalDescargas = computed(() => {
+    const list = this.bitacoraListSig();
+    return list.length === 0 ? null : list.length;
+  });
+
+  readonly xmlDownloads = computed(() => {
+    const list = this.bitacoraListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return list.filter((b) => String(b.tipo_archivo || "").toLowerCase().includes("xml")).length;
+  });
+
+  readonly excelDownloads = computed(() => {
+    const list = this.bitacoraListSig();
+    if (list.length === 0) {
+      return null;
+    }
+    return list.filter((b) => {
+      const tipo = String(b.tipo_archivo || "").toLowerCase();
+      return tipo.includes("excel") || tipo.includes("spreadsheet");
+    }).length;
+  });
+
   get bitacoraList(): BitacoraDTO[] {
     return this.bitacoraListSig();
   }
@@ -30,20 +61,27 @@ export class CentriesBitacoraComponent implements OnInit {
   tableColumns: TableColumn[] = generateTableColumns(this.bitacoraDTO);
 
   ngOnInit(): void {
-    // Suscribirse al BehaviorSubject para actualizar el signal
-    this.bitacoraList$.subscribe(data => {
-      this.bitacoraListSig.set(data);
-    });
+    // Sincronizar el BehaviorSubject con la señal (patrón Signals + takeUntilDestroyed)
+    this.bitacoraList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.bitacoraListSig.set(data);
+      });
     this.obtenerBitacora();
   }
 
   async obtenerBitacora(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.bitacoraService,
-      "getListadoBitacora",
-      this.bitacoraList$,
-      "Error al cargar bitácora"
-    );
+    this.loadingSig.set(true);
+    try {
+      await this.dataService.obtenerDatos(
+        this.bitacoraService,
+        "getListadoBitacora",
+        this.bitacoraList$,
+        "Error al cargar bitácora"
+      );
+    } finally {
+      this.loadingSig.set(false);
+    }
   }
 
   async descargarArchivo(archivo: BitacoraDTO | Record<string, unknown>): Promise<void> {
@@ -65,7 +103,7 @@ export class CentriesBitacoraComponent implements OnInit {
         ? "Excel"
         : "Texto",
       "Error al descargar el archivo de bitácora",
-      archivo
+      archivo as Record<string, unknown>
     );
   }
 }

@@ -1,0 +1,44 @@
+<div
+  class="card h-100 kpi-card"
+  [class]="'kpi-card--' + variant()"
+  [class.kpi-card--loading]="loading()"
+>
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div class="flex-grow-1 overflow-hidden">
+        <h6 class="text-muted text-truncate mb-2 kpi-card__label">
+          {{ label() }}
+        </h6>
+        <h3 class="mb-0 kpi-card__value" [class]="'text-' + variant()">
+          @if (loading()) {
+            <span class="placeholder-glow d-inline-block w-100">
+              <span class="placeholder col-8 mb-1"></span>
+              <span class="placeholder col-5"></span>
+            </span>
+          } @else if (hasValue()) {
+            {{ isCurrency() ? (value() | fpCurrency) : value() }}
+          } @else {
+            <span class="kpi-card__empty">{{ emptyLabel() }}</span>
+          }
+        </h3>
+      </div>
+      <div
+        class="avatar-sm rounded kpi-card__icon"
+        [class]="'bg-' + variant() + '-subtle text-' + variant()"
+        aria-hidden="true"
+      >
+        <i [class]="icon()"></i>
+      </div>
+    </div>
+
+    @if (trend()) {
+      <div
+        class="mt-2 small d-flex align-items-center gap-1 kpi-card__trend"
+        [class]="'kpi-card__trend--' + trendDirection()"
+      >
+        <i [class]="trendIcon()"></i>
+        <span>{{ trend() }}</span>
+      </div>
+    }
+  </div>
+</div>

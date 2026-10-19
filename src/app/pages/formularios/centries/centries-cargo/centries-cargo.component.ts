@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BehaviorSubject } from "rxjs";
 import { DataService } from "src/app/core/services/data.service";
 import { generateTableColumns } from "src/app/utils/table-utils";
@@ -16,11 +17,22 @@ export class CentriesCargoComponent implements OnInit {
   // Inyección de dependencias usando inject()
   private dataService = inject(DataService);
   private cargoService = inject(CargoService);
+  private destroyRef = inject(DestroyRef);
 
   //Table data cargos - Mantener BehaviorSubject para DataService, pero exponer como signal
   private cargosList$ = new BehaviorSubject<CargoDTO[]>([]);
   private readonly cargosListSig = signal<CargoDTO[]>([]);
-  
+
+  // Estado de carga para skeletons de KPI
+  private readonly loadingSig = signal<boolean>(false);
+  readonly loading = this.loadingSig.asReadonly();
+
+  // KPIs de conteo (SPEC-06 §4.6)
+  readonly totalCargos = computed(() => {
+    const list = this.cargosListSig();
+    return list.length === 0 ? null : list.length;
+  });
+
   get cargosList(): CargoDTO[] {
     return this.cargosListSig();
   }
@@ -30,10 +42,12 @@ export class CentriesCargoComponent implements OnInit {
   tableColumns: TableColumn[] = generateTableColumns(this.cargoDTO);
 
   ngOnInit(): void {
-    // Suscribirse al BehaviorSubject para actualizar el signal
-    this.cargosList$.subscribe(data => {
-      this.cargosListSig.set(data);
-    });
+    // Sincronizar el BehaviorSubject con la señal (patrón Signals + takeUntilDestroyed)
+    this.cargosList$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.cargosListSig.set(data);
+      });
     this.obtenerCargos();
   }
 
@@ -47,12 +61,17 @@ export class CentriesCargoComponent implements OnInit {
    * listado de cargos.
    */
   async obtenerCargos(): Promise<void> {
-    return this.dataService.obtenerDatos(
-      this.cargoService,
-      "getListadoCargo",
-      this.cargosList$,
-      "Error al cargar cargos"
-    );
+    this.loadingSig.set(true);
+    try {
+      await this.dataService.obtenerDatos(
+        this.cargoService,
+        "getListadoCargo",
+        this.cargosList$,
+        "Error al cargar cargos"
+      );
+    } finally {
+      this.loadingSig.set(false);
+    }
   }
   async onAddCargo(newCargo: CargoDTO | Record<string, unknown>): Promise<void> {
     await this.dataService.agregarRegistro(
@@ -92,7 +111,7 @@ export class CentriesCargoComponent implements OnInit {
     await this.dataService.eliminarRegistro(
       this.cargoService,
       "eliminarCargo",
-      cargo,
+      cargo as Record<string, unknown>,
       "Cargo eliminado con éxito",
       "Error al eliminar el cargo"
     );

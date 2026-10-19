@@ -1,0 +1,86 @@
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+        <h4 class="mb-sm-0">{{ 'CATEGORIES.TITLE' | translate }}</h4>
+        <div class="page-title-right">
+          <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item"><a href="javascript: void(0);">{{ 'MENUITEMS.FINANCE.TEXT' | translate }}</a></li>
+            <li class="breadcrumb-item active">{{ 'CATEGORIES.TITLE' | translate }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xl-4">
+      <app-kpi-card
+        [label]="'CATEGORIES.KPI_TOTAL' | translate"
+        [value]="total()"
+        icon="mdi mdi-tag-multiple-outline"
+        variant="primary"
+        [loading]="loading()"
+        [emptyLabel]="'CATEGORIES.EMPTY_TITLE' | translate"
+      ></app-kpi-card>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+      <app-kpi-card
+        [label]="'CATEGORIES.KPI_INCOME' | translate"
+        [value]="incomeCount()"
+        icon="mdi mdi-arrow-down-bold-circle-outline"
+        variant="success"
+        [loading]="loading()"
+        [emptyLabel]="'COMMON.NO_DATA' | translate"
+      ></app-kpi-card>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+      <app-kpi-card
+        [label]="'CATEGORIES.KPI_EXPENSE' | translate"
+        [value]="expenseCount()"
+        icon="mdi mdi-arrow-up-bold-circle-outline"
+        variant="danger"
+        [loading]="loading()"
+        [emptyLabel]="'COMMON.NO_DATA' | translate"
+      ></app-kpi-card>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <app-categories-list
+        [items]="items()"
+        [loading]="loading()"
+        [error]="error()"
+        (create)="onNew()"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+        (deactivate)="onDeactivate($event)"
+        (activate)="onActivate($event)"
+        (retry)="onRetry()"
+      ></app-categories-list>
+    </div>
+
+    @if (showForm()) {
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              {{ (editing() ? 'CATEGORIES.EDIT' : 'CATEGORIES.NEW') | translate }}
+            </h5>
+            <button type="button" class="btn-close" (click)="onCancel()" [attr.aria-label]="'CATEGORIES.CANCEL' | translate"></button>
+          </div>
+          <div class="card-body">
+            <app-categories-form
+              [loading]="loading()"
+              [errorMessage]="formError()"
+              [category]="editing()"
+              (submit)="onSubmit($event)"
+              (cancel)="onCancel()"
+            ></app-categories-form>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

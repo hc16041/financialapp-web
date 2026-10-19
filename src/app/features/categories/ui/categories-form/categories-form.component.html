@@ -1,0 +1,90 @@
+<form [formGroup]="categoryForm" (ngSubmit)="onSubmit($event)" class="row g-3">
+  @if (errorMessage()) {
+    <div class="col-12">
+      <div class="alert alert-danger d-flex align-items-start gap-2 mb-0" role="alert">
+        <i class="mdi mdi-alert-circle" aria-hidden="true"></i>
+        <div>{{ errorMessage() }}</div>
+      </div>
+    </div>
+  }
+
+  <div class="col-12">
+    <label for="cat-name" class="form-label">{{ 'CATEGORIES.NAME' | translate }} *</label>
+    <input
+      id="cat-name"
+      type="text"
+      class="form-control"
+      formControlName="name"
+      maxlength="100"
+      [class.is-invalid]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched"
+    />
+    @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+      <div class="invalid-feedback">{{ 'CATEGORIES.NAME_REQUIRED' | translate }}</div>
+    }
+  </div>
+
+  <div class="col-12">
+    <label for="cat-type" class="form-label">{{ 'CATEGORIES.TYPE' | translate }} *</label>
+    <select id="cat-type" class="form-select" formControlName="type">
+      <option [value]="incomeType">{{ 'CATEGORIES.TYPE_INCOME' | translate }}</option>
+      <option [value]="expenseType">{{ 'CATEGORIES.TYPE_EXPENSE' | translate }}</option>
+    </select>
+  </div>
+
+  <div class="col-12">
+    <label for="cat-icon" class="form-label">{{ 'CATEGORIES.ICON' | translate }}</label>
+    <div class="input-group">
+      <span class="input-group-text" aria-hidden="true">
+        <i [class]="categoryForm.get('icon')?.value"></i>
+      </span>
+      <select id="cat-icon" class="form-select" formControlName="icon">
+        @for (icon of icons; track icon) {
+          <option [value]="icon">{{ icon }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <label for="cat-color" class="form-label">{{ 'CATEGORIES.COLOR' | translate }}</label>
+    <div class="input-group">
+      <span
+        class="input-group-text"
+        aria-hidden="true"
+      >
+        <span class="categories-form__swatch" [style.background]="categoryForm.get('color')?.value"></span>
+      </span>
+      <input
+        id="cat-color"
+        type="text"
+        class="form-control"
+        formControlName="color"
+        maxlength="32"
+        placeholder="var(--fp-primary)"
+      />
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="form-check">
+      <input id="cat-active" type="checkbox" class="form-check-input" formControlName="isActive" />
+      <label for="cat-active" class="form-check-label">{{ 'CATEGORIES.ACTIVE' | translate }}</label>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="d-flex gap-2 justify-content-end">
+      <button type="button" class="btn btn-secondary" [disabled]="loading()" (click)="onCancel()">
+        {{ 'CATEGORIES.CANCEL' | translate }}
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="categoryForm.invalid || loading()">
+        @if (loading()) {
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          {{ 'COMMON.LOADING' | translate }}
+        } @else {
+          {{ 'CATEGORIES.SAVE' | translate }}
+        }
+      </button>
+    </div>
+  </div>
+</form>

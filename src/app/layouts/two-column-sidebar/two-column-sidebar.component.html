@@ -21,7 +21,7 @@
       </span>
     </a>
     <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
-      <i class="ri-record-circle-line"></i>
+      <i class="mdi mdi-record-circle-outline"></i>
     </button>
   </div>
 
@@ -89,7 +89,7 @@
                                 | translate}}</span>}
                             </a>
 
-                            <div class="collapse menu-dropdown sub-menu" id="{{item.collapseid}}" #collapse="ngbCollapse" [(ngbCollapse)]="subitem.isCollapsed">
+                            <div class="collapse menu-dropdown sub-menu" id="{{item.collapseid}}" [ngbCollapse]="subitem.isCollapsed ?? true" (ngbCollapseChange)="subitem.isCollapsed = $event">
                               <ul class="nav nav-sm flex-column">
                                 @for(subSubitem of subitem.subItems; track $index){
                                 <li class="nav-item">
@@ -100,7 +100,7 @@
                                       | translate}}</span>}
                                   </a>
 
-                                  <div class="collapse menu-dropdown extra-sub-menu" [(ngbCollapse)]="subSubitem.isCollapsed">
+                                  <div class="collapse menu-dropdown extra-sub-menu" [ngbCollapse]="subSubitem.isCollapsed ?? true" (ngbCollapseChange)="subSubitem.isCollapsed = $event">
                                     <ul class="nav nav-sm flex-column" aria-expanded="false">
                                       @for(subSubitem1 of subSubitem.subItems; track $index){
                                       <li class="nav-item">

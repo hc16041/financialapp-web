@@ -1,0 +1,149 @@
+<div class="card">
+  <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+    <h5 class="card-title mb-0">{{ 'CATEGORIES.TITLE' | translate }}</h5>
+    <div class="d-flex flex-wrap gap-2">
+      <div class="categories-list__search">
+        <label class="visually-hidden" for="cat-search">{{ 'CATEGORIES.SEARCH' | translate }}</label>
+        <input
+          id="cat-search"
+          type="search"
+          class="form-control form-control-sm"
+          [placeholder]="'CATEGORIES.SEARCH' | translate"
+          [attr.aria-label]="'CATEGORIES.SEARCH' | translate"
+          (input)="onSearch($event)"
+        />
+      </div>
+      <div>
+        <label class="visually-hidden" for="cat-type">{{ 'CATEGORIES.TYPE' | translate }}</label>
+        <select
+          id="cat-type"
+          class="form-select form-select-sm"
+          [attr.aria-label]="'CATEGORIES.TYPE' | translate"
+          (change)="onTypeChange($event)"
+        >
+          <option value="all">{{ 'CATEGORIES.FILTER_ALL' | translate }}</option>
+          <option [value]="categoryType.Income">{{ 'CATEGORIES.TYPE_INCOME' | translate }}</option>
+          <option [value]="categoryType.Expense">{{ 'CATEGORIES.TYPE_EXPENSE' | translate }}</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-sm btn-primary" (click)="create.emit()">
+        <i class="mdi mdi-plus-circle me-1" aria-hidden="true"></i>
+        {{ 'CATEGORIES.NEW' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    @if (error()) {
+      <app-error-alert
+        [message]="error()!"
+        [retryLabel]="'COMMON.RETRY' | translate"
+        (retry)="retry.emit()"
+      ></app-error-alert>
+    } @else if (loading()) {
+      <app-loading-skeleton [rows]="5"></app-loading-skeleton>
+    } @else if (filtered().length === 0) {
+      <app-empty-state
+        icon="mdi mdi-tag-multiple-outline"
+        [title]="'CATEGORIES.EMPTY_TITLE' | translate"
+        [message]="'CATEGORIES.EMPTY_MESSAGE' | translate"
+        [actionLabel]="'CATEGORIES.NEW' | translate"
+        (action)="create.emit()"
+      ></app-empty-state>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle categories-list__table">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'CATEGORIES.NAME' | translate }}</th>
+              <th scope="col">{{ 'CATEGORIES.TYPE' | translate }}</th>
+              <th scope="col">{{ 'CATEGORIES.ICON' | translate }}</th>
+              <th scope="col">{{ 'CATEGORIES.STATUS' | translate }}</th>
+              <th scope="col" class="text-end">{{ 'CATEGORIES.ACTIONS' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (category of filtered(); track category.id) {
+              <tr>
+                <td>
+                  <span
+                    class="categories-list__dot me-2"
+                    [style.background]="category.color"
+                    aria-hidden="true"
+                  ></span>
+                  {{ category.name }}
+                </td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.bg-success-subtle]="category.type === categoryType.Income"
+                    [class.text-success]="category.type === categoryType.Income"
+                    [class.bg-danger-subtle]="category.type === categoryType.Expense"
+                    [class.text-danger]="category.type === categoryType.Expense"
+                  >
+                    {{ (category.type === categoryType.Income ? 'CATEGORIES.TYPE_INCOME' : 'CATEGORIES.TYPE_EXPENSE') | translate }}
+                  </span>
+                </td>
+                <td><i [class]="category.icon" aria-hidden="true"></i></td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.bg-success-subtle]="category.isActive"
+                    [class.text-success]="category.isActive"
+                    [class.bg-secondary-subtle]="!category.isActive"
+                    [class.text-secondary]="!category.isActive"
+                  >
+                    {{ (category.isActive ? 'CATEGORIES.ACTIVE' : 'CATEGORIES.INACTIVE') | translate }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-1">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary"
+                      [attr.aria-label]="'CATEGORIES.EDIT' | translate"
+                      [title]="'CATEGORIES.EDIT' | translate"
+                      (click)="edit.emit(category)"
+                    >
+                      <i class="mdi mdi-pencil" aria-hidden="true"></i>
+                    </button>
+                    @if (category.isActive) {
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-warning"
+                        [attr.aria-label]="'CATEGORIES.DEACTIVATE' | translate"
+                        [title]="'CATEGORIES.DEACTIVATE' | translate"
+                        (click)="deactivate.emit(category)"
+                      >
+                        <i class="mdi mdi-toggle-switch-off-outline" aria-hidden="true"></i>
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-success"
+                        [attr.aria-label]="'CATEGORIES.ACTIVATE' | translate"
+                        [title]="'CATEGORIES.ACTIVATE' | translate"
+                        (click)="activate.emit(category)"
+                      >
+                        <i class="mdi mdi-toggle-switch-outline" aria-hidden="true"></i>
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      [attr.aria-label]="'CATEGORIES.DELETE' | translate"
+                      [title]="'CATEGORIES.DELETE' | translate"
+                      (click)="remove.emit(category)"
+                    >
+                      <i class="mdi mdi-delete-outline" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

@@ -1,4 +1,87 @@
 {
+  "COMMON": {
+    "LOADING": "Loading…",
+    "EMPTY": "No data",
+    "EMPTY_TITLE": "No records",
+    "EMPTY_MESSAGE": "No data found.",
+    "ERROR_TITLE": "Error",
+    "RETRY": "Retry",
+    "DISMISS": "Close",
+    "ERROR_GENERIC": "Something went wrong. Please try again.",
+    "NO_DATA": "No data available.",
+    "ACTIONS": {
+      "EDIT": "Edit",
+      "DELETE": "Delete"
+    }
+  },
+  "DASHBOARD": {
+    "GREETING": "Hello, {{name}}",
+    "SUBTITLE": "Summary of your financial situation today.",
+    "KPI": {
+      "BALANCE": "Total Balance",
+      "INCOME": "Monthly Income",
+      "EXPENSES": "Monthly Expenses",
+      "INVESTED": "Total Invested",
+      "SAVINGS": "Total Savings",
+      "NET": "Net Balance"
+    },
+    "CHART": {
+      "MONTHLY_TRANSACTIONS": "Monthly Transactions",
+      "EXPENSES_BY_CATEGORY": "Expenses by Category",
+      "INVESTMENTS_EVOLUTION": "Investment Evolution"
+    },
+    "WIDGET": {
+      "RECENT_TRANSACTIONS": "Recent Transactions",
+      "SPENDING_BY_CARD": "Spending by Card",
+      "VIEW_ALL": "View all"
+    },
+    "EMPTY": "No data to display yet."
+  },
+  "REPORTS": {
+    "EMPTY": "There is no data to display in this report.",
+    "ERROR": "The report could not be loaded.",
+    "RETRY": "Retry"
+  },
+  "CATEGORIES": {
+    "TITLE": "Categories",
+    "NEW": "New category",
+    "EDIT": "Edit category",
+    "DELETE": "Delete",
+    "DEACTIVATE": "Deactivate",
+    "ACTIVATE": "Activate",
+    "NAME": "Name",
+    "NAME_REQUIRED": "Name is required (1 to 100 characters).",
+    "TYPE": "Type",
+    "TYPE_INCOME": "Income",
+    "TYPE_EXPENSE": "Expense",
+    "COLOR": "Color",
+    "ICON": "Icon",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "STATUS": "Status",
+    "ACTIONS": "Actions",
+    "FILTER_ALL": "All",
+    "SEARCH": "Search by name",
+    "KPI_TOTAL": "Total categories",
+    "KPI_INCOME": "Income categories",
+    "KPI_EXPENSE": "Expense categories",
+    "EMPTY_TITLE": "No categories",
+    "EMPTY_MESSAGE": "Create your first one (e.g. Food, Transport).",
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "DUPLICATE": "A category with that name and type already exists.",
+    "CONFIRM_DELETE": "Delete this category?"
+  },
+  "TOP": {
+    "SEARCH": "Search…",
+    "PROFILE": "Profile",
+    "LOGOUT": "Logout",
+    "WELCOME": "Welcome!",
+    "CONFIRM": "Are you sure?",
+    "CONFIRM_DELETE_NOTIFICATION": "Are you sure you want to remove this notification?",
+    "CLOSE": "Close",
+    "YES_DELETE": "Yes, Delete It!"
+  },
   "HEADER": {
     "MORE": {
       "TEXT": "More"
@@ -7,6 +90,28 @@
   "MENUITEMS": {
     "MENU": {
       "TEXT": "MENU"
+    },
+    "FINANCE": {
+      "TEXT": "Finance",
+      "DASHBOARD": "Dashboard",
+      "MAINTENANCE": "Maintenance",
+      "CREDIT_CARD": "Credit Cards",
+      "TRANSACTIONS": "Transactions",
+      "MERCHANTS": "Merchants",
+      "INVESTMENTS": "Investments",
+      "PLATFORMS": "Platforms",
+      "WITHDRAWAL": "Withdrawal Methods",
+      "SAVINGS": "Savings",
+      "REPORTS": "Reports",
+      "CATEGORIES": "Categories",
+      "SECURITY": "Security",
+      "CENTRIES_USUARIO": "Users",
+      "CENTRIES_PERFIL": "Profiles",
+      "CENTRIES_CARGO": "Job Positions",
+      "CENTRIES_PERMISO_PERFIL": "Permissions by Profile",
+      "CENTRIES_USUARIOS_INACTIVOS": "Inactive Users",
+      "CENTRIES_BITACORA": "Audit Log",
+      "SETTINGS": "Settings"
     },
     "DASHBOARD": {
       "TEXT": "Dashboards",

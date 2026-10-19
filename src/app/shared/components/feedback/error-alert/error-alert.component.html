@@ -1,0 +1,9 @@
+<div class="alert alert-danger error-alert d-flex align-items-start gap-2" role="alert">
+  <i class="mdi mdi-alert-circle error-alert__icon" aria-hidden="true"></i>
+  <div class="flex-grow-1 error-alert__message">{{ message() }}</div>
+  @if (retryLabel()) {
+    <button type="button" class="btn btn-sm btn-outline-danger" (click)="retry.emit()">
+      {{ retryLabel() }}
+    </button>
+  }
+</div>

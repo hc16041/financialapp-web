@@ -1,0 +1,73 @@
+// ============================================================
+// Body de la Tabla Genérica — estilos específicos
+// ============================================================
+// Sin colores hex ni rgba hardcodeados: tokens --vz-* / --fp-*.
+
+// Botón de limpieza del filtro por columna
+.clear-filter-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+}
+
+// Menú de acciones (NgbDropdown)
+.actions-dropdown {
+  .btn-icon {
+    padding: 0.25rem;
+    line-height: 1;
+    border: none;
+    background: transparent;
+  }
+
+  .btn-icon:hover {
+    background-color: var(--vz-light);
+  }
+
+  .mdi {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+}
+
+.dropdown-menu {
+  min-width: 12rem;
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+
+    .mdi {
+      font-size: 1rem;
+      width: 1rem;
+    }
+  }
+}
+
+// Empty state con CTA
+.table-empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--vz-secondary-color);
+
+  .table-empty-icon {
+    font-size: 3rem;
+    opacity: 0.4;
+    margin-bottom: 0.75rem;
+    display: inline-block;
+  }
+}
+
+// Overlay de carga (skeleton/spinner)
+.table-loading-overlay {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--vz-secondary-color);
+}

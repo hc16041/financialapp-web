@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiConnectionService } from "src/app/core/services/api-connection.service";
 import { CreditcardDTO } from "../DTO/CreditcardDTO";
 import { CreditCardCodeDTO } from "../DTO/CreditCardCode.dto";
+import { CreditCardsSummaryDto } from "../DTO/CreditCardsSummary.dto";
 import {
   CreditCardOperationResponse,
   CreditCardCreateRequest,
@@ -210,6 +211,32 @@ export class CreditcardService {
       );
     } catch (error) {
       console.error("Error en getCreditcardActivas:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene el resumen agregado de tarjetas de crédito
+   * (límite total, saldo usado y crédito disponible).
+   *
+   * Consumido por los KPIs del módulo de tarjetas (SPEC-06 §4.2).
+   *
+   * @returns `CreditCardsSummaryDto` con los totales agregados.
+   */
+  async getSummary(
+    token: string,
+    usuario: string
+  ): Promise<CreditCardsSummaryDto> {
+    try {
+      const url = `CreditCards/summary`;
+      return await this.apiConnectionService.sendRequestAsync<CreditCardsSummaryDto>(
+        url,
+        "GET",
+        null,
+        { Authorization: token }
+      );
+    } catch (error) {
+      console.error("Error en getSummary:", error);
       throw error;
     }
   }

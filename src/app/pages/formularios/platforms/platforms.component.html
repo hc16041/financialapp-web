@@ -1,3 +1,37 @@
+<!-- KPIs de Plataformas (SPEC-06 §4.5): conteos desde la lista cargada -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Total plataformas"
+      [value]="totalPlatforms()"
+      icon="mdi mdi-layers-outline"
+      variant="primary"
+      [loading]="loading()"
+      [emptyLabel]="'Sin plataformas'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Activas"
+      [value]="activePlatforms()"
+      icon="mdi mdi-check-circle-outline"
+      variant="success"
+      [loading]="loading()"
+      [emptyLabel]="'Sin plataformas'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Inactivas"
+      [value]="inactivePlatforms()"
+      icon="mdi mdi-close-circle-outline"
+      variant="danger"
+      [loading]="loading()"
+      [emptyLabel]="'Sin plataformas'"
+    ></app-kpi-card>
+  </div>
+</div>
+
 <app-generic-table
   [title]="'Listado de Plataformas'"
   [columns]="tableColumns"

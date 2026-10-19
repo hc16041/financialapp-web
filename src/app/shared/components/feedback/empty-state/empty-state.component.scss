@@ -1,0 +1,26 @@
+// Empty State — estilos tokenizados (--vz-* / --fp-*), sin colores hex.
+
+.empty-state {
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--fp-empty-icon-size, 3.5rem);
+    height: var(--fp-empty-icon-size, 3.5rem);
+    border-radius: 50%;
+    font-size: 1.75rem;
+    color: var(--vz-secondary-color);
+    background-color: var(--vz-secondary-bg);
+  }
+
+  &__title {
+    color: var(--vz-heading-color, var(--vz-body-color));
+    font-weight: 600;
+  }
+
+  &__message {
+    max-width: var(--fp-empty-message-width, 26rem);
+    color: var(--vz-secondary-color);
+  }
+}

@@ -20,7 +20,12 @@ import {
   CashExpensesReportDto,
   CardConsumptionDto,
 } from "src/app/application/Reports/DTO/reports.dto";
-import { ChartType } from "../../dashboards/dashboard/dashboard.model";
+import { ApexOptions } from "ng-apexcharts";
+import { AlertcustomService } from "src/app/core/services/alertcustom.service";
+import {
+  getReportChartColors,
+  generateCategoryColors,
+} from "./reports-chart-colors";
 
 @Component({
   selector: "app-reports",
@@ -32,6 +37,7 @@ export class ReportsComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private loginService = inject(LoginService);
   private creditcardService = inject(CreditcardService);
+  private alertService = inject(AlertcustomService);
 
   // Estado con señales y adaptadores getter/setter para compatibilidad con plantillas
   private readonly selectedYearSig = signal<number>(new Date().getFullYear());
@@ -64,6 +70,46 @@ export class ReportsComponent implements OnInit {
   }
   set isLoadingInvestments(value: boolean) {
     this.isLoadingInvestmentsSig.set(value);
+  }
+
+  private readonly isLoadingCardExpensesSig = signal<boolean>(false);
+  get isLoadingCardExpenses(): boolean {
+    return this.isLoadingCardExpensesSig();
+  }
+  set isLoadingCardExpenses(value: boolean) {
+    this.isLoadingCardExpensesSig.set(value);
+  }
+
+  private readonly isLoadingCardPaymentsSig = signal<boolean>(false);
+  get isLoadingCardPayments(): boolean {
+    return this.isLoadingCardPaymentsSig();
+  }
+  set isLoadingCardPayments(value: boolean) {
+    this.isLoadingCardPaymentsSig.set(value);
+  }
+
+  private readonly isLoadingCardsConsumptionSig = signal<boolean>(false);
+  get isLoadingCardsConsumption(): boolean {
+    return this.isLoadingCardsConsumptionSig();
+  }
+  set isLoadingCardsConsumption(value: boolean) {
+    this.isLoadingCardsConsumptionSig.set(value);
+  }
+
+  private readonly isLoadingMerchantsExpensesSig = signal<boolean>(false);
+  get isLoadingMerchantsExpenses(): boolean {
+    return this.isLoadingMerchantsExpensesSig();
+  }
+  set isLoadingMerchantsExpenses(value: boolean) {
+    this.isLoadingMerchantsExpensesSig.set(value);
+  }
+
+  private readonly isLoadingCashExpensesSig = signal<boolean>(false);
+  get isLoadingCashExpenses(): boolean {
+    return this.isLoadingCashExpensesSig();
+  }
+  set isLoadingCashExpenses(value: boolean) {
+    this.isLoadingCashExpensesSig.set(value);
   }
 
   private readonly creditCardsSig = signal<CreditCardCodeDTO[]>([]);
@@ -138,35 +184,35 @@ export class ReportsComponent implements OnInit {
     this.cashExpensesDataSig.set(value);
   }
 
-  private readonly investmentsChartSig = signal<ChartType | null>(null);
-  get investmentsChart(): ChartType | null {
+  private readonly investmentsChartSig = signal<ApexOptions | null>(null);
+  get investmentsChart(): ApexOptions | null {
     return this.investmentsChartSig();
   }
-  set investmentsChart(value: ChartType | null) {
+  set investmentsChart(value: ApexOptions | null) {
     this.investmentsChartSig.set(value);
   }
 
-  private readonly monthlyBalanceChartSig = signal<ChartType | null>(null);
-  get monthlyBalanceChart(): ChartType | null {
+  private readonly monthlyBalanceChartSig = signal<ApexOptions | null>(null);
+  get monthlyBalanceChart(): ApexOptions | null {
     return this.monthlyBalanceChartSig();
   }
-  set monthlyBalanceChart(value: ChartType | null) {
+  set monthlyBalanceChart(value: ApexOptions | null) {
     this.monthlyBalanceChartSig.set(value);
   }
 
-  private readonly cardConsumptionChartSig = signal<ChartType | null>(null);
-  get cardConsumptionChart(): ChartType | null {
+  private readonly cardConsumptionChartSig = signal<ApexOptions | null>(null);
+  get cardConsumptionChart(): ApexOptions | null {
     return this.cardConsumptionChartSig();
   }
-  set cardConsumptionChart(value: ChartType | null) {
+  set cardConsumptionChart(value: ApexOptions | null) {
     this.cardConsumptionChartSig.set(value);
   }
 
-  private readonly merchantsChartSig = signal<ChartType | null>(null);
-  get merchantsChart(): ChartType | null {
+  private readonly merchantsChartSig = signal<ApexOptions | null>(null);
+  get merchantsChart(): ApexOptions | null {
     return this.merchantsChartSig();
   }
-  set merchantsChart(value: ChartType | null) {
+  set merchantsChart(value: ApexOptions | null) {
     this.merchantsChartSig.set(value);
   }
 
@@ -228,7 +274,8 @@ export class ReportsComponent implements OnInit {
           null;
       }
     } catch (error) {
-      // Error al cargar tarjetas
+      console.error("Error al cargar tarjetas:", error);
+      this.alertService.showError("Ocurrió un error. Inténtalo de nuevo.");
     }
   }
 
@@ -247,7 +294,7 @@ export class ReportsComponent implements OnInit {
       );
       this.generateInvestmentsCharts();
     } catch (error) {
-      // Error al cargar reporte de inversiones
+      this.alertService.showError("Error al cargar el reporte de inversiones");
     } finally {
       this.isLoadingInvestments = false;
     }
@@ -258,6 +305,7 @@ export class ReportsComponent implements OnInit {
    */
   async loadCardExpenses(): Promise<void> {
     if (!this.selectedCardId) return;
+    this.isLoadingCardExpenses = true;
     try {
       const token = this.loginService.token || "";
       const username = this.loginService.username || "";
@@ -270,7 +318,11 @@ export class ReportsComponent implements OnInit {
       );
       this.generateCardExpensesChart();
     } catch (error) {
-      // Error al cargar gastos por tarjeta
+      this.alertService.showError(
+        "Error al cargar los gastos por tarjeta"
+      );
+    } finally {
+      this.isLoadingCardExpenses = false;
     }
   }
 
@@ -279,6 +331,7 @@ export class ReportsComponent implements OnInit {
    */
   async loadCardPayments(): Promise<void> {
     if (!this.selectedCardId) return;
+    this.isLoadingCardPayments = true;
     try {
       const token = this.loginService.token || "";
       const username = this.loginService.username || "";
@@ -290,7 +343,9 @@ export class ReportsComponent implements OnInit {
         this.endDate
       );
     } catch (error) {
-      // Error al cargar pagos por tarjeta
+      this.alertService.showError("Error al cargar los pagos por tarjeta");
+    } finally {
+      this.isLoadingCardPayments = false;
     }
   }
 
@@ -299,6 +354,7 @@ export class ReportsComponent implements OnInit {
    * Nota: Los parámetros de fecha son opcionales según la documentación
    */
   async loadCardsConsumption(): Promise<void> {
+    this.isLoadingCardsConsumption = true;
     try {
       const token = this.loginService.token || "";
       const username = this.loginService.username || "";
@@ -311,7 +367,11 @@ export class ReportsComponent implements OnInit {
       );
       this.generateCardsConsumptionChart();
     } catch (error) {
-      // Error al cargar consumo de tarjetas
+      this.alertService.showError(
+        "Error al cargar el consumo de tarjetas"
+      );
+    } finally {
+      this.isLoadingCardsConsumption = false;
     }
   }
 
@@ -319,6 +379,7 @@ export class ReportsComponent implements OnInit {
    * Carga el reporte de gastos por comercios
    */
   async loadMerchantsExpenses(): Promise<void> {
+    this.isLoadingMerchantsExpenses = true;
     try {
       const token = this.loginService.token || "";
       const username = this.loginService.username || "";
@@ -331,7 +392,11 @@ export class ReportsComponent implements OnInit {
         );
       this.generateMerchantsChart();
     } catch (error) {
-      // Error al cargar gastos por comercios
+      this.alertService.showError(
+        "Error al cargar los gastos por comercios"
+      );
+    } finally {
+      this.isLoadingMerchantsExpenses = false;
     }
   }
 
@@ -339,6 +404,7 @@ export class ReportsComponent implements OnInit {
    * Carga el reporte de gastos en efectivo
    */
   async loadCashExpenses(): Promise<void> {
+    this.isLoadingCashExpenses = true;
     try {
       const token = this.loginService.token || "";
       const username = this.loginService.username || "";
@@ -349,7 +415,11 @@ export class ReportsComponent implements OnInit {
         this.endDate
       );
     } catch (error) {
-      // Error al cargar gastos en efectivo
+      this.alertService.showError(
+        "Error al cargar los gastos en efectivo"
+      );
+    } finally {
+      this.isLoadingCashExpenses = false;
     }
   }
 
@@ -372,7 +442,6 @@ export class ReportsComponent implements OnInit {
         bar: {
           horizontal: false,
           columnWidth: "55%",
-          endingShape: "rounded",
         },
       },
       dataLabels: {
@@ -383,7 +452,7 @@ export class ReportsComponent implements OnInit {
         width: 2,
         colors: ["transparent"],
       },
-      colors: ["#34c38f", "#f46a6a"],
+      colors: getReportChartColors(),
       series: [
         {
           name: "Ingresos",
@@ -424,7 +493,7 @@ export class ReportsComponent implements OnInit {
         height: 350,
         toolbar: { show: false },
       },
-      colors: ["#556ee6"],
+      colors: [getReportChartColors()[2]],
       stroke: {
         curve: "smooth",
         width: 3,
@@ -473,7 +542,7 @@ export class ReportsComponent implements OnInit {
       },
       labels: expenses.map((e) => e.merchantName || "Sin comercio"),
       series: expenses.map((e) => e.amount),
-      colors: this.generateColors(expenses.length),
+      colors: generateCategoryColors(expenses.length),
       legend: {
         position: "bottom",
       },
@@ -505,7 +574,7 @@ export class ReportsComponent implements OnInit {
           horizontal: true,
         },
       },
-      colors: ["#556ee6"],
+      colors: [getReportChartColors()[2]],
       series: [
         {
           name: "Utilización (%)",
@@ -564,11 +633,11 @@ export class ReportsComponent implements OnInit {
           borderRadius: 4,
         },
       },
-      colors: ["#34c38f"],
+      colors: [getReportChartColors()[0]],
       dataLabels: {
         enabled: true,
-        formatter: function (val: number) {
-          return "$ " + val.toFixed(2);
+        formatter: function (val: string | number | number[]) {
+          return "$ " + Number(val).toFixed(2);
         },
       },
       series: [
@@ -593,25 +662,6 @@ export class ReportsComponent implements OnInit {
         },
       },
     };
-  }
-
-  /**
-   * Genera colores para los gráficos
-   */
-  private generateColors(count: number): string[] {
-    const colors = [
-      "#556ee6",
-      "#34c38f",
-      "#f46a6a",
-      "#f1b44c",
-      "#50a5f1",
-      "#ff6b6b",
-      "#4ecdc4",
-      "#45b7d1",
-      "#f9ca24",
-      "#6c5ce7",
-    ];
-    return colors.slice(0, count);
   }
 
   /**
@@ -660,5 +710,18 @@ export class ReportsComponent implements OnInit {
       (sum, m) => sum + m.retiroCount,
       0
     );
+  }
+
+  /**
+   * Formatea un rango de fechas (`yyyy-MM-dd`) como `dd/MM/yyyy - dd/MM/yyyy`
+   * para la tarjeta KPI "Período".
+   */
+  formatPeriod(start: string, end: string): string {
+    const format = (date: string): string => {
+      if (!date) return "—";
+      const [year, month, day] = date.split("-");
+      return year && month && day ? `${day}/${month}/${year}` : "—";
+    };
+    return `${format(start)} - ${format(end)}`;
   }
 }

@@ -1,0 +1,18 @@
+// Error Alert — estilos tokenizados (--vz-*), sin colores hex.
+// La base visual (fondo/borde `alert-danger`) proviene de Bootstrap 5.3.
+
+.error-alert {
+  border-color: rgba(var(--vz-danger-rgb), 0.35);
+
+  &__icon {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: var(--vz-danger);
+  }
+
+  &__message {
+    color: inherit;
+    overflow-wrap: anywhere;
+  }
+}

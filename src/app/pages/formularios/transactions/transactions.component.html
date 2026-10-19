@@ -1,3 +1,39 @@
+<!-- KPIs de Transacciones (SPEC-06 §4.3): se recalculan con el rango de fechas activo -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Total gastado"
+      [value]="totalSpent()"
+      icon="mdi mdi-cash-minus"
+      variant="danger"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin transacciones'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Nº transacciones"
+      [value]="transactionsCount()"
+      icon="mdi mdi-swap-horizontal"
+      variant="info"
+      [loading]="loading()"
+      [emptyLabel]="'Sin transacciones'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Promedio por transacción"
+      [value]="averageAmount()"
+      icon="mdi mdi-chart-line"
+      variant="primary"
+      [isCurrency]="true"
+      [loading]="loading()"
+      [emptyLabel]="'Sin transacciones'"
+    ></app-kpi-card>
+  </div>
+</div>
+
 <app-generic-table
   [title]="'Listado de Transacciones'"
   [columns]="tableColumns"

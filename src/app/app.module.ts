@@ -46,7 +46,7 @@ if (environment.defaultauth === "firebase") {
   imports: [
     NgbPaginationModule,
     TranslateModule.forRoot({
-      defaultLanguage: "en",
+      defaultLanguage: "es",
       loader: {
         provide: TranslateLoader,
         useFactory: createTranslateLoader,

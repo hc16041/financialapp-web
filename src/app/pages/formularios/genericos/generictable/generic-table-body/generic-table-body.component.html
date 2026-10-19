@@ -1,0 +1,327 @@
+<!-- Overlay de carga -->
+@if (loading) {
+<div class="table-loading-overlay" role="status" aria-live="polite">
+  <div
+    class="spinner-border spinner-border-sm me-2"
+    role="status"
+    aria-hidden="true"
+  ></div>
+  <span>Cargando datos…</span>
+</div>
+}
+
+<!-- Empty state con CTA -->
+@if (!loading && paginatedData.length === 0) {
+<div class="table-empty-state">
+  <i class="mdi mdi-database-search-outline table-empty-icon"></i>
+  <p class="mb-3">
+    {{ emptyMessage || 'No hay registros para mostrar' }}
+  </p>
+  @if (showNewRegister) {
+  <button
+    type="button"
+    class="btn btn-outline-info btn-sm"
+    (click)="onNewClick()"
+  >
+    <i class="mdi mdi-plus me-1"></i>
+    Nuevo Registro
+  </button>
+  }
+</div>
+}
+
+@if (!loading && paginatedData.length > 0) {
+<!-- Vista de tabla para desktop -->
+<div class="table-responsive d-none d-md-block">
+  <table class="table table-gridjs">
+    <thead>
+      <tr>
+        <th
+          *ngFor="let column of visibleColumns"
+          [ngClass]="{
+            sort: column.sortable,
+            sorted: column.property === sortColumn,
+            'text-end': isNumericColumn(column)
+          }"
+          [attr.aria-sort]="
+            column.sortable
+              ? sortColumn === column.property
+                ? sortDirection === 'asc'
+                  ? 'ascending'
+                  : 'descending'
+                : 'none'
+              : null
+          "
+          (click)="column.sortable && onSortClick(column.property)"
+        >
+          <div
+            class="d-flex justify-content-between align-items-center"
+            [ngClass]="{ 'justify-content-end': isNumericColumn(column) }"
+          >
+            <span (click)="column.sortable && onSortClick(column.property)">
+              {{ column.header }}
+            </span>
+            <i
+              *ngIf="column.sortable"
+              class="mdi"
+              [ngClass]="{
+                'mdi-arrow-down':
+                  sortColumn === column.property &&
+                  sortDirection === 'desc',
+                'mdi-arrow-up':
+                  sortColumn === column.property &&
+                  sortDirection === 'asc',
+                'mdi-arrow-down text-secondary':
+                  sortColumn !== column.property
+              }"
+            ></i>
+          </div>
+
+          <!-- Input de filtro para la columna -->
+          <div class="position-relative mt-1">
+            <label class="visually-hidden" [for]="'gt-filter-' + column.property">
+              Filtrar por {{ column.header }}
+            </label>
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              [id]="'gt-filter-' + column.property"
+              placeholder="Filtrar..."
+              [attr.aria-label]="'Filtrar por ' + column.header"
+              [value]="columnFilters[column.property] || ''"
+              (input)="
+                onColumnFilter(column.property, getInputValue($event))
+              "
+            />
+
+            <!-- Botón para limpiar filtro -->
+            <span
+              *ngIf="columnFilters[column.property]"
+              class="clear-filter-btn"
+              (click)="
+                clearColumnFilter(column.property);
+                $event.stopPropagation()
+              "
+            >
+              <i class="mdi mdi-close-circle text-muted"></i>
+            </span>
+          </div>
+        </th>
+        <th *ngIf="showActions" class="text-end">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of paginatedData; trackBy: trackByFn">
+        <td *ngFor="let column of visibleColumns" [ngClass]="getCellClasses(column)">
+          @switch (column.type) {
+            @case ('date') {
+              {{
+                getValueAsDate(item, column.property)
+                  | date : column.format || 'yyyy-MM-dd'
+              }}
+            }
+            @case ('currency') {
+              {{ toNumber(getValue(item, column.property)) | fpCurrency }}
+            }
+            @case ('badge') {
+              @if (getBadgeForColumn(item, column); as badge) {
+              <span class="badge {{ badgeVariantClass(badge.variant) }}">
+                {{ badge.label }}
+              </span>
+              } @else {
+              {{ getValueAsString(item, column.property) || column.defaultValue || '-' }}
+              }
+            }
+            @case ('boolean') {
+              @if (getBadgeForColumn(item, column); as badge) {
+              <span class="badge {{ badgeVariantClass(badge.variant) }}">
+                {{ badge.label }}
+              </span>
+              } @else {
+              {{ getValueAsString(item, column.property) || column.defaultValue || '-' }}
+              }
+            }
+            @case ('number') {
+              {{
+                toNumber(getValue(item, column.property)) ??
+                  (getValueAsString(item, column.property) ||
+                    column.defaultValue ||
+                    '-')
+              }}
+            }
+            @default {
+              <ngb-highlight
+                [result]="
+                  getValueAsString(item, column.property) ||
+                  column.defaultValue ||
+                  '-'
+                "
+                [term]="searchTerm"
+              ></ngb-highlight>
+            }
+          }
+        </td>
+        <td *ngIf="showActions" class="text-end">
+          <div ngbDropdown class="d-inline-block actions-dropdown">
+            <button
+              class="btn btn-icon btn-sm btn-light"
+              ngbDropdownToggle
+              aria-label="Acciones"
+              aria-haspopup="true"
+            >
+              <i class="mdi mdi-dots-horizontal"></i>
+            </button>
+            <div ngbDropdownMenu>
+              <ng-container *ngFor="let action of allowedActions">
+                <button
+                  *ngIf="shouldRenderAction(action, item)"
+                  class="dropdown-item"
+                  role="menuitem"
+                  tabindex="0"
+                  (click)="onActionClick(actionConfig[action].action, item)"
+                >
+                  <i
+                    class="mdi {{ actionConfig[action].icon }} {{
+                      actionConfig[action].color
+                    }}"
+                  ></i>
+                  <span>{{ actionConfig[action].text }}</span>
+                </button>
+              </ng-container>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <!-- Fila de sumatoria -->
+      <tr *ngIf="sumColumns.length > 0">
+        <td *ngFor="let column of visibleColumns">
+          <ng-container
+            *ngIf="sumColumns.includes(column.property); else emptyCell"
+          >
+            <b>{{ columnSums[column.property] | fpCurrency }}</b>
+          </ng-container>
+          <ng-template #emptyCell>
+            <span *ngIf="column === visibleColumns[0]"><b>Total</b></span>
+          </ng-template>
+        </td>
+        <td *ngIf="showActions"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Vista de cards para móviles -->
+<div class="d-md-none">
+  <div class="row g-3">
+    <div
+      class="col-12"
+      *ngFor="let item of paginatedData; trackBy: trackByFn"
+    >
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div
+            class="d-flex justify-content-between align-items-start mb-2"
+          >
+            <h6 class="card-title mb-0">
+              {{
+                visibleColumns[0]
+                  ? getValue(item, visibleColumns[0].property)
+                  : '-'
+              }}
+            </h6>
+            <div *ngIf="showActions">
+              <div ngbDropdown class="d-inline-block actions-dropdown">
+                <button
+                  class="btn btn-icon btn-sm btn-light"
+                  ngbDropdownToggle
+                  aria-label="Acciones"
+                  aria-haspopup="true"
+                >
+                  <i class="mdi mdi-dots-horizontal"></i>
+                </button>
+                <div ngbDropdownMenu>
+                  <ng-container *ngFor="let action of allowedActions">
+                    <button
+                      *ngIf="shouldRenderAction(action, item)"
+                      class="dropdown-item"
+                      role="menuitem"
+                      tabindex="0"
+                      (click)="onActionClick(actionConfig[action].action, item)"
+                    >
+                      <i
+                        class="mdi {{ actionConfig[action].icon }} {{
+                          actionConfig[action].color
+                        }}"
+                      ></i>
+                      <span>{{ actionConfig[action].text }}</span>
+                    </button>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-2">
+            <div
+              class="col-6"
+              *ngFor="let column of visibleColumns.slice(1)"
+            >
+              <small class="text-muted d-block"
+                >{{ column.header }}:</small
+              >
+              <div class="fw-medium">
+                @switch (column.type) {
+                  @case ('date') {
+                    {{
+                      getValueAsDate(item, column.property)
+                        | date : column.format || 'yyyy-MM-dd'
+                    }}
+                  }
+                  @case ('currency') {
+                    {{ toNumber(getValue(item, column.property)) | fpCurrency }}
+                  }
+                  @case ('badge') {
+                    @if (getBadgeForColumn(item, column); as badge) {
+                    <span class="badge {{ badgeVariantClass(badge.variant) }}">
+                      {{ badge.label }}
+                    </span>
+                    } @else {
+                    {{ getValueAsString(item, column.property) || column.defaultValue || '-' }}
+                    }
+                  }
+                  @case ('boolean') {
+                    @if (getBadgeForColumn(item, column); as badge) {
+                    <span class="badge {{ badgeVariantClass(badge.variant) }}">
+                      {{ badge.label }}
+                    </span>
+                    } @else {
+                    {{ getValueAsString(item, column.property) || column.defaultValue || '-' }}
+                    }
+                  }
+                  @case ('number') {
+                    {{
+                      toNumber(getValue(item, column.property)) ??
+                        (getValueAsString(item, column.property) ||
+                          column.defaultValue ||
+                          '-')
+                    }}
+                  }
+                  @default {
+                    <ngb-highlight
+                      [result]="
+                        getValueAsString(item, column.property) ||
+                        column.defaultValue ||
+                        '-'
+                      "
+                      [term]="searchTerm"
+                    ></ngb-highlight>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}

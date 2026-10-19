@@ -1,3 +1,37 @@
+<!-- KPIs de Permisos por Perfil (SPEC-06 §4.6) -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Total asignaciones"
+      [value]="totalAsignaciones()"
+      icon="mdi mdi-key-outline"
+      variant="primary"
+      [loading]="loading()"
+      [emptyLabel]="'Sin asignaciones'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Perfiles"
+      [value]="perfilesAsignados()"
+      icon="mdi mdi-account-group-outline"
+      variant="info"
+      [loading]="loading()"
+      [emptyLabel]="'Sin asignaciones'"
+    ></app-kpi-card>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <app-kpi-card
+      label="Permisos"
+      [value]="permisosAsignados()"
+      icon="mdi mdi-shield-key-outline"
+      variant="success"
+      [loading]="loading()"
+      [emptyLabel]="'Sin asignaciones'"
+    ></app-kpi-card>
+  </div>
+</div>
+
 <app-generic-table
   [title]="'Listado de Permisos por Perfil'"
   [columns]="tableColumns"

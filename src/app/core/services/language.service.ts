@@ -7,7 +7,7 @@ export class LanguageService {
   private translate = inject(TranslateService);
   private cookieService = inject(CookieService);
 
-  public languages: string[] = ['en', 'es', 'de', 'it', 'ru'];
+  public languages: string[] = ['es', 'en'];
 
   constructor() {
     let browserLang: string | undefined;
@@ -21,7 +21,7 @@ export class LanguageService {
     else {
       browserLang = this.translate.getBrowserLang();
     }
-    this.translate.use(browserLang?.match(/en|es|de|it|ru/) ? browserLang : 'en');
+    this.translate.use(browserLang?.match(/es|en/) ? browserLang : 'es');
   }
 
   /***

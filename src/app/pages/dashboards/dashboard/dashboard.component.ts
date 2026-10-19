@@ -1,455 +1,242 @@
-import { Component, OnInit, ViewChild, inject, ChangeDetectionStrategy } from "@angular/core";
-import { ToastService } from "./toast-service";
-import { circle, latLng, tileLayer } from "leaflet";
-import { ChartType } from "./dashboard.model";
+import {
+  Component,
+  OnInit,
+  inject,
+  ChangeDetectionStrategy,
+  computed,
+  signal,
+} from "@angular/core";
+import { LoginService } from "src/app/account/login/Services/LoginService";
+import { formatMoney } from "src/app/core/utils/money.util";
+import { DashboardFacade } from "./dashboard.facade";
+import { DashboardChartOptions, DashboardKpi } from "./dashboard.model";
 
-interface BreadCrumbItem {
-  label: string;
-  active?: boolean;
-}
-
-interface DateRange {
-  from: Date;
-  to: Date;
-}
-
+/**
+ * Dashboard financiero (SPEC-01).
+ *
+ * Reemplaza el antiguo demo de ecommerce por un panel real: saludo localizado,
+ * 6 KPIs, 3 gráficos ApexCharts y 2 widgets. El estado proviene del
+ * `DashboardFacade` (Signals).
+ */
 @Component({
   selector: "app-dashboard",
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-
-/**
- * Ecommerce Component
- */
 export class DashboardComponent implements OnInit {
-  toastService = inject(ToastService);
-  
-  // bread crumb items
-  breadCrumbItems!: BreadCrumbItem[];
-  analyticsChart!: ChartType;
-  BestSelling: unknown;
-  TopSelling: unknown;
-  Recentelling: unknown;
-  SalesCategoryChart!: ChartType;
-  statData: unknown;
+  private readonly facade = inject(DashboardFacade);
+  private readonly loginService = inject(LoginService);
 
-  // Current Date
-  currentDate: DateRange;
+  /** Nombre de usuario desde el LoginService (clave `username`). */
+  readonly username = signal<string>(this.loginService.username ?? "");
 
-  constructor() {
-    const date = new Date();
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    this.currentDate = { from: firstDay, to: lastDay };
-  }
+  // Estado reactivo del facade (Signals read-only).
+  readonly loading = this.facade.loading;
+  readonly error = this.facade.error;
+  readonly summary = this.facade.summary;
+  readonly monthlyTransactions = this.facade.monthlyTransactions;
+  readonly categoryExpenses = this.facade.categoryExpenses;
+  readonly investmentEvolution = this.facade.investmentEvolution;
+  readonly recentTransactions = this.facade.recentTransactions;
+  readonly spendingByCard = this.facade.spendingByCard;
+
+  /** Fila de 6 KPIs con icono MDI y variante semántica. */
+  readonly kpis = computed<DashboardKpi[]>(() => {
+    const summary = this.summary();
+    const balance = summary?.totalBalance ?? null;
+    const net = summary?.netBalance ?? null;
+    return [
+      {
+        id: "balance",
+        labelKey: "DASHBOARD.KPI.BALANCE",
+        value: balance,
+        icon: "mdi mdi-wallet-outline",
+        variant: balance !== null && balance < 0 ? "danger" : "primary",
+      },
+      {
+        id: "income",
+        labelKey: "DASHBOARD.KPI.INCOME",
+        value: summary?.monthIncome ?? null,
+        icon: "mdi mdi-trending-up",
+        variant: "success",
+      },
+      {
+        id: "expenses",
+        labelKey: "DASHBOARD.KPI.EXPENSES",
+        value: summary?.monthExpenses ?? null,
+        icon: "mdi mdi-trending-down",
+        variant: "danger",
+      },
+      {
+        id: "invested",
+        labelKey: "DASHBOARD.KPI.INVESTED",
+        value: summary?.totalInvested ?? null,
+        icon: "mdi mdi-chart-line",
+        variant: "info",
+      },
+      {
+        id: "savings",
+        labelKey: "DASHBOARD.KPI.SAVINGS",
+        value: summary?.totalSavings ?? null,
+        icon: "mdi mdi-piggy-bank-outline",
+        variant: "primary",
+      },
+      {
+        id: "net",
+        labelKey: "DASHBOARD.KPI.NET",
+        value: net,
+        icon: "mdi mdi-scale-balance",
+        variant: net !== null && net < 0 ? "danger" : "success",
+      },
+    ];
+  });
+
+  /** Indica si el gráfico mensual tiene algún dato distinto de cero. */
+  readonly hasMonthlyData = computed(() =>
+    this.monthlyTransactions().some((m) => m.income !== 0 || m.expenses !== 0)
+  );
+
+  // Configuraciones de los 3 gráficos (tipadas con `ApexOptions`).
+  readonly monthlyTransactionsChart = computed<DashboardChartOptions>(() =>
+    this.buildMonthlyTransactionsChart()
+  );
+  readonly categoryExpensesChart = computed<DashboardChartOptions>(() =>
+    this.buildCategoryExpensesChart()
+  );
+  readonly investmentEvolutionChart = computed<DashboardChartOptions>(() =>
+    this.buildInvestmentEvolutionChart()
+  );
 
   ngOnInit(): void {
-    /**
-     * BreadCrumb
-     */
-    this.breadCrumbItems = [
-      { label: "Dashboards" },
-      { label: "Dashboard", active: true },
-    ];
-
-    if (sessionStorage.getItem("toast")) {
-      this.toastService.show("Logged in Successfull.", {
-        classname: "bg-success text-center text-white",
-        delay: 5000,
-      });
-      sessionStorage.removeItem("toast");
-    }
-
-    /**
-     * Fetches the data
-     */
-    // this.fetchData();
-
-    // Chart Color Data Get Function
-    this._analyticsChart('["--vz-success", "--vz-primary", "--vz-danger"]');
-    this._SalesCategoryChart(
-      '["--vz-primary", "--vz-success", "--vz-warning", "--vz-danger", "--vz-info"]'
-    );
+    void this.facade.initialize();
   }
 
-  // Chart Colors Set
-  private getChartColorsArray(colors: any) {
-    colors = JSON.parse(colors);
-    return colors.map(function (value: any) {
-      var newValue = value.replace(" ", "");
-      if (newValue.indexOf(",") === -1) {
-        var color = getComputedStyle(document.documentElement).getPropertyValue(
-          newValue
-        );
-        if (color) {
-          color = color.replace(" ", "");
-          return color;
-        } else return newValue;
-      } else {
-        var val = value.split(",");
-        if (val.length == 2) {
-          var rgbaColor = getComputedStyle(
-            document.documentElement
-          ).getPropertyValue(val[0]);
-          rgbaColor = "rgba(" + rgbaColor + "," + val[1] + ")";
-          return rgbaColor;
-        } else {
-          return newValue;
-        }
+  /**
+   * Gráfico "Transacciones por Mes": barras ingresos vs gastos.
+   * Colores semánticos vía tokens CSS resueltos por `getChartColorsArray`.
+   */
+  private buildMonthlyTransactionsChart(): DashboardChartOptions {
+    const data = this.monthlyTransactions();
+    const colors = this.getChartColorsArray('["--vz-success", "--vz-danger"]');
+    return {
+      chart: { height: 350, type: "bar", toolbar: { show: false } },
+      colors,
+      series: [
+        { name: "Ingresos", data: data.map((d) => d.income) },
+        { name: "Gastos", data: data.map((d) => d.expenses) },
+      ],
+      xaxis: { categories: data.map((d) => d.month) },
+      plotOptions: { bar: { columnWidth: "55%", borderRadius: 4 } },
+      dataLabels: { enabled: false },
+      legend: { position: "top" },
+      tooltip: { y: { formatter: (val: number) => formatMoney(val) } },
+    };
+  }
+
+  /**
+   * Gráfico "Gastos por Categoría": donut alimentado por merchants/expenses.
+   */
+  private buildCategoryExpensesChart(): DashboardChartOptions {
+    const data = this.categoryExpenses();
+    const colors = this.getChartColorsArray(
+      '["--fp-primary", "--fp-success", "--fp-danger", "--fp-info", "--fp-warning", "--fp-accent"]'
+    );
+    return {
+      chart: { height: 350, type: "donut" },
+      labels: data.map((d) => d.label),
+      series: data.map((d) => d.value),
+      colors,
+      legend: { position: "bottom" },
+      dataLabels: {
+        enabled: true,
+        formatter: (val: string | number | number[]) =>
+          `${Number(val).toFixed(1)}%`,
+      },
+      tooltip: { y: { formatter: (val: number) => formatMoney(val) } },
+    };
+  }
+
+  /**
+   * Gráfico "Evolución de Inversiones": línea alimentada por investments/monthly.
+   */
+  private buildInvestmentEvolutionChart(): DashboardChartOptions {
+    const data = this.investmentEvolution();
+    const colors = this.getChartColorsArray('["--fp-primary"]');
+    return {
+      chart: { height: 350, type: "line", toolbar: { show: false } },
+      colors,
+      series: [{ name: "Inversiones", data: data.map((d) => d.invested) }],
+      xaxis: { categories: data.map((d) => d.month) },
+      stroke: { curve: "smooth", width: 3 },
+      markers: { size: 4 },
+      dataLabels: { enabled: false },
+      tooltip: { y: { formatter: (val: number) => formatMoney(val) } },
+    };
+  }
+
+  /**
+   * Resuelve tokens CSS (p. ej. `"--vz-success"`) a valores para los gráficos.
+   * Conservado del dashboard anterior y reutilizado por los 3 gráficos.
+   */
+  private getChartColorsArray(colors: string): string[] {
+    const tokens: string[] = JSON.parse(colors);
+    return tokens.map((value) => {
+      const token = value.replace(" ", "");
+      if (token.indexOf(",") === -1) {
+        const color = getComputedStyle(
+          document.documentElement
+        ).getPropertyValue(token);
+        return color ? color.replace(" ", "") : token;
       }
+      const parts = token.split(",");
+      if (parts.length === 2) {
+        const rgba = getComputedStyle(
+          document.documentElement
+        ).getPropertyValue(parts[0]);
+        return "rgba(" + rgba + "," + parts[1] + ")";
+      }
+      return token;
     });
   }
 
-  /**
-   * Sales Analytics Chart
-   */
-  setrevenuevalue(value: any) {
-    if (value == "all") {
-      this.analyticsChart.series = [
-        {
-          name: "Orders",
-          type: "area",
-          data: [34, 65, 46, 68, 49, 61, 42, 44, 78, 52, 63, 67],
-        },
-        {
-          name: "Earnings",
-          type: "bar",
-          data: [
-            89.25, 98.58, 68.74, 108.87, 77.54, 84.03, 51.24, 28.57, 92.57,
-            42.36, 88.51, 36.57,
-          ],
-        },
-        {
-          name: "Refunds",
-          type: "line",
-          data: [8, 12, 7, 17, 21, 11, 5, 9, 7, 29, 12, 35],
-        },
-      ];
-    }
-    if (value == "1M") {
-      this.analyticsChart.series = [
-        {
-          name: "Orders",
-          type: "area",
-          data: [24, 75, 16, 98, 19, 41, 52, 34, 28, 52, 63, 67],
-        },
-        {
-          name: "Earnings",
-          type: "bar",
-          data: [
-            99.25, 28.58, 98.74, 12.87, 107.54, 94.03, 11.24, 48.57, 22.57,
-            42.36, 88.51, 36.57,
-          ],
-        },
-        {
-          name: "Refunds",
-          type: "line",
-          data: [28, 22, 17, 27, 21, 11, 5, 9, 17, 29, 12, 15],
-        },
-      ];
-    }
-    if (value == "6M") {
-      this.analyticsChart.series = [
-        {
-          name: "Orders",
-          type: "area",
-          data: [34, 75, 66, 78, 29, 41, 32, 44, 58, 52, 43, 77],
-        },
-        {
-          name: "Earnings",
-          type: "bar",
-          data: [
-            109.25, 48.58, 38.74, 57.87, 77.54, 84.03, 31.24, 18.57, 92.57,
-            42.36, 48.51, 56.57,
-          ],
-        },
-        {
-          name: "Refunds",
-          type: "line",
-          data: [12, 22, 17, 27, 1, 51, 5, 9, 7, 29, 12, 35],
-        },
-      ];
-    }
-    if (value == "1Y") {
-      this.analyticsChart.series = [
-        {
-          name: "Orders",
-          type: "area",
-          data: [34, 65, 46, 68, 49, 61, 42, 44, 78, 52, 63, 67],
-        },
-        {
-          name: "Earnings",
-          type: "bar",
-          data: [
-            89.25, 98.58, 68.74, 108.87, 77.54, 84.03, 51.24, 28.57, 92.57,
-            42.36, 88.51, 36.57,
-          ],
-        },
-        {
-          name: "Refunds",
-          type: "line",
-          data: [8, 12, 7, 17, 21, 11, 5, 9, 7, 29, 12, 35],
-        },
-      ];
+  /** Clase de badge semántico según el tipo de transacción. */
+  transactionTypeBadgeClass(type: string): string {
+    switch (type) {
+      case "Purchase":
+        return "badge bg-danger";
+      case "Payment":
+        return "badge bg-success";
+      case "Fee":
+      case "Interest":
+        return "badge bg-warning";
+      default:
+        return "badge bg-secondary";
     }
   }
 
-  private _analyticsChart(colors: any) {
-    colors = this.getChartColorsArray(colors);
-    this.analyticsChart = {
-      chart: {
-        height: 370,
-        type: "line",
-        toolbar: {
-          show: false,
-        },
-      },
-      stroke: {
-        curve: "straight",
-        dashArray: [0, 0, 8],
-        width: [2, 0, 2.2],
-      },
-      colors: colors,
-      series: [
-        {
-          name: "Orders",
-          type: "area",
-          data: [34, 65, 46, 68, 49, 61, 42, 44, 78, 52, 63, 67],
-        },
-        {
-          name: "Earnings",
-          type: "bar",
-          data: [
-            89.25, 98.58, 68.74, 108.87, 77.54, 84.03, 51.24, 28.57, 92.57,
-            42.36, 88.51, 36.57,
-          ],
-        },
-        {
-          name: "Refunds",
-          type: "line",
-          data: [8, 12, 7, 17, 21, 11, 5, 9, 7, 29, 12, 35],
-        },
-      ],
-      fill: {
-        opacity: [0.1, 0.9, 1],
-      },
-      labels: [
-        "01/01/2003",
-        "02/01/2003",
-        "03/01/2003",
-        "04/01/2003",
-        "05/01/2003",
-        "06/01/2003",
-        "07/01/2003",
-        "08/01/2003",
-        "09/01/2003",
-        "10/01/2003",
-        "11/01/2003",
-      ],
-      markers: {
-        size: [0, 0, 0],
-        strokeWidth: 2,
-        hover: {
-          size: 4,
-        },
-      },
-      xaxis: {
-        categories: [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ],
-        axisTicks: {
-          show: false,
-        },
-        axisBorder: {
-          show: false,
-        },
-      },
-      grid: {
-        show: true,
-        xaxis: {
-          lines: {
-            show: true,
-          },
-        },
-        yaxis: {
-          lines: {
-            show: false,
-          },
-        },
-        padding: {
-          top: 0,
-          right: -2,
-          bottom: 15,
-          left: 10,
-        },
-      },
-      legend: {
-        show: true,
-        horizontalAlign: "center",
-        offsetX: 0,
-        offsetY: -5,
-        markers: {
-          width: 9,
-          height: 9,
-          radius: 6,
-        },
-        itemMargin: {
-          horizontal: 10,
-          vertical: 0,
-        },
-      },
-      plotOptions: {
-        bar: {
-          columnWidth: "30%",
-          barHeight: "70%",
-        },
-      },
-    };
-  }
-
-  /**
-   *  Sales Category
-   */
-  private _SalesCategoryChart(colors: any) {
-    colors = this.getChartColorsArray(colors);
-    this.SalesCategoryChart = {
-      series: [44, 55, 41, 17, 15],
-      labels: ["Direct", "Social", "Email", "Other", "Referrals"],
-      chart: {
-        height: 333,
-        type: "donut",
-      },
-      legend: {
-        position: "bottom",
-      },
-      stroke: {
-        show: false,
-      },
-      dataLabels: {
-        dropShadow: {
-          enabled: false,
-        },
-      },
-      colors: colors,
-    };
-  }
-
-  /**
-   * Fetches the data
-   */
-  // private fetchData() {
-  //   this.BestSelling = BestSelling;
-  //   this.TopSelling = TopSelling;
-  //   this.Recentelling = Recentelling;
-  //   this.statData = statData;
-  // }
-
-  /**
-   * Sale Location Map
-   */
-  options = {
-    layers: [
-      tileLayer(
-        "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidGhlbWVzYnJhbmQiLCJhIjoiY2xmbmc3bTV4MGw1ejNzbnJqOWpubzhnciJ9.DNkdZVKLnQ6I9NOz7EED-w",
-        {
-          id: "mapbox/light-v9",
-          tileSize: 512,
-          zoomOffset: 0,
-          attribution:
-            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        }
-      ),
-    ],
-    zoom: 1.1,
-    center: latLng(28, 1.5),
-  };
-  layers = [
-    circle([41.9, 12.45], {
-      color: "#435fe3",
-      opacity: 0.5,
-      weight: 10,
-      fillColor: "#435fe3",
-      fillOpacity: 1,
-      radius: 400000,
-    }),
-    circle([12.05, -61.75], {
-      color: "#435fe3",
-      opacity: 0.5,
-      weight: 10,
-      fillColor: "#435fe3",
-      fillOpacity: 1,
-      radius: 400000,
-    }),
-    circle([1.3, 103.8], {
-      color: "#435fe3",
-      opacity: 0.5,
-      weight: 10,
-      fillColor: "#435fe3",
-      fillOpacity: 1,
-      radius: 400000,
-    }),
-  ];
-
-  num: number = 0;
-  option = {
-    startVal: this.num,
-    useEasing: true,
-    duration: 2,
-    decimalPlaces: 2,
-  };
-
-  /**
-   * Swiper Vertical
-   */
-  Vertical = {
-    infinite: true,
-    autoplay: true,
-    autoplaySpeed: 2000,
-    slidesToShow: 2,
-    slidesToScroll: 1,
-    arrows: false,
-    vertical: true, // Enable vertical sliding
-  };
-
-  /**
-   * Recent Activity
-   */
-  toggleActivity() {
-    const recentActivity = document.querySelector(".layout-rightside-col");
-    if (recentActivity != null) {
-      recentActivity.classList.toggle("d-none");
+  /** Clase de color para la barra de utilización de una tarjeta. */
+  utilizationClass(percentage: number): string {
+    if (percentage >= 80) {
+      return "bg-danger";
     }
-
-    if (document.documentElement.clientWidth <= 767) {
-      const recentActivity = document.querySelector(".layout-rightside-col");
-      if (recentActivity != null) {
-        recentActivity.classList.add("d-block");
-        recentActivity.classList.remove("d-none");
-      }
+    if (percentage >= 50) {
+      return "bg-warning";
     }
+    return "bg-success";
   }
 
-  /**
-   * SidebarHide modal
-   * @param content modal content
-   */
-  SidebarHide() {
-    const recentActivity = document.querySelector(".layout-rightside-col");
-    if (recentActivity != null) {
-      recentActivity.classList.remove("d-block");
+  /** Clase de color para el monto según el tipo de transacción. */
+  transactionAmountClass(type: string): string {
+    switch (type) {
+      case "Purchase":
+      case "Fee":
+      case "Interest":
+        return "text-danger";
+      case "Payment":
+        return "text-success";
+      default:
+        return "text-secondary";
     }
   }
 }

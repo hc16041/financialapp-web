@@ -1,4 +1,87 @@
 {
+  "COMMON": {
+    "LOADING": "Cargando…",
+    "EMPTY": "Sin datos",
+    "EMPTY_TITLE": "No hay registros",
+    "EMPTY_MESSAGE": "No se encontraron datos para mostrar.",
+    "ERROR_TITLE": "Error",
+    "RETRY": "Reintentar",
+    "DISMISS": "Cerrar",
+    "ERROR_GENERIC": "Ocurrió un error. Inténtalo de nuevo.",
+    "NO_DATA": "No hay datos disponibles.",
+    "ACTIONS": {
+      "EDIT": "Editar",
+      "DELETE": "Eliminar"
+    }
+  },
+  "DASHBOARD": {
+    "GREETING": "Hola, {{name}}",
+    "SUBTITLE": "Resumen de tu situación financiera hoy.",
+    "KPI": {
+      "BALANCE": "Saldo Total",
+      "INCOME": "Ingresos del Mes",
+      "EXPENSES": "Gastos del Mes",
+      "INVESTED": "Total Invertido",
+      "SAVINGS": "Total Ahorrado",
+      "NET": "Balance Neto"
+    },
+    "CHART": {
+      "MONTHLY_TRANSACTIONS": "Transacciones por Mes",
+      "EXPENSES_BY_CATEGORY": "Gastos por Categoría",
+      "INVESTMENTS_EVOLUTION": "Evolución de Inversiones"
+    },
+    "WIDGET": {
+      "RECENT_TRANSACTIONS": "Últimas Transacciones",
+      "SPENDING_BY_CARD": "Gastos por Tarjeta",
+      "VIEW_ALL": "Ver todo"
+    },
+    "EMPTY": "Aún no hay datos para mostrar."
+  },
+  "REPORTS": {
+    "EMPTY": "No hay datos para mostrar en este reporte.",
+    "ERROR": "No se pudo cargar el reporte.",
+    "RETRY": "Reintentar"
+  },
+  "CATEGORIES": {
+    "TITLE": "Categorías",
+    "NEW": "Nueva categoría",
+    "EDIT": "Editar categoría",
+    "DELETE": "Eliminar",
+    "DEACTIVATE": "Desactivar",
+    "ACTIVATE": "Activar",
+    "NAME": "Nombre",
+    "NAME_REQUIRED": "El nombre es requerido (1 a 100 caracteres).",
+    "TYPE": "Tipo",
+    "TYPE_INCOME": "Ingreso",
+    "TYPE_EXPENSE": "Gasto",
+    "COLOR": "Color",
+    "ICON": "Ícono",
+    "ACTIVE": "Activa",
+    "INACTIVE": "Inactiva",
+    "STATUS": "Estado",
+    "ACTIONS": "Acciones",
+    "FILTER_ALL": "Todas",
+    "SEARCH": "Buscar por nombre",
+    "KPI_TOTAL": "Total categorías",
+    "KPI_INCOME": "Categorías de ingreso",
+    "KPI_EXPENSE": "Categorías de gasto",
+    "EMPTY_TITLE": "Sin categorías",
+    "EMPTY_MESSAGE": "Crea la primera (ej. Comida, Transporte).",
+    "SAVE": "Guardar",
+    "CANCEL": "Cancelar",
+    "DUPLICATE": "Ya existe una categoría con ese nombre y tipo.",
+    "CONFIRM_DELETE": "¿Eliminar esta categoría?"
+  },
+  "TOP": {
+    "SEARCH": "Buscar…",
+    "PROFILE": "Perfil",
+    "LOGOUT": "Salir",
+    "WELCOME": "¡Bienvenido!",
+    "CONFIRM": "¿Está seguro?",
+    "CONFIRM_DELETE_NOTIFICATION": "¿Está seguro de que desea eliminar esta notificación?",
+    "CLOSE": "Cerrar",
+    "YES_DELETE": "Sí, ¡Eliminar!"
+  },
   "HEADER": {
     "MORE": {
       "TEXT": "Más"
@@ -7,6 +90,28 @@
   "MENUITEMS": {
     "MENU": {
       "TEXT": "MENÚ"
+    },
+    "FINANCE": {
+      "TEXT": "Finanzas",
+      "DASHBOARD": "Dashboard",
+      "MAINTENANCE": "Mantenimientos",
+      "CREDIT_CARD": "Tarjetas de Crédito",
+      "TRANSACTIONS": "Transacciones",
+      "MERCHANTS": "Comercios",
+      "INVESTMENTS": "Inversiones",
+      "PLATFORMS": "Plataformas",
+      "WITHDRAWAL": "Métodos de Retiro",
+      "SAVINGS": "Ahorros",
+      "REPORTS": "Reportes",
+      "CATEGORIES": "Categorías",
+      "SECURITY": "Seguridad",
+      "CENTRIES_USUARIO": "Usuarios",
+      "CENTRIES_PERFIL": "Perfiles",
+      "CENTRIES_CARGO": "Cargos",
+      "CENTRIES_PERMISO_PERFIL": "Permisos por Perfil",
+      "CENTRIES_USUARIOS_INACTIVOS": "Usuarios Inactivos",
+      "CENTRIES_BITACORA": "Bitácora",
+      "SETTINGS": "Ajustes"
     },
     "DASHBOARD": {
       "TEXT": "Tableros",

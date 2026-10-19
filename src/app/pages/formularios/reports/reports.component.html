@@ -26,11 +26,13 @@
               </a>
               <ng-template ngbNavContent>
                 <!-- Tab: Reporte de Inversiones Mensuales -->
-                <div class="row mb-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Año</label>
+                <div class="row g-3 mb-3">
+                  <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label" for="rep-year">Año</label>
                     <select
+                      id="rep-year"
                       class="form-select"
+                      aria-label="Seleccionar año"
                       [(ngModel)]="selectedYear"
                       (change)="onYearChange()"
                     >
@@ -38,66 +40,6 @@
                       <option [value]="year">{{ year }}</option>
                       }
                     </select>
-                  </div>
-                  <div class="col-md-8 d-flex align-items-end">
-                    @if (investmentsReport) {
-                    <div class="row w-100">
-                      <div class="col-md-4">
-                        <div class="card border-primary">
-                          <div class="card-body">
-                            <h6 class="text-muted mb-2">Total Ingresos</h6>
-                            <h4 class="text-success mb-0">
-                              ${{
-                                investmentsReport.totalIngresos
-                                  | number : "1.2-2"
-                              }}
-                            </h4>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="card border-danger">
-                          <div class="card-body">
-                            <h6 class="text-muted mb-2">Total Retiros</h6>
-                            <h4 class="text-danger mb-0">
-                              ${{
-                                investmentsReport.totalRetiros
-                                  | number : "1.2-2"
-                              }}
-                            </h4>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div
-                          class="card"
-                          [class.border-success]="
-                            investmentsReport.netBalance >= 0
-                          "
-                          [class.border-danger]="
-                            investmentsReport.netBalance < 0
-                          "
-                        >
-                          <div class="card-body">
-                            <h6 class="text-muted mb-2">Balance Neto</h6>
-                            <h4
-                              class="mb-0"
-                              [class.text-success]="
-                                investmentsReport.netBalance >= 0
-                              "
-                              [class.text-danger]="
-                                investmentsReport.netBalance < 0
-                              "
-                            >
-                              ${{
-                                investmentsReport.netBalance | number : "1.2-2"
-                              }}
-                            </h4>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    }
                   </div>
                 </div>
 
@@ -108,6 +50,40 @@
                   </div>
                 </div>
                 } @else if (investmentsReport) {
+                <div class="row g-3 mb-4">
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="Total Ingresos"
+                      [value]="investmentsReport.totalIngresos"
+                      icon="mdi mdi-trending-up"
+                      variant="success"
+                      [isCurrency]="true"
+                    />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="Total Retiros"
+                      [value]="investmentsReport.totalRetiros"
+                      icon="mdi mdi-trending-down"
+                      variant="danger"
+                      [isCurrency]="true"
+                    />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="Balance Neto"
+                      [value]="investmentsReport.netBalance"
+                      icon="mdi mdi-scale-balance"
+                      [variant]="
+                        investmentsReport.netBalance >= 0
+                          ? 'success'
+                          : 'danger'
+                      "
+                      [isCurrency]="true"
+                    />
+                  </div>
+                </div>
+
                 <div class="row">
                   <!-- Gráfico de Ingresos vs Retiros -->
                   <div class="col-lg-6">
@@ -120,18 +96,27 @@
                       <div class="card-body">
                         @if (investmentsChart) {
                         <apx-chart
-                          [series]="investmentsChart.series"
-                          [chart]="investmentsChart.chart"
-                          [plotOptions]="investmentsChart.plotOptions"
-                          [dataLabels]="investmentsChart.dataLabels"
-                          [stroke]="investmentsChart.stroke"
-                          [colors]="investmentsChart.colors"
-                          [xaxis]="investmentsChart.xaxis"
-                          [yaxis]="investmentsChart.yaxis"
-                          [fill]="investmentsChart.fill"
-                          [tooltip]="investmentsChart.tooltip"
-                          [legend]="investmentsChart.legend"
+                          [series]="investmentsChart.series!"
+                          [chart]="investmentsChart.chart!"
+                          [plotOptions]="investmentsChart.plotOptions!"
+                          [dataLabels]="investmentsChart.dataLabels!"
+                          [stroke]="investmentsChart.stroke!"
+                          [colors]="investmentsChart.colors!"
+                          [xaxis]="investmentsChart.xaxis!"
+                          [yaxis]="investmentsChart.yaxis!"
+                          [fill]="investmentsChart.fill!"
+                          [tooltip]="investmentsChart.tooltip!"
+                          [legend]="investmentsChart.legend!"
                         ></apx-chart>
+                        } @else {
+                        <div class="text-center py-5">
+                          <i
+                            class="mdi mdi-chart-box-outline display-3 text-muted"
+                          ></i>
+                          <p class="text-muted mt-3 mb-0">
+                            {{ "REPORTS.EMPTY" | translate }}
+                          </p>
+                        </div>
                         }
                       </div>
                     </div>
@@ -146,15 +131,24 @@
                       <div class="card-body">
                         @if (monthlyBalanceChart) {
                         <apx-chart
-                          [series]="monthlyBalanceChart.series"
-                          [chart]="monthlyBalanceChart.chart"
-                          [stroke]="monthlyBalanceChart.stroke"
-                          [colors]="monthlyBalanceChart.colors"
-                          [xaxis]="monthlyBalanceChart.xaxis"
-                          [yaxis]="monthlyBalanceChart.yaxis"
-                          [markers]="monthlyBalanceChart.markers"
-                          [tooltip]="monthlyBalanceChart.tooltip"
+                          [series]="monthlyBalanceChart.series!"
+                          [chart]="monthlyBalanceChart.chart!"
+                          [stroke]="monthlyBalanceChart.stroke!"
+                          [colors]="monthlyBalanceChart.colors!"
+                          [xaxis]="monthlyBalanceChart.xaxis!"
+                          [yaxis]="monthlyBalanceChart.yaxis!"
+                          [markers]="monthlyBalanceChart.markers!"
+                          [tooltip]="monthlyBalanceChart.tooltip!"
                         ></apx-chart>
+                        } @else {
+                        <div class="text-center py-5">
+                          <i
+                            class="mdi mdi-chart-box-outline display-3 text-muted"
+                          ></i>
+                          <p class="text-muted mt-3 mb-0">
+                            {{ "REPORTS.EMPTY" | translate }}
+                          </p>
+                        </div>
                         }
                       </div>
                     </div>
@@ -190,12 +184,12 @@
                                   <strong>{{ summary.monthName }}</strong>
                                 </td>
                                 <td class="text-end text-success">
-                                  ${{
-                                    summary.totalIngresos | number : "1.2-2"
+                                  {{
+                                    summary.totalIngresos | fpCurrency
                                   }}
                                 </td>
                                 <td class="text-end text-danger">
-                                  ${{ summary.totalRetiros | number : "1.2-2" }}
+                                  {{ summary.totalRetiros | fpCurrency }}
                                 </td>
                                 <td
                                   class="text-end"
@@ -203,8 +197,8 @@
                                   [class.text-danger]="summary.netBalance < 0"
                                 >
                                   <strong
-                                    >${{
-                                      summary.netBalance | number : "1.2-2"
+                                    >{{
+                                      summary.netBalance | fpCurrency
                                     }}</strong
                                   >
                                 </td>
@@ -222,17 +216,17 @@
                                 <td><strong>TOTAL</strong></td>
                                 <td class="text-end text-success">
                                   <strong
-                                    >${{
+                                    >{{
                                       investmentsReport.totalIngresos
-                                        | number : "1.2-2"
+                                        | fpCurrency
                                     }}</strong
                                   >
                                 </td>
                                 <td class="text-end text-danger">
                                   <strong
-                                    >${{
+                                    >{{
                                       investmentsReport.totalRetiros
-                                        | number : "1.2-2"
+                                        | fpCurrency
                                     }}</strong
                                   >
                                 </td>
@@ -246,9 +240,9 @@
                                   "
                                 >
                                   <strong
-                                    >${{
+                                    >{{
                                       investmentsReport.netBalance
-                                        | number : "1.2-2"
+                                        | fpCurrency
                                     }}</strong
                                   >
                                 </td>
@@ -305,17 +299,17 @@
                                 </td>
                                 <td>{{ investment.platformName }}</td>
                                 <td class="text-end">
-                                  ${{ investment.amount | number : "1.2-2" }}
+                                  {{ investment.amount | fpCurrency }}
                                 </td>
                                 <td class="text-end">
-                                  ${{
-                                    investment.commission | number : "1.2-2"
+                                  {{
+                                    investment.commission | fpCurrency
                                   }}
                                 </td>
                                 <td class="text-end">
                                   <strong
-                                    >${{
-                                      investment.total | number : "1.2-2"
+                                    >{{
+                                      investment.total | fpCurrency
                                     }}</strong
                                   >
                                 </td>
@@ -342,6 +336,15 @@
                   </div>
                   } }
                 </div>
+                } @else {
+                <div class="text-center py-5">
+                  <i
+                    class="mdi mdi-chart-box-outline display-3 text-muted"
+                  ></i>
+                  <p class="text-muted mt-3 mb-0">
+                    {{ "REPORTS.EMPTY" | translate }}
+                  </p>
+                </div>
                 }
               </ng-template>
             </li>
@@ -354,11 +357,13 @@
               </a>
               <ng-template ngbNavContent>
                 <!-- Tab: Reportes de Tarjetas -->
-                <div class="row mb-3">
-                  <div class="col-md-3">
-                    <label class="form-label">Tarjeta</label>
+                <div class="row g-3 mb-3">
+                  <div class="col-12 col-md-3">
+                    <label class="form-label" for="rep-card">Tarjeta</label>
                     <select
+                      id="rep-card"
                       class="form-select"
+                      aria-label="Seleccionar tarjeta"
                       [(ngModel)]="selectedCardId"
                       (change)="onCardChange()"
                     >
@@ -369,7 +374,7 @@
                       }
                     </select>
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-12 col-md-3">
                     <label class="form-label">Fecha Inicio</label>
                     <input
                       type="date"
@@ -377,7 +382,7 @@
                       [(ngModel)]="startDate"
                     />
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-12 col-md-3">
                     <label class="form-label">Fecha Fin</label>
                     <input
                       type="date"
@@ -385,7 +390,7 @@
                       [(ngModel)]="endDate"
                     />
                   </div>
-                  <div class="col-md-3 d-flex align-items-end">
+                  <div class="col-12 col-md-3 d-flex align-items-end">
                     <button
                       class="btn btn-primary w-100"
                       (click)="onDateRangeSearch()"
@@ -396,7 +401,13 @@
                 </div>
 
                 <!-- Reporte de Gastos por Tarjeta -->
-                @if (cardExpensesData) {
+                @if (isLoadingCardExpenses) {
+                <div class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                  </div>
+                </div>
+                } @else if (cardExpensesData) {
                 <div class="row mb-4">
                   <div class="col-12">
                     <div class="card">
@@ -406,59 +417,58 @@
                         </h5>
                       </div>
                       <div class="card-body">
-                        <div class="row mb-3">
-                          <div class="col-md-4">
-                            <div class="card border-primary">
-                              <div class="card-body">
-                                <h6 class="text-muted mb-2">Total Gastos</h6>
-                                <h4 class="text-primary mb-0">
-                                  ${{
-                                    cardExpensesData.totalExpenses
-                                      | number : "1.2-2"
-                                  }}
-                                </h4>
-                              </div>
-                            </div>
+                        <div class="row g-3 mb-3">
+                          <div class="col-12 col-md-4">
+                            <app-kpi-card
+                              label="Total Gastos"
+                              [value]="cardExpensesData.totalExpenses"
+                              icon="mdi mdi-trending-down"
+                              variant="danger"
+                              [isCurrency]="true"
+                            />
                           </div>
-                          <div class="col-md-4">
-                            <div class="card border-info">
-                              <div class="card-body">
-                                <h6 class="text-muted mb-2"># Transacciones</h6>
-                                <h4 class="text-info mb-0">
-                                  {{ cardExpensesData.transactionCount }}
-                                </h4>
-                              </div>
-                            </div>
+                          <div class="col-12 col-md-4">
+                            <app-kpi-card
+                              label="# Transacciones"
+                              [value]="cardExpensesData.transactionCount"
+                              icon="mdi mdi-cash-multiple"
+                              variant="info"
+                              [isCurrency]="false"
+                            />
                           </div>
-                          <div class="col-md-4">
-                            <div class="card border-secondary">
-                              <div class="card-body">
-                                <h6 class="text-muted mb-2">Período</h6>
-                                <h6 class="mb-0">
-                                  {{
-                                    cardExpensesData.periodStart
-                                      | date : "dd/MM/yyyy"
-                                  }}
-                                  -
-                                  {{
-                                    cardExpensesData.periodEnd
-                                      | date : "dd/MM/yyyy"
-                                  }}
-                                </h6>
-                              </div>
-                            </div>
+                          <div class="col-12 col-md-4">
+                            <app-kpi-card
+                              label="Período"
+                              [value]="null"
+                              [emptyLabel]="formatPeriod(
+                                cardExpensesData.periodStart,
+                                cardExpensesData.periodEnd
+                              )"
+                              icon="mdi mdi-calendar-range"
+                              variant="secondary"
+                              [isCurrency]="false"
+                            />
                           </div>
                         </div>
 
                         @if (cardConsumptionChart) {
                         <apx-chart
-                          [series]="cardConsumptionChart.series"
-                          [chart]="cardConsumptionChart.chart"
-                          [labels]="cardConsumptionChart.labels"
-                          [colors]="cardConsumptionChart.colors"
-                          [legend]="cardConsumptionChart.legend"
-                          [tooltip]="cardConsumptionChart.tooltip"
+                          [series]="cardConsumptionChart.series!"
+                          [chart]="cardConsumptionChart.chart!"
+                          [labels]="cardConsumptionChart.labels!"
+                          [colors]="cardConsumptionChart.colors!"
+                          [legend]="cardConsumptionChart.legend!"
+                          [tooltip]="cardConsumptionChart.tooltip!"
                         ></apx-chart>
+                        } @else {
+                        <div class="text-center py-5">
+                          <i
+                            class="mdi mdi-chart-box-outline display-3 text-muted"
+                          ></i>
+                          <p class="text-muted mt-3 mb-0">
+                            {{ "REPORTS.EMPTY" | translate }}
+                          </p>
+                        </div>
                         }
                       </div>
                     </div>
@@ -467,7 +477,13 @@
                 }
 
                 <!-- Reporte de Pagos por Tarjeta -->
-                @if (cardPaymentsData) {
+                @if (isLoadingCardPayments) {
+                <div class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                  </div>
+                </div>
+                } @else if (cardPaymentsData) {
                 <div class="row mb-4">
                   <div class="col-12">
                     <div class="card">
@@ -477,29 +493,24 @@
                         </h5>
                       </div>
                       <div class="card-body">
-                        <div class="row mb-3">
-                          <div class="col-md-6">
-                            <div class="card border-success">
-                              <div class="card-body">
-                                <h6 class="text-muted mb-2">Total Pagos</h6>
-                                <h4 class="text-success mb-0">
-                                  ${{
-                                    cardPaymentsData.totalPayments
-                                      | number : "1.2-2"
-                                  }}
-                                </h4>
-                              </div>
-                            </div>
+                        <div class="row g-3">
+                          <div class="col-12 col-md-6">
+                            <app-kpi-card
+                              label="Total Pagos"
+                              [value]="cardPaymentsData.totalPayments"
+                              icon="mdi mdi-trending-up"
+                              variant="success"
+                              [isCurrency]="true"
+                            />
                           </div>
-                          <div class="col-md-6">
-                            <div class="card border-info">
-                              <div class="card-body">
-                                <h6 class="text-muted mb-2"># Pagos</h6>
-                                <h4 class="text-info mb-0">
-                                  {{ cardPaymentsData.paymentCount }}
-                                </h4>
-                              </div>
-                            </div>
+                          <div class="col-12 col-md-6">
+                            <app-kpi-card
+                              label="# Pagos"
+                              [value]="cardPaymentsData.paymentCount"
+                              icon="mdi mdi-cash-multiple"
+                              variant="info"
+                              [isCurrency]="false"
+                            />
                           </div>
                         </div>
                       </div>
@@ -509,7 +520,13 @@
                 }
 
                 <!-- Reporte de Consumo de Tarjetas -->
-                @if (cardsConsumptionData && cardsConsumptionData.length > 0) {
+                @if (isLoadingCardsConsumption) {
+                <div class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                  </div>
+                </div>
+                } @else if (cardsConsumptionData && cardsConsumptionData.length > 0) {
                 <div class="row">
                   <div class="col-12">
                     <div class="card">
@@ -519,18 +536,36 @@
                       <div class="card-body">
                         @if (cardConsumptionChart) {
                         <apx-chart
-                          [series]="cardConsumptionChart.series"
-                          [chart]="cardConsumptionChart.chart"
-                          [plotOptions]="cardConsumptionChart.plotOptions"
-                          [colors]="cardConsumptionChart.colors"
-                          [xaxis]="cardConsumptionChart.xaxis"
-                          [yaxis]="cardConsumptionChart.yaxis"
-                          [tooltip]="cardConsumptionChart.tooltip"
+                          [series]="cardConsumptionChart.series!"
+                          [chart]="cardConsumptionChart.chart!"
+                          [plotOptions]="cardConsumptionChart.plotOptions!"
+                          [colors]="cardConsumptionChart.colors!"
+                          [xaxis]="cardConsumptionChart.xaxis!"
+                          [yaxis]="cardConsumptionChart.yaxis!"
+                          [tooltip]="cardConsumptionChart.tooltip!"
                         ></apx-chart>
+                        } @else {
+                        <div class="text-center py-5">
+                          <i
+                            class="mdi mdi-chart-box-outline display-3 text-muted"
+                          ></i>
+                          <p class="text-muted mt-3 mb-0">
+                            {{ "REPORTS.EMPTY" | translate }}
+                          </p>
+                        </div>
                         }
                       </div>
                     </div>
                   </div>
+                </div>
+                } @else {
+                <div class="text-center py-5">
+                  <i
+                    class="mdi mdi-chart-box-outline display-3 text-muted"
+                  ></i>
+                  <p class="text-muted mt-3 mb-0">
+                    {{ "REPORTS.EMPTY" | translate }}
+                  </p>
                 </div>
                 }
               </ng-template>
@@ -544,8 +579,8 @@
               </a>
               <ng-template ngbNavContent>
                 <!-- Tab: Gastos en Efectivo -->
-                <div class="row mb-3">
-                  <div class="col-md-4">
+                <div class="row g-3 mb-3">
+                  <div class="col-12 col-md-4">
                     <label class="form-label">Fecha Inicio</label>
                     <input
                       type="date"
@@ -553,7 +588,7 @@
                       [(ngModel)]="startDate"
                     />
                   </div>
-                  <div class="col-md-4">
+                  <div class="col-12 col-md-4">
                     <label class="form-label">Fecha Fin</label>
                     <input
                       type="date"
@@ -561,7 +596,7 @@
                       [(ngModel)]="endDate"
                     />
                   </div>
-                  <div class="col-md-4 d-flex align-items-end">
+                  <div class="col-12 col-md-4 d-flex align-items-end">
                     <button
                       class="btn btn-primary w-100"
                       (click)="onDateRangeSearch()"
@@ -571,43 +606,44 @@
                   </div>
                 </div>
 
-                @if (cashExpensesData) {
-                <div class="row mb-4">
-                  <div class="col-md-4">
-                    <div class="card border-primary">
-                      <div class="card-body">
-                        <h6 class="text-muted mb-2">Total Gastos Efectivo</h6>
-                        <h4 class="text-primary mb-0">
-                          ${{
-                            cashExpensesData.totalExpenses | number : "1.2-2"
-                          }}
-                        </h4>
-                      </div>
-                    </div>
+                @if (isLoadingCashExpenses) {
+                <div class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
                   </div>
-                  <div class="col-md-4">
-                    <div class="card border-info">
-                      <div class="card-body">
-                        <h6 class="text-muted mb-2"># Transacciones</h6>
-                        <h4 class="text-info mb-0">
-                          {{ cashExpensesData.transactionCount }}
-                        </h4>
-                      </div>
-                    </div>
+                </div>
+                } @else if (cashExpensesData) {
+                <div class="row g-3 mb-4">
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="Total Gastos Efectivo"
+                      [value]="cashExpensesData.totalExpenses"
+                      icon="mdi mdi-trending-down"
+                      variant="danger"
+                      [isCurrency]="true"
+                    />
                   </div>
-                  <div class="col-md-4">
-                    <div class="card border-secondary">
-                      <div class="card-body">
-                        <h6 class="text-muted mb-2">Período</h6>
-                        <h6 class="mb-0">
-                          {{
-                            cashExpensesData.periodStart | date : "dd/MM/yyyy"
-                          }}
-                          -
-                          {{ cashExpensesData.periodEnd | date : "dd/MM/yyyy" }}
-                        </h6>
-                      </div>
-                    </div>
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="# Transacciones"
+                      [value]="cashExpensesData.transactionCount"
+                      icon="mdi mdi-cash-multiple"
+                      variant="info"
+                      [isCurrency]="false"
+                    />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="Período"
+                      [value]="null"
+                      [emptyLabel]="formatPeriod(
+                        cashExpensesData.periodStart,
+                        cashExpensesData.periodEnd
+                      )"
+                      icon="mdi mdi-calendar-range"
+                      variant="secondary"
+                      [isCurrency]="false"
+                    />
                   </div>
                 </div>
 
@@ -644,17 +680,37 @@
                                 <td>{{ expense.description }}</td>
                                 <td>{{ expense.merchantName }}</td>
                                 <td class="text-end">
-                                  ${{ expense.amount | number : "1.2-2" }}
+                                  {{ expense.amount | fpCurrency }}
                                 </td>
                                 <td>{{ expense.transactionType }}</td>
                               </tr>
                               }
                             </tbody>
+                            <tfoot>
+                              <tr class="table-active">
+                                <td colspan="3"><strong>TOTAL</strong></td>
+                                <td class="text-end">
+                                  <strong>{{
+                                    cashExpensesData.totalExpenses | fpCurrency
+                                  }}</strong>
+                                </td>
+                                <td></td>
+                              </tr>
+                            </tfoot>
                           </table>
                         </div>
                       </div>
                     </div>
                   </div>
+                </div>
+                } @else {
+                <div class="text-center py-5">
+                  <i
+                    class="mdi mdi-chart-box-outline display-3 text-muted"
+                  ></i>
+                  <p class="text-muted mt-3 mb-0">
+                    {{ "REPORTS.EMPTY" | translate }}
+                  </p>
                 </div>
                 }
               </ng-template>
@@ -668,8 +724,8 @@
               </a>
               <ng-template ngbNavContent>
                 <!-- Tab: Gastos por Comercios -->
-                <div class="row mb-3">
-                  <div class="col-md-4">
+                <div class="row g-3 mb-3">
+                  <div class="col-12 col-md-4">
                     <label class="form-label">Fecha Inicio</label>
                     <input
                       type="date"
@@ -677,7 +733,7 @@
                       [(ngModel)]="startDate"
                     />
                   </div>
-                  <div class="col-md-4">
+                  <div class="col-12 col-md-4">
                     <label class="form-label">Fecha Fin</label>
                     <input
                       type="date"
@@ -685,7 +741,7 @@
                       [(ngModel)]="endDate"
                     />
                   </div>
-                  <div class="col-md-4 d-flex align-items-end">
+                  <div class="col-12 col-md-4 d-flex align-items-end">
                     <button
                       class="btn btn-primary w-100"
                       (click)="onDateRangeSearch()"
@@ -695,40 +751,40 @@
                   </div>
                 </div>
 
-                @if (merchantsExpensesData) {
-                <div class="row mb-4">
-                  <div class="col-md-4">
-                    <div class="card border-primary">
-                      <div class="card-body">
-                        <h6 class="text-muted mb-2">Total Gastos</h6>
-                        <h4 class="text-primary mb-0">
-                          ${{
-                            merchantsExpensesData.totalExpenses
-                              | number : "1.2-2"
-                          }}
-                        </h4>
-                      </div>
-                    </div>
+                @if (isLoadingMerchantsExpenses) {
+                <div class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
                   </div>
-                  <div class="col-md-4">
-                    <div class="card border-info">
-                      <div class="card-body">
-                        <h6 class="text-muted mb-2"># Transacciones</h6>
-                        <h4 class="text-info mb-0">
-                          {{ merchantsExpensesData.totalTransactions }}
-                        </h4>
-                      </div>
-                    </div>
+                </div>
+                } @else if (merchantsExpensesData) {
+                <div class="row g-3 mb-4">
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="Total Gastos"
+                      [value]="merchantsExpensesData.totalExpenses"
+                      icon="mdi mdi-trending-down"
+                      variant="danger"
+                      [isCurrency]="true"
+                    />
                   </div>
-                  <div class="col-md-4">
-                    <div class="card border-secondary">
-                      <div class="card-body">
-                        <h6 class="text-muted mb-2"># Comercios</h6>
-                        <h4 class="mb-0">
-                          {{ merchantsExpensesData.merchants.length || 0 }}
-                        </h4>
-                      </div>
-                    </div>
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="# Transacciones"
+                      [value]="merchantsExpensesData.totalTransactions"
+                      icon="mdi mdi-cash-multiple"
+                      variant="info"
+                      [isCurrency]="false"
+                    />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <app-kpi-card
+                      label="# Comercios"
+                      [value]="merchantsExpensesData.merchants.length || 0"
+                      icon="mdi mdi-store"
+                      variant="secondary"
+                      [isCurrency]="false"
+                    />
                   </div>
                 </div>
 
@@ -743,18 +799,27 @@
                       </div>
                       <div class="card-body">
                         <apx-chart
-                          [series]="merchantsChart.series"
-                          [chart]="merchantsChart.chart"
-                          [plotOptions]="merchantsChart.plotOptions"
-                          [dataLabels]="merchantsChart.dataLabels"
-                          [colors]="merchantsChart.colors"
-                          [xaxis]="merchantsChart.xaxis"
-                          [yaxis]="merchantsChart.yaxis"
-                          [tooltip]="merchantsChart.tooltip"
+                          [series]="merchantsChart.series!"
+                          [chart]="merchantsChart.chart!"
+                          [plotOptions]="merchantsChart.plotOptions!"
+                          [dataLabels]="merchantsChart.dataLabels!"
+                          [colors]="merchantsChart.colors!"
+                          [xaxis]="merchantsChart.xaxis!"
+                          [yaxis]="merchantsChart.yaxis!"
+                          [tooltip]="merchantsChart.tooltip!"
                         ></apx-chart>
                       </div>
                     </div>
                   </div>
+                </div>
+                } @else {
+                <div class="text-center py-5">
+                  <i
+                    class="mdi mdi-chart-box-outline display-3 text-muted"
+                  ></i>
+                  <p class="text-muted mt-3 mb-0">
+                    {{ "REPORTS.EMPTY" | translate }}
+                  </p>
                 </div>
                 }
 
@@ -788,8 +853,8 @@
                                 <td>{{ merchant.category || "-" }}</td>
                                 <td class="text-end">
                                   <strong
-                                    >${{
-                                      merchant.totalAmount | number : "1.2-2"
+                                    >{{
+                                      merchant.totalAmount | fpCurrency
                                     }}</strong
                                   >
                                 </td>
@@ -805,13 +870,41 @@
                               </tr>
                               }
                             </tbody>
+                            <tfoot>
+                              <tr class="table-active">
+                                <td colspan="2"><strong>TOTAL</strong></td>
+                                <td class="text-end">
+                                  <strong>{{
+                                    merchantsExpensesData.totalExpenses
+                                      | fpCurrency
+                                  }}</strong>
+                                </td>
+                                <td class="text-center">
+                                  <strong>{{
+                                    merchantsExpensesData.totalTransactions
+                                  }}</strong>
+                                </td>
+                                <td class="text-end">
+                                  <strong>100.00%</strong>
+                                </td>
+                              </tr>
+                            </tfoot>
                           </table>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                } }
+                } } @else {
+                <div class="text-center py-5">
+                  <i
+                    class="mdi mdi-chart-box-outline display-3 text-muted"
+                  ></i>
+                  <p class="text-muted mt-3 mb-0">
+                    {{ "REPORTS.EMPTY" | translate }}
+                  </p>
+                </div>
+                }
               </ng-template>
             </li>
           </ul>
